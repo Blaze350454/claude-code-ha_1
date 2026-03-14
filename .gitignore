@@ -1,0 +1,38 @@
+# Secrets
+secrets.yaml
+
+# Database & logs
+home-assistant.log*
+home-assistant_v2.db*
+*.db-shm
+*.db-wal
+
+# HA internal dirs
+deps/
+tts/
+backups/
+.storage/
+.cloud/
+.HA_VERSION
+
+# ESPHome secrets (if ever added)
+esphome/.esphome/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# TP-Link credentials and token cache
+scripts/.tplink_creds
+scripts/.tplink_tokens
+scripts/.tplink_device_cache
+
+# HA internal cache
+.cache/
+www/
+
+# Runtime files
+.ha_run.lock
+
+# Custom components (managed via HACS)
+custom_components/

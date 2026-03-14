@@ -1,0 +1,50 @@
+  - sensor:
+      - name: "Reservoir Tent Level"
+        unique_id: reservoir_tent_level
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: mdi:gauge
+        state: >
+          {% if is_state('binary_sensor.reservoir_full_tent', 'on') %}
+            100
+          {% elif is_state('binary_sensor.reservoir_half_tent', 'on') %}
+            50
+          {% elif is_state('binary_sensor.reservoir_quarter_tent', 'on') %}
+            25
+          {% else %}
+            0
+          {% endif %}
+        attributes:
+          level_text: >
+            {% if is_state('binary_sensor.reservoir_full_tent', 'on') %}
+              Full
+            {% elif is_state('binary_sensor.reservoir_half_tent', 'on') %}
+              1/2
+            {% elif is_state('binary_sensor.reservoir_quarter_tent', 'on') %}
+              1/4
+            {% else %}
+              Empty
+            {% endif %}
+
+      - name: "Flush Reservoir Tent Level"
+        unique_id: flush_reservoir_tent_level
+        unit_of_measurement: "%"
+        state_class: measurement
+        icon: mdi:gauge
+        state: >
+          {% if is_state('binary_sensor.flush_full_tent', 'on') %}
+            100
+          {% elif is_state('binary_sensor.flush_quarter_tent', 'on') %}
+            25
+          {% else %}
+            0
+          {% endif %}
+        attributes:
+          level_text: >
+            {% if is_state('binary_sensor.flush_full_tent', 'on') %}
+              Full
+            {% elif is_state('binary_sensor.flush_quarter_tent', 'on') %}
+              1/4
+            {% else %}
+              Empty
+            {% endif %}
