@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "input_boolean",
+  "data": {
+    "items": [
+      {
+        "id": "tent_irrigation_start",
+        "name": "Tent Irrigation Start",
+        "icon": "mdi:cup-water"
+      },
+      {
+        "id": "irrigation_enabled",
+        "name": "Irrigation Enabled",
+        "icon": "mdi:sprinkler-variant"
+      },
+      {
+        "id": "alternating_active",
+        "name": "Air/Stir Alternating Active",
+        "icon": "mdi:sync"
+      }
+    ]
+  }
+}

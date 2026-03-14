@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "input_text",
+  "data": {
+    "items": [
+      {
+        "id": "irrigation_status",
+        "name": "Irrigation Status",
+        "initial": "Idle",
+        "icon": "mdi:information-outline",
+        "mode": "text",
+        "max": 100,
+        "min": 0
+      }
+    ]
+  }
+}
