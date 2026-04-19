@@ -1,0 +1,381 @@
+tent_irrigation_safety:
+  automation:
+    - id: automation.irrigation_watchdog
+      alias: Irrigation — Watchdog
+      description: Forces all pumps and valves off if any pump runs for more than 10 minutes
+      triggers:
+        - trigger: state
+          entity_id:
+            - switch.feed_pump_irrigation_tent
+            - switch.flush_pump_irrigation_tent
+          to: 'on'
+          for:
+            minutes: 10
+      actions:
+        - action: script.stop_alternating
+        - action: script.turn_off
+          target:
+            entity_id:
+              - script.run_feed_cycle
+              - script.run_normal_flush
+              - script.run_day3_flush
+          data: {}
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.feed_pump_irrigation_tent
+              - switch.flush_pump_irrigation_tent
+              - switch.air_pump_irrigation_tent
+              - switch.feed_stir_pump_irrigation_tent
+              - switch.flush_stir_pump_irrigation_tent
+              - switch.table_drain_pump_irrigation_tent
+          data: {}
+        - action: valve.close_valve
+          target:
+            entity_id:
+              - valve.feed_valve_irrigation_tent
+              - valve.flush_valve_irrigation_tent
+              - valve.flush_drain_valve_irrigation_tent
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.irrigation_status
+          data:
+            value: FAULT — Watchdog triggered
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Irrigation Watchdog Alert
+            message: A pump has been running for over 10 minutes. All pumps and valves forced off — check system.
+      mode: single
+    - id: automation.irrigation_startup_recovery
+      alias: Irrigation — Startup Recovery
+      description: Forces all pumps and valves off immediately on HA start or restart
+      triggers:
+        - trigger: homeassistant
+          event: start
+      actions:
+        - action: script.turn_off
+          target:
+            entity_id:
+              - script.run_feed_cycle
+              - script.run_normal_flush
+              - script.run_day3_flush
+              - script.run_alternating
+          data: {}
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.alternating_active
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.feed_pump_irrigation_tent
+              - switch.flush_pump_irrigation_tent
+              - switch.air_pump_irrigation_tent
+              - switch.feed_stir_pump_irrigation_tent
+              - switch.flush_stir_pump_irrigation_tent
+              - switch.table_drain_pump_irrigation_tent
+          data: {}
+        - action: valve.close_valve
+          target:
+            entity_id:
+              - valve.feed_valve_irrigation_tent
+              - valve.flush_valve_irrigation_tent
+              - valve.flush_drain_valve_irrigation_tent
+              - valve.feed_fill_valve_irrigation_tent
+              - valve.flush_fill_valve_irrigation_tent
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.irrigation_status
+          data:
+            value: Idle
+      mode: single
+    - id: automation.irrigation_feed_empty_block
+      alias: Irrigation — Block Feed When Reservoir Dry
+      description: Turns off feed pump, stir pump, and valve immediately if activated while feed reservoir is dry
+      triggers:
+        - trigger: state
+          entity_id:
+            - switch.feed_pump_irrigation_tent
+            - switch.feed_stir_pump_irrigation_tent
+          to: 'on'
+        - trigger: state
+          entity_id: valve.feed_valve_irrigation_tent
+          to: open
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.feed_empty_irrigation_tent
+          state: 'off'
+      actions:
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.feed_pump_irrigation_tent
+              - switch.feed_stir_pump_irrigation_tent
+        - action: valve.close_valve
+          target:
+            entity_id: valve.feed_valve_irrigation_tent
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Feed Blocked — Reservoir Dry
+            message: Feed pump, stir pump, or valve turned off. Feed reservoir is dry.
+      mode: single
+    - id: automation.irrigation_flush_empty_block
+      alias: Irrigation — Block Flush When Reservoir Dry
+      description: Turns off flush pump, stir pump, and valve immediately if activated while flush reservoir is dry
+      triggers:
+        - trigger: state
+          entity_id:
+            - switch.flush_pump_irrigation_tent
+            - switch.flush_stir_pump_irrigation_tent
+          to: 'on'
+        - trigger: state
+          entity_id: valve.flush_valve_irrigation_tent
+          to: open
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.flush_empty_irrigation_tent
+          state: 'off'
+      actions:
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.flush_pump_irrigation_tent
+              - switch.flush_stir_pump_irrigation_tent
+        - action: valve.close_valve
+          target:
+            entity_id: valve.flush_valve_irrigation_tent
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Flush Blocked — Reservoir Dry
+            message: Flush pump, stir pump, or valve turned off. Flush reservoir is dry.
+      mode: single
+    - id: automation.irrigation_table_drain_empty_block
+      alias: Irrigation — Block Table Drain Pump When Dry
+      description: Turns off table drain pump immediately if activated while table drain is empty
+      triggers:
+        - trigger: state
+          entity_id: switch.table_drain_pump_irrigation_tent
+          to: 'on'
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.table_drain_empty
+          state: 'off'
+      actions:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.table_drain_pump_irrigation_tent
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Table Drain Blocked — Dry
+            message: Table drain pump turned off. Table drain is empty.
+      mode: single
+    - alias: Toggle — Kill Irrigation Automations
+      id: toggle_irrigation_kill_automations
+      trigger:
+        - platform: state
+          entity_id: input_boolean.irrigation_kill_automations
+      action:
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.irrigation_kill_automations
+                  state: 'on'
+              sequence:
+                - action: automation.turn_off
+                  target:
+                    entity_id:
+                      - automation.irrigation_feed_empty_block
+                      - automation.irrigation_flush_empty_block
+                      - automation.irrigation_table_drain_empty_block
+                      - automation.irrigation_daily_setup
+                      - automation.irrigation_feed_trigger
+                      - automation.irrigation_lights_off_stop
+                      - automation.irrigation_night_cycle_start
+                      - automation.irrigation_night_cycle_stop
+                      - automation.irrigation_pre_feed_start
+                      - automation.irrigation_pre_feed_stop
+                      - automation.irrigation_startup_recovery
+                      - automation.table_drain_pump_control
+                      - automation.irrigation_watchdog
+                      - automation.irrigation_maintenance_cycle
+                - action: script.turn_off
+                  target:
+                    entity_id: script.irrigation_advance_to_next_feed
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.irrigation_kill_automations
+                  state: 'off'
+              sequence:
+                - action: automation.turn_on
+                  target:
+                    entity_id:
+                      - automation.irrigation_feed_empty_block
+                      - automation.irrigation_flush_empty_block
+                      - automation.irrigation_table_drain_empty_block
+                      - automation.irrigation_daily_setup
+                      - automation.irrigation_feed_trigger
+                      - automation.irrigation_lights_off_stop
+                      - automation.irrigation_night_cycle_start
+                      - automation.irrigation_night_cycle_stop
+                      - automation.irrigation_pre_feed_start
+                      - automation.irrigation_pre_feed_stop
+                      - automation.irrigation_startup_recovery
+                      - automation.table_drain_pump_control
+                      - automation.irrigation_maintenance_cycle
+                      - automation.irrigation_watchdog
+    - alias: Toggle — Irrigation Tent All Off
+      id: toggle_irrigation_tent_kill
+      trigger:
+        - platform: state
+          entity_id: input_boolean.irrigation_tent_kill
+      action:
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.irrigation_tent_kill
+                  state: 'on'
+              sequence:
+                - action: automation.turn_off
+                  target:
+                    entity_id:
+                      - automation.air_pump_controll
+                      - automation.fill_feed_reservoir
+                      - automation.fill_flush_reservoir
+                      - automation.irrigation_feed_empty_block
+                      - automation.irrigation_flush_empty_block
+                      - automation.irrigation_table_drain_empty_block
+                      - automation.irrigation_daily_setup
+                      - automation.irrigation_feed_trigger
+                      - automation.irrigation_lights_off_stop
+                      - automation.irrigation_night_cycle_start
+                      - automation.irrigation_night_cycle_stop
+                      - automation.irrigation_pre_feed_start
+                      - automation.irrigation_pre_feed_stop
+                      - automation.irrigation_startup_recovery
+                      - automation.table_drain_pump_control
+                      - automation.irrigation_watchdog
+                      - automation.irrigation_maintenance_cycle
+                - action: script.turn_off
+                  target:
+                    entity_id:
+                      - script.irrigation_advance_to_next_feed
+                      - script.run_alternating
+                      - script.run_day3_flush
+                      - script.run_feed_cycle
+                      - script.run_normal_flush
+                      - script.stop_alternating
+                - action: switch.turn_off
+                  target:
+                    entity_id:
+                      - switch.feed_pump_irrigation_tent
+                      - switch.feed_stir_pump_irrigation_tent
+                      - switch.flush_pump_irrigation_tent
+                      - switch.flush_stir_pump_irrigation_tent
+                      - switch.air_pump_irrigation_tent
+                      - switch.irrigation_controller_tent
+                - action: valve.close_valve
+                  target:
+                    entity_id:
+                      - valve.feed_fill_valve_irrigation_tent
+                      - valve.feed_valve_irrigation_tent
+                      - valve.flush_drain_valve_irrigation_tent
+                      - valve.flush_fill_valve_irrigation_tent
+                      - valve.flush_valve_irrigation_tent
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.irrigation_tent_kill
+                  state: 'off'
+              sequence:
+                - action: automation.turn_on
+                  target:
+                    entity_id:
+                      - automation.air_pump_controll
+                      - automation.fill_feed_reservoir
+                      - automation.fill_flush_reservoir
+                      - automation.irrigation_feed_empty_block
+                      - automation.irrigation_flush_empty_block
+                      - automation.irrigation_table_drain_empty_block
+                      - automation.irrigation_daily_setup
+                      - automation.irrigation_feed_trigger
+                      - automation.irrigation_lights_off_stop
+                      - automation.irrigation_night_cycle_start
+                      - automation.irrigation_night_cycle_stop
+                      - automation.irrigation_pre_feed_start
+                      - automation.irrigation_pre_feed_stop
+                      - automation.irrigation_startup_recovery
+                      - automation.table_drain_pump_control
+                      - automation.irrigation_maintenance_cycle
+                      - automation.irrigation_watchdog
+
+    - id: automation.irrigation_maintenance_cycle
+      alias: Irrigation — Maintenance Cycle
+      description: Runs stir then air every maintenance_interval_minutes. Skips if feed is within 60 min or a feed/pre-feed is running.
+      triggers:
+        - trigger: time_pattern
+          minutes: /5
+      conditions:
+        - condition: state
+          entity_id: input_boolean.irrigation_enabled
+          state: "on"
+        - condition: state
+          entity_id: input_boolean.alternating_active
+          state: "off"
+        - condition: not
+          conditions:
+            - condition: state
+              entity_id: script.run_feed_cycle
+              state: "on"
+            - condition: state
+              entity_id: script.run_normal_flush
+              state: "on"
+            - condition: state
+              entity_id: script.run_day3_flush
+              state: "on"
+        - condition: template
+          value_template: >
+            {% set next_feed = states("input_datetime.next_feed_time") %}
+            {% if next_feed in ["unknown", "unavailable"] %}true
+            {% else %}
+              {{ (as_timestamp(next_feed) - as_timestamp(now())) > 3600 }}
+            {% endif %}
+        - condition: template
+          value_template: >
+            {% set last = state_attr("automation.irrigation_maintenance_cycle", "last_triggered") %}
+            {% if last is none %}true
+            {% else %}
+              {{ (as_timestamp(now()) - as_timestamp(last)) >= (states("input_number.maintenance_interval_minutes") | int * 60) }}
+            {% endif %}
+      actions:
+        - action: switch.turn_on
+          target:
+            entity_id:
+              - switch.feed_stir_pump_irrigation_tent
+              - switch.flush_stir_pump_irrigation_tent
+        - delay:
+            minutes: "{{ states(input_number.maintenance_stir_minutes) | int }}"
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.feed_stir_pump_irrigation_tent
+              - switch.flush_stir_pump_irrigation_tent
+        - delay:
+            milliseconds: 500
+        - action: switch.turn_on
+          target:
+            entity_id: switch.air_pump_irrigation_tent
+        - delay:
+            minutes: "{{ states(input_number.maintenance_air_minutes) | int }}"
+        - action: switch.turn_off
+          target:
+            entity_id: switch.air_pump_irrigation_tent
+      mode: single
+# Humidity Control — mode-based switching between humidify / dehumidify
+# Mode selector: input_select.tent_humidity_mode (Humidify / Dehumidify / Off)
+# Fogger smart plug: switch.humidifier
+# Fan PWM: fan.grow_tent_one_humidifier_fan_pwm (grow-tent-one ESP32-C3)
+# Dehumidifier: humidifier.dehumidifier_tent (Midea, standalone)
+# AC dry mode: climate.air_conditioner_tent (Midea, set to 'dry')
+# Humidity sensor: sensor.tent_humidity (averaged template)
+
+########## MODE SWITCHING ##########
+
+# When mode changes, shut off the opposing equipment

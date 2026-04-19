@@ -1,0 +1,31 @@
+tent_irrigation_drainage:
+  automation:
+    - id: automation.table_drain_pump_control
+      alias: Irrigation — Table Drain Pump
+      description: Turns on drain pump when table is full, off when empty sensor goes dry
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.table_drain_full
+          to: 'on'
+      actions:
+        - action: switch.turn_on
+          target:
+            entity_id: switch.table_drain_pump_irrigation_tent
+        - wait_for_trigger:
+            - platform: state
+              entity_id: binary_sensor.table_drain_empty
+              to: 'off'
+          timeout:
+            minutes: 30
+        - action: switch.turn_off
+          target:
+            entity_id: switch.table_drain_pump_irrigation_tent
+        - if:
+            - condition: template
+              value_template: '{{ wait.timed_out }}'
+          then:
+            - action: notify.mobile_app_sm_a166w
+              data:
+                title: Table Drain Alert
+                message: Table drain pump ran for 30 minutes but empty sensor never triggered — check pump and sensors.
+      mode: single

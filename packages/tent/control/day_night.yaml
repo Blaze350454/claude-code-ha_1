@@ -1,0 +1,380 @@
+tent_control_day_night:
+  automation:
+    - id: ac_lights_on_day_mode
+      alias: "AC — Lights On (Day Mode)"
+      description: >
+        When tent lights turn on, set AC to cool mode with day settings
+        (temp target, fan speed, direction, wind mode, power mode) from dashboard selectors.
+      triggers:
+        - trigger: state
+          entity_id: light.hlg
+          to: "on"
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+      actions:
+        - action: climate.set_hvac_mode
+          target:
+            entity_id: climate.air_conditioner_tent
+          data:
+            hvac_mode: cool
+        - action: climate.set_temperature
+          target:
+            entity_id: climate.air_conditioner_tent
+          data:
+            temperature: "{{ states('input_number.tent_day_temp_target') | float }}"
+        - action: number.set_value
+          target:
+            entity_id: number.fan_speed_percent_air_conditioner_tent
+          data:
+            value: "{{ states('input_number.ac_day_fan_speed') | int }}"
+  # Vertical direction
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_day_vertical
+                  state: swing
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.swing_vertical_air_conditioner_tent
+          default:
+            - action: switch.turn_off
+              target:
+                entity_id: switch.swing_vertical_air_conditioner_tent
+            - action: select.select_option
+              target:
+                entity_id: select.airflow_vertical_air_conditioner_tent
+              data:
+                option: "{{ states('input_select.ac_day_vertical') }}"
+  # Horizontal direction
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_day_horizontal
+                  state: swing
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.swing_horizontal_air_conditioner_tent
+          default:
+            - action: switch.turn_off
+              target:
+                entity_id: switch.swing_horizontal_air_conditioner_tent
+            - action: select.select_option
+              target:
+                entity_id: select.airflow_horizontal_air_conditioner_tent
+              data:
+                option: "{{ states('input_select.ac_day_horizontal') }}"
+  # Wind mode — turn off all first, then enable selected
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.natural_wind_air_conditioner_tent
+              - switch.indirect_wind_air_conditioner_tent
+              - switch.breezeless_air_conditioner_tent
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_day_wind_mode
+                  state: natural
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.natural_wind_air_conditioner_tent
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_day_wind_mode
+                  state: indirect
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.indirect_wind_air_conditioner_tent
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_day_wind_mode
+                  state: breezeless
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.breezeless_air_conditioner_tent
+  # Power mode — turn off all first, then enable selected
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.eco_mode_air_conditioner_tent
+              - switch.sleep_mode_air_conditioner_tent
+              - switch.boost_mode_air_conditioner_tent
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_day_power_mode
+                  state: eco
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.eco_mode_air_conditioner_tent
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_day_power_mode
+                  state: sleep
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.sleep_mode_air_conditioner_tent
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_day_power_mode
+                  state: boost
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.boost_mode_air_conditioner_tent
+      mode: single
+    - id: ac_lights_off_night_mode
+      alias: "AC — Lights Off (Night Mode)"
+      description: >
+        When tent lights turn off, switch AC to night settings
+        (lower temp, lower fan speed, eco mode, breezeless) from dashboard selectors.
+      triggers:
+        - trigger: state
+          entity_id: light.hlg
+          to: "off"
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+      actions:
+        - action: climate.set_temperature
+          target:
+            entity_id: climate.air_conditioner_tent
+          data:
+            temperature: "{{ states('input_number.tent_night_temp_target') | float }}"
+        - action: number.set_value
+          target:
+            entity_id: number.fan_speed_percent_air_conditioner_tent
+          data:
+            value: "{{ states('input_number.ac_night_fan_speed') | int }}"
+  # Vertical direction
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_night_vertical
+                  state: swing
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.swing_vertical_air_conditioner_tent
+          default:
+            - action: switch.turn_off
+              target:
+                entity_id: switch.swing_vertical_air_conditioner_tent
+            - action: select.select_option
+              target:
+                entity_id: select.airflow_vertical_air_conditioner_tent
+              data:
+                option: "{{ states('input_select.ac_night_vertical') }}"
+  # Horizontal direction
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_night_horizontal
+                  state: swing
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.swing_horizontal_air_conditioner_tent
+          default:
+            - action: switch.turn_off
+              target:
+                entity_id: switch.swing_horizontal_air_conditioner_tent
+            - action: select.select_option
+              target:
+                entity_id: select.airflow_horizontal_air_conditioner_tent
+              data:
+                option: "{{ states('input_select.ac_night_horizontal') }}"
+  # Wind mode
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.natural_wind_air_conditioner_tent
+              - switch.indirect_wind_air_conditioner_tent
+              - switch.breezeless_air_conditioner_tent
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_night_wind_mode
+                  state: natural
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.natural_wind_air_conditioner_tent
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_night_wind_mode
+                  state: indirect
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.indirect_wind_air_conditioner_tent
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_night_wind_mode
+                  state: breezeless
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.breezeless_air_conditioner_tent
+  # Power mode
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.eco_mode_air_conditioner_tent
+              - switch.sleep_mode_air_conditioner_tent
+              - switch.boost_mode_air_conditioner_tent
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_night_power_mode
+                  state: eco
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.eco_mode_air_conditioner_tent
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_night_power_mode
+                  state: sleep
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.sleep_mode_air_conditioner_tent
+            - conditions:
+                - condition: state
+                  entity_id: input_select.ac_night_power_mode
+                  state: boost
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.boost_mode_air_conditioner_tent
+      mode: single
+    - id: humidity_lights_on_day
+      alias: "Humidity — Lights On (Day Target)"
+      description: >
+        When tent lights turn on, set humidifier_target_rh to the day humidity target.
+      triggers:
+        - trigger: state
+          entity_id: light.hlg
+          to: "on"
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+      actions:
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.humidifier_target_rh
+          data:
+            value: "{{ states('input_number.humidity_day_target') | float }}"
+      mode: single
+    - id: humidity_lights_off_night
+      alias: "Humidity — Lights Off (Night Target)"
+      description: >
+        When tent lights turn off, set humidifier_target_rh to the night humidity target.
+        Lower night RH helps prevent mold and bud rot.
+      triggers:
+        - trigger: state
+          entity_id: light.hlg
+          to: "off"
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+      actions:
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.humidifier_target_rh
+          data:
+            value: "{{ states('input_number.humidity_night_target') | float }}"
+      mode: single
+    - id: fans_lights_on_day
+      alias: "Fans — Lights On (Day Mode)"
+      description: >
+        When lights turn on, set fans according to day toggles.
+      triggers:
+        - trigger: state
+          entity_id: light.hlg
+          to: "on"
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+      actions:
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.circulation_fans_day
+                  state: "on"
+              sequence:
+                - action: fan.turn_on
+                  target:
+                    entity_id: fan.circulation_fans_tent
+          default:
+            - action: fan.turn_off
+              target:
+                entity_id: fan.circulation_fans_tent
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.ac_circ_fan_day
+                  state: "on"
+              sequence:
+                - action: fan.turn_on
+                  target:
+                    entity_id: fan.ac_circulation_fan
+          default:
+            - action: fan.turn_off
+              target:
+                entity_id: fan.ac_circulation_fan
+      mode: single
+    - id: fans_lights_off_night
+      alias: "Fans — Lights Off (Night Mode)"
+      description: >
+        When lights turn off, set fans according to night toggles.
+      triggers:
+        - trigger: state
+          entity_id: light.hlg
+          to: "off"
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+      actions:
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.circulation_fans_night
+                  state: "on"
+              sequence:
+                - action: fan.turn_on
+                  target:
+                    entity_id: fan.circulation_fans_tent
+          default:
+            - action: fan.turn_off
+              target:
+                entity_id: fan.circulation_fans_tent
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.ac_circ_fan_night
+                  state: "on"
+              sequence:
+                - action: fan.turn_on
+                  target:
+                    entity_id: fan.ac_circulation_fan
+          default:
+            - action: fan.turn_off
+              target:
+                entity_id: fan.ac_circulation_fan
+      mode: single

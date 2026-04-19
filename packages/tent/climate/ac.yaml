@@ -1,0 +1,42 @@
+tent_climate_ac:
+  automation:
+    - id: ac_overheat_alert
+      alias: "AC — Overheat Alert"
+      description: >
+        If tent temperature stays above 30°C for 5 minutes, activate boost mode
+        and send a notification. Turns off boost after 15 min if temp has dropped.
+      triggers:
+        - trigger: numeric_state
+          entity_id: sensor.tent_temperature
+          above: 30
+          for:
+            minutes: 5
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+      actions:
+        - action: switch.turn_on
+          target:
+            entity_id: switch.boost_mode_air_conditioner_tent
+        - action: persistent_notification.create
+          data:
+            title: "Tent Overheat Warning"
+            message: >
+              Tent temperature is {{ states('sensor.tent_temperature') }}°C — above 30°C
+              for 5 minutes. Boost mode activated. Check lights, ventilation, and AC.
+        - delay:
+            minutes: 15
+        - condition: numeric_state
+          entity_id: sensor.tent_temperature
+          below: 29
+        - action: switch.turn_off
+          target:
+            entity_id: switch.boost_mode_air_conditioner_tent
+        - action: persistent_notification.create
+          data:
+            title: "Tent Overheat Resolved"
+            message: >
+              Temperature back to {{ states('sensor.tent_temperature') }}°C. Boost mode deactivated.
+      mode: single
+

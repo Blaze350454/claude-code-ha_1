@@ -1,0 +1,51 @@
+printer_bambu:
+  automation:
+    - id: '1767090991123'
+      alias: Bambu Light & Camera On Power
+      description: ''
+      triggers:
+        - trigger: state
+          entity_id:
+            - switch.bambu
+          to:
+            - 'on'
+          from:
+            - 'off'
+          for:
+            hours: 0
+            minutes: 0
+            seconds: 10
+      conditions: []
+      actions:
+        - action: light.turn_on
+          metadata: {}
+          data: {}
+          target:
+            entity_id: light.chamber_light_p1s
+        - action: switch.turn_on
+          metadata: {}
+          target:
+            entity_id: switch.enable_camera_p1s
+          data: {}
+      mode: single
+    - id: '1768742840086'
+      alias: Bambu Turn Off After Print
+      description: ''
+      triggers:
+        - trigger: state
+          entity_id:
+            - sensor.current_stage_p1s
+          to:
+            - idle
+          for:
+            hours: 0
+            minutes: 30
+            seconds: 0
+      conditions: []
+      actions:
+        - action: switch.turn_off
+          metadata: {}
+          data: {}
+          target:
+            entity_id: switch.bambu
+      mode: single

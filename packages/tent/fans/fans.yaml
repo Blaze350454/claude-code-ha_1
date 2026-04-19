@@ -1,0 +1,61 @@
+tent_fans:
+  automation:
+    - id: fans_climate_active_boost
+      alias: "Fans — Boost Circulation During Climate Activity"
+      description: >
+        Turn on circulation fans when AC or humidifier is actively running,
+        to help distribute conditioned air evenly through the tent.
+      triggers:
+        - trigger: state
+          entity_id:
+            - climate.air_conditioner_tent
+            - switch.humidifier
+            - humidifier.dehumidifier_tent
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+      actions:
+        - choose:
+            - conditions:
+                - condition: or
+                  conditions:
+                    - condition: template
+                      value_template: >
+                        {{ states('climate.air_conditioner_tent') not in ['off', 'unavailable', 'unknown'] }}
+                    - condition: state
+                      entity_id: switch.humidifier
+                      state: "on"
+                    - condition: state
+                      entity_id: humidifier.dehumidifier_tent
+                      state: "on"
+              sequence:
+                - action: fan.turn_on
+                  target:
+                    entity_id: fan.circulation_fans_tent
+          default:
+    # All climate equipment off — revert to day/night toggle setting
+            - choose:
+                - conditions:
+                    - condition: state
+                      entity_id: light.hlg
+                      state: "on"
+                    - condition: state
+                      entity_id: input_boolean.circulation_fans_day
+                      state: "off"
+                  sequence:
+                    - action: fan.turn_off
+                      target:
+                        entity_id: fan.circulation_fans_tent
+                - conditions:
+                    - condition: state
+                      entity_id: light.hlg
+                      state: "off"
+                    - condition: state
+                      entity_id: input_boolean.circulation_fans_night
+                      state: "off"
+                  sequence:
+                    - action: fan.turn_off
+                      target:
+                        entity_id: fan.circulation_fans_tent
+      mode: single

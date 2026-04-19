@@ -1,53 +1,54 @@
+grow_tent_irrigation:
 # ================================================
 # Grow Tent — Irrigation Package
 # ================================================
 
 # --- HELPERS ---
 
-input_datetime:
-  night_cycle_stop:
-    name: Night Cycle Stop
-    has_date: true
-    has_time: true
+  input_datetime:
+    night_cycle_stop:
+      name: Night Cycle Stop
+      has_date: true
+      has_time: true
 
-input_number:
-  maintenance_interval_minutes:
-    name: Maintenance Interval
-    min: 30
-    max: 480
-    step: 10
-    unit_of_measurement: min
-    mode: box
-    icon: mdi:timer-sync
-    initial: 120
-  maintenance_stir_minutes:
-    name: Maintenance Stir Duration
-    min: 1
-    max: 30
-    step: 1
-    unit_of_measurement: min
-    mode: box
-    icon: mdi:rotate-3d-variant
-    initial: 5
-  maintenance_air_minutes:
-    name: Maintenance Air Duration
-    min: 1
-    max: 60
-    step: 1
-    unit_of_measurement: min
-    mode: box
-    icon: mdi:air-purifier
-    initial: 20
+  input_number:
+    maintenance_interval_minutes:
+      name: Maintenance Interval
+      min: 30
+      max: 480
+      step: 10
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:timer-sync
+      initial: 120
+    maintenance_stir_minutes:
+      name: Maintenance Stir Duration
+      min: 1
+      max: 30
+      step: 1
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:rotate-3d-variant
+      initial: 5
+    maintenance_air_minutes:
+      name: Maintenance Air Duration
+      min: 1
+      max: 60
+      step: 1
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:air-purifier
+      initial: 20
 
 
-input_boolean:
-  irrigation_kill_automations:
-    name: "Kill Irrigation Automations"
-    icon: mdi:robot-off
+  input_boolean:
+    irrigation_kill_automations:
+      name: "Kill Irrigation Automations"
+      icon: mdi:robot-off
 
-  irrigation_tent_kill:
-    name: "Irrigation Tent — All Off"
-    icon: mdi:power-off
+    irrigation_tent_kill:
+      name: "Irrigation Tent — All Off"
+      icon: mdi:power-off
 
 # --- SCRIPTS ---
 

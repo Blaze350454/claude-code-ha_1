@@ -1,0 +1,65 @@
+tent_control_safety:
+  automation:
+    - id: safety_flower_night_humidifier_shutoff
+      alias: "Safety — Flower Night Humidifier Shutoff"
+      description: >
+        When lights turn off during Flowering stage, immediately shut off the
+        humidifier fogger and fan to prevent bud rot. Only fires if the safety
+        block toggle is enabled.
+      triggers:
+        - trigger: state
+          entity_id: light.hlg
+          to: "off"
+      conditions:
+        - condition: state
+          entity_id: input_select.grow_tent_growth_stage
+          state: Flowering
+        - condition: state
+          entity_id: input_boolean.flower_night_humidifier_block
+          state: "on"
+      actions:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.humidifier
+        - action: fan.turn_off
+          target:
+            entity_id: fan.grow_tent_one_humidifier_fan_pwm
+        - action: persistent_notification.create
+          data:
+            title: "Humidifier Blocked — Flower Night"
+            message: >
+              Lights off during Flowering stage. Humidifier shut off to prevent
+              bud rot. Disable 'Block Humidifier During Flower Nights' toggle
+              to override this behavior.
+      mode: single
+    - id: safety_flower_night_humidifier_warning
+      alias: "Safety — Flower Night Humidity High Warning"
+      description: >
+        During flower nights, warn if humidity rises above 60% even though
+        humidifier is blocked — may need to run dehumidifier.
+      triggers:
+        - trigger: numeric_state
+          entity_id: sensor.tent_humidity
+          above: 60
+          for:
+            minutes: 10
+      conditions:
+        - condition: state
+          entity_id: input_select.grow_tent_growth_stage
+          state: Flowering
+        - condition: state
+          entity_id: light.hlg
+          state: "off"
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+      actions:
+        - action: persistent_notification.create
+          data:
+            title: "Flower Night — High Humidity Warning"
+            message: >
+              Humidity is {{ states('sensor.tent_humidity') }}% during flower night.
+              Risk of bud rot above 60%. Consider switching to Dehumidify mode
+              or increasing ventilation.
+      mode: single
+

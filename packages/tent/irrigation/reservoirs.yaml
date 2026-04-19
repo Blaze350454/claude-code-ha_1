@@ -1,0 +1,106 @@
+tent_irrigation_reservoirs:
+  automation:
+    - id: automation.fill_feed_reservoir
+      alias: Fill — Feed Reservoir
+      description: Opens feed fill valve until reservoir full sensor triggers or timeout
+      triggers:
+        - trigger: event
+          event_type: fill_feed_reservoir_start
+      actions:
+        - action: valve.open_valve
+          target:
+            entity_id: valve.feed_fill_valve_irrigation_tent
+        - wait_for_trigger:
+            - platform: state
+              entity_id: binary_sensor.feed_full_irrigation_tent
+              to: 'on'
+          timeout:
+            minutes: 2
+            seconds: 30
+        - action: valve.close_valve
+          target:
+            entity_id: valve.feed_fill_valve_irrigation_tent
+      mode: single
+    - id: automation.fill_flush_reservoir
+      alias: Fill — Flush Reservoir
+      description: Opens flush fill valve until flush full sensor triggers or timeout
+      triggers:
+        - trigger: event
+          event_type: fill_flush_reservoir_start
+      actions:
+        - action: valve.open_valve
+          target:
+            entity_id: valve.flush_fill_valve_irrigation_tent
+        - wait_for_trigger:
+            - platform: state
+              entity_id: binary_sensor.flush_full_irrigation_tent
+              to: 'on'
+          timeout:
+            minutes: 2
+            seconds: 30
+        - action: valve.close_valve
+          target:
+            entity_id: valve.flush_fill_valve_irrigation_tent
+      mode: single
+    - id: automation.feed_reservoir_empty_alert
+      alias: Alert — Feed Reservoir Dry
+      description: Immediate push notification when feed reservoir goes dry
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.feed_empty_irrigation_tent
+          to: 'off'
+          for:
+            minutes: 1
+      actions:
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Feed Reservoir Empty
+            message: Feed reservoir is dry — refill needed.
+      mode: single
+    - id: automation.feed_reservoir_empty_repeat
+      alias: Alert — Feed Reservoir Dry (Repeat)
+      description: Repeats push notification every 30 minutes while feed reservoir stays dry
+      triggers:
+        - trigger: time_pattern
+          minutes: /30
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.feed_empty_irrigation_tent
+          state: 'off'
+      actions:
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Feed Reservoir Still Empty
+            message: Feed reservoir is still dry — refill needed.
+      mode: single
+    - id: automation.flush_reservoir_empty_alert
+      alias: Alert — Flush Reservoir Dry
+      description: Immediate push notification when flush reservoir goes dry
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.flush_empty_irrigation_tent
+          to: 'off'
+          for:
+            minutes: 1
+      actions:
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Flush Reservoir Empty
+            message: Flush reservoir is dry — refill needed.
+      mode: single
+    - id: automation.flush_reservoir_empty_repeat
+      alias: Alert — Flush Reservoir Dry (Repeat)
+      description: Repeats push notification every 30 minutes while flush reservoir stays dry
+      triggers:
+        - trigger: time_pattern
+          minutes: /30
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.flush_empty_irrigation_tent
+          state: 'off'
+      actions:
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Flush Reservoir Still Empty
+            message: Flush reservoir is still dry — refill needed.
+      mode: single

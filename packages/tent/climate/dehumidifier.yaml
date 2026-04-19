@@ -1,0 +1,43 @@
+tent_climate_dehumidifier:
+  automation:
+    - id: dehumidifier_on
+      alias: "Dehumidifier - Turn On"
+      trigger:
+        - platform: template
+          value_template: >
+            {{ states('sensor.tent_humidity') | float(0) >
+               (states('input_number.humidifier_target_rh') | float(65) +
+                states('input_number.humidifier_hysteresis') | float(5)) }}
+      condition:
+        - condition: state
+          entity_id: input_select.tent_humidity_mode
+          state: "Dehumidify"
+        - condition: not
+          conditions:
+            - condition: state
+              entity_id: sensor.tent_humidity
+              state: "unavailable"
+            - condition: state
+              entity_id: sensor.tent_humidity
+              state: "unknown"
+      action:
+        - service: humidifier.turn_on
+          target:
+            entity_id: humidifier.dehumidifier_tent
+
+# Turn OFF dehumidifier + AC when RH drops to target
+    - id: dehumidifier_off
+      alias: "Dehumidifier - Turn Off"
+      trigger:
+        - platform: template
+          value_template: >
+            {{ states('sensor.tent_humidity') | float(0) <=
+               states('input_number.humidifier_target_rh') | float(65) }}
+      condition:
+        - condition: state
+          entity_id: humidifier.dehumidifier_tent
+          state: "on"
+      action:
+        - service: humidifier.turn_off
+          target:
+            entity_id: humidifier.dehumidifier_tent

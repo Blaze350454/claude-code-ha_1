@@ -1,0 +1,59 @@
+tent_climate_vpd:
+  automation:
+    - id: vpd_out_of_range_alert
+      alias: "VPD — Out of Range Alert"
+      description: >
+        Alert when VPD drifts outside the target +/- tolerance for 10 minutes.
+        Tells user current VPD, target, and ideal RH to help them adjust.
+      triggers:
+        - trigger: template
+          value_template: >
+            {% set vpd = states('sensor.grow_tent_vpd') | float(0) %}
+            {% set target = states('sensor.active_vpd_target') | float(1.0) %}
+            {% set tol = states('input_number.vpd_tolerance') | float(0.3) %}
+            {{ vpd > 0 and (vpd < target - tol or vpd > target + tol) }}
+          for:
+            minutes: 10
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+        - condition: template
+          value_template: >
+            {{ states('sensor.grow_tent_vpd') not in ['unknown', 'unavailable'] }}
+      actions:
+        - action: persistent_notification.create
+          data:
+            title: "VPD Out of Range"
+            message: >
+              VPD is {{ states('sensor.grow_tent_vpd') }} kPa
+              (target: {{ states('sensor.active_vpd_target') }} kPa ± {{ states('input_number.vpd_tolerance') }}).
+              Temp: {{ states('sensor.tent_temperature') }}°C,
+              RH: {{ states('sensor.tent_humidity') }}%.
+              Ideal RH for current temp: {{ states('sensor.vpd_ideal_rh') }}%.
+      mode: single
+    - id: vpd_recovered_alert
+      alias: "VPD — Back in Range"
+      description: >
+        Dismiss VPD alert when VPD returns to target range for 5 minutes.
+      triggers:
+        - trigger: template
+          value_template: >
+            {% set vpd = states('sensor.grow_tent_vpd') | float(0) %}
+            {% set target = states('sensor.active_vpd_target') | float(1.0) %}
+            {% set tol = states('input_number.vpd_tolerance') | float(0.3) %}
+            {{ vpd > 0 and vpd >= target - tol and vpd <= target + tol }}
+          for:
+            minutes: 5
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+      actions:
+        - action: persistent_notification.create
+          data:
+            title: "VPD Recovered"
+            message: >
+              VPD back in range at {{ states('sensor.grow_tent_vpd') }} kPa
+              (target: {{ states('sensor.active_vpd_target') }} kPa).
+      mode: single

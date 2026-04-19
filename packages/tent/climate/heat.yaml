@@ -1,0 +1,3 @@
+# Placeholder for tent climate heat config.
+# Add automation/sensor/script entries under this key when ready.
+tent_climate_heat: {}

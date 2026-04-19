@@ -1,0 +1,135 @@
+tent_irrigation_schedule:
+  automation:
+    - id: automation.irrigation_daily_setup
+      alias: Irrigation — Daily Setup at Lights On
+      description: Resets daily counters, calculates feed schedule, sets next_feed_time to first feed
+      triggers:
+        - platform: time
+          at: input_datetime.veg_lights_on_time
+      conditions:
+        - condition: state
+          entity_id: input_boolean.irrigation_enabled
+          state: 'on'
+      actions:
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.current_feed_number
+          data:
+            value: 0
+        - variables:
+            lights_on_h: '{{ states(''input_datetime.veg_lights_on_time'')[0:2] | int }}'
+            lights_on_m: '{{ states(''input_datetime.veg_lights_on_time'')[3:5] | int }}'
+            lights_off_h: '{{ states(''input_datetime.veg_lights_off_time'')[0:2] | int }}'
+            lights_off_m: '{{ states(''input_datetime.veg_lights_off_time'')[3:5] | int }}'
+            today_str: '{{ now().date() | string }}'
+            on_total_min: '{{ lights_on_h * 60 + lights_on_m }}'
+            off_total_min: '{{ lights_off_h * 60 + lights_off_m }}'
+            first_feed_total_min: '{{ on_total_min + 5 }}'
+            first_feed_h: '{{ (first_feed_total_min // 60) % 24 }}'
+            first_feed_m: '{{ first_feed_total_min % 60 }}'
+            first_feed_dt: '{{ today_str ~ '' '' ~ (''0'' ~ (first_feed_h | string))[-2:] ~ '':'' ~ (''0'' ~ (first_feed_m | string))[-2:] ~ '':00'' }}'
+            lead_min: '{{ states(''input_number.air_stir_lead_minutes'') | int }}'
+            pre_start_total: '{{ first_feed_total_min - lead_min }}'
+            pre_start_h: '{{ (pre_start_total // 60) % 24 }}'
+            pre_start_m: '{{ pre_start_total % 60 }}'
+            pre_start_dt: '{{ today_str ~ '' '' ~ (''0'' ~ (pre_start_h | string))[-2:] ~ '':'' ~ (''0'' ~ (pre_start_m | string))[-2:] ~ '':00'' }}'
+            pre_stop_total: '{{ first_feed_total_min - 5 }}'
+            pre_stop_h: '{{ (pre_stop_total // 60) % 24 }}'
+            pre_stop_m: '{{ pre_stop_total % 60 }}'
+            pre_stop_dt: '{{ today_str ~ '' '' ~ (''0'' ~ (pre_stop_h | string))[-2:] ~ '':'' ~ (''0'' ~ (pre_stop_m | string))[-2:] ~ '':00'' }}'
+            night_delay: '{{ states(''input_number.night_delay_minutes'') | int }}'
+            off_plus_delay: '{{ off_total_min + night_delay }}'
+            night_start_h: '{{ (off_plus_delay // 60) % 24 }}'
+            night_start_m: '{{ off_plus_delay % 60 }}'
+            next_day_str: '{{ (now().date() + timedelta(days=1)) | string }}'
+            night_start_dt: '{{ (next_day_str if off_plus_delay < on_total_min else today_str) ~ '' '' ~ (''0'' ~ (night_start_h | string))[-2:] ~ '':'' ~ (''0'' ~ (night_start_m | string))[-2:] ~ '':00'' }}'
+            night_stop_total: '{{ lights_on_h * 60 + lights_on_m - 5 }}'
+            night_stop_h: '{{ (night_stop_total // 60) % 24 }}'
+            night_stop_m: '{{ night_stop_total % 60 }}'
+            night_stop_dt: '{{ next_day_str ~ '' '' ~ (''0'' ~ (night_stop_h | string))[-2:] ~ '':'' ~ (''0'' ~ (night_stop_m | string))[-2:] ~ '':00'' }}'
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.next_feed_time
+          data:
+            datetime: '{{ first_feed_dt }}'
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.next_pre_feed_start
+          data:
+            datetime: '{{ pre_start_dt }}'
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.next_pre_feed_stop
+          data:
+            datetime: '{{ pre_stop_dt }}'
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.night_cycle_start
+          data:
+            datetime: '{{ night_start_dt }}'
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.night_cycle_stop
+          data:
+            datetime: '{{ night_stop_dt }}'
+        - variables:
+            current_day: '{{ states(''input_number.flush_day_counter'') | int }}'
+        - choose:
+            - conditions:
+                - condition: template
+                  value_template: '{{ current_day >= 3 }}'
+              sequence:
+                - action: input_number.set_value
+                  target:
+                    entity_id: input_number.flush_day_counter
+                  data:
+                    value: 0
+            - conditions:
+                - condition: template
+                  value_template: '{{ true }}'
+              sequence:
+                - action: input_number.increment
+                  target:
+                    entity_id: input_number.flush_day_counter
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.irrigation_status
+          data:
+            value: Idle
+      mode: single
+    - id: automation.irrigation_lights_off_stop
+      alias: Irrigation — Lights Off Cleanup
+      description: Stops all irrigation activity at lights-off
+      triggers:
+        - at: input_datetime.veg_lights_off_time
+          trigger: time
+      actions:
+        - action: script.stop_alternating
+        - action: script.turn_off
+          target:
+            entity_id:
+              - script.run_feed_cycle
+              - script.run_normal_flush
+              - script.run_day3_flush
+          data: {}
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.feed_pump_irrigation_tent
+              - switch.flush_pump_irrigation_tent
+              - switch.air_pump_irrigation_tent
+              - switch.feed_stir_pump_irrigation_tent
+              - switch.flush_stir_pump_irrigation_tent
+          data: {}
+        - action: valve.close_valve
+          target:
+            entity_id:
+              - valve.feed_valve_irrigation_tent
+              - valve.flush_valve_irrigation_tent
+              - valve.flush_drain_valve_irrigation_tent
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.irrigation_status
+          data:
+            value: Idle
+      mode: single

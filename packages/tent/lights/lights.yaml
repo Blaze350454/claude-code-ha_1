@@ -1,0 +1,122 @@
+tent_lights:
+  automation:
+    - id: '1772302120351'
+      alias: Tent Lights Transition
+      description: 'Advances transition each day when tent lights go off — reduces light period by 1 hour until Flower mode
+
+        '
+      triggers:
+        - trigger: state
+          entity_id: light.chilled
+          to: 'off'
+          id: light_off
+      conditions:
+        - condition: state
+          entity_id: input_select.growth_stage
+          state: Transition
+        - condition: state
+          entity_id: light.chilled
+          state: 'off'
+        - condition: state
+          entity_id: light.hlg
+          state: 'off'
+      actions:
+        - choose:
+            - conditions:
+                - condition: template
+                  value_template: '{{ transition_day < 6 }}'
+              sequence:
+                - action: input_number.set_value
+                  target:
+                    entity_id: input_number.transition_day_counter
+                  data:
+                    value: '{{ transition_day + 1 }}'
+                - action: input_datetime.set_datetime
+                  target:
+                    entity_id: input_datetime.veg_lights_off_time
+                  data:
+                    time: '{{ new_off_time }}'
+                - action: persistent_notification.create
+                  data:
+                    title: Tent Lights Transition
+                    message: 'Day {{ transition_day + 1 }} of 6 complete. Tent lights: {{ states(''input_datetime.veg_lights_on_time'') }} to {{ new_off_time }} ({{ 18 - (transition_day + 1) }} hours on)
+
+                      '
+            - conditions:
+                - condition: template
+                  value_template: '{{ transition_day >= 6 }}'
+              sequence:
+                - action: input_select.select_option
+                  target:
+                    entity_id: input_select.growth_stage
+                  data:
+                    option: Flower
+                - action: input_number.set_value
+                  target:
+                    entity_id: input_number.transition_day_counter
+                  data:
+                    value: 0
+                - action: input_datetime.set_datetime
+                  target:
+                    entity_id: input_datetime.veg_lights_off_time
+                  data:
+                    time: 06:00:00
+                - action: persistent_notification.create
+                  data:
+                    title: Tent Lights Transition Complete
+                    message: 'Transition complete! Tent lights now in Flower mode on 12/12 schedule.
+
+                      '
+      variables:
+        transition_day: '{{ states(''input_number.transition_day_counter'') | int }}'
+        new_off_time: "{{ '%02d:%02d:00' | format(\n  (states('input_datetime.veg_lights_off_time').split(':')[0] | int - 1) % 24,\n  states('input_datetime.veg_lights_off_time').split(':')[1] | int\n) }}\n"
+      mode: single
+    - id: '1772302862266'
+      alias: Tent Lights Auto
+      description: Controls tent lights on/off based on veg/flower/transition schedule
+      triggers:
+        - trigger: time_pattern
+          minutes: /1
+          id: check_lights
+        - trigger: state
+          entity_id: input_select.growth_stage
+          id: stage_change
+      actions:
+        - choose:
+            - conditions:
+                - condition: template
+                  value_template: "{%- set stage = states('input_select.growth_stage') -%}\n{%- if stage in ['Vegetative', 'Transition'] -%}\n  {%- set on_t = states('input_datetime.veg_lights_on_time') -%}\n  {%- set off_t = states('input_datetime.veg_lights_off_time') -%}\n{%- else -%}\n  {%- set on_t = states('input_datetime.flower_lights_on_time') -%}\n  {%- set off_t = states('input_datetime.flower_lights_off_time') -%}\n{%- endif -%}\n{%- set on_m = (on_t.split(':')[0]|int * 60) + on_t.split(':')[1]|int -%}\n{%- set off_m = (off_t.split(':')[0]|int * 60) + off_t.split(':')[1]|int -%}\n{%- set now_m = now().hour * 60 + now().minute -%}\n{%- if on_m < off_m -%}{{ now_m >= on_m and now_m < off_m }}\n{%- else -%}{{ now_m >= on_m or now_m < off_m }}\n{%- endif -%}\n"
+                - condition: or
+                  conditions:
+                    - condition: state
+                      entity_id: light.hlg
+                      state: 'off'
+                    - condition: state
+                      entity_id: light.chilled
+                      state: 'off'
+              sequence:
+                - action: light.turn_on
+                  target:
+                    entity_id:
+                      - light.hlg
+                      - light.chilled
+                  data:
+                    brightness_pct: 100
+            - conditions:
+                - condition: template
+                  value_template: "{%- set stage = states('input_select.growth_stage') -%}\n{%- if stage in ['Vegetative', 'Transition'] -%}\n  {%- set on_t = states('input_datetime.veg_lights_on_time') -%}\n  {%- set off_t = states('input_datetime.veg_lights_off_time') -%}\n{%- else -%}\n  {%- set on_t = states('input_datetime.flower_lights_on_time') -%}\n  {%- set off_t = states('input_datetime.flower_lights_off_time') -%}\n{%- endif -%}\n{%- set on_m = (on_t.split(':')[0]|int * 60) + on_t.split(':')[1]|int -%}\n{%- set off_m = (off_t.split(':')[0]|int * 60) + off_t.split(':')[1]|int -%}\n{%- set now_m = now().hour * 60 + now().minute -%}\n{%- if on_m < off_m -%}{{ now_m < on_m or now_m >= off_m }}\n{%- else -%}{{ now_m < on_m and now_m >= off_m }}\n{%- endif -%}\n"
+                - condition: or
+                  conditions:
+                    - condition: state
+                      entity_id: light.hlg
+                      state: 'on'
+                    - condition: state
+                      entity_id: light.chilled
+                      state: 'on'
+              sequence:
+                - action: light.turn_off
+                  target:
+                    entity_id:
+                      - light.hlg
+                      - light.chilled
+      mode: single
