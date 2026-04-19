@@ -63,18 +63,18 @@
       state_class: measurement
       icon: mdi:gauge
       state: >
-        {% if is_state('binary_sensor.table_drain_full_irrigation_tent', 'on') %}
+        {% if is_state('binary_sensor.table_drain_full', 'on') %}
           100
-        {% elif is_state('binary_sensor.table_drain_empty_irrigation_tent', 'on') %}
+        {% elif is_state('binary_sensor.table_drain_empty', 'on') %}
           50
         {% else %}
           0
         {% endif %}
       attributes:
         level_text: >
-          {% if is_state('binary_sensor.table_drain_full_irrigation_tent', 'on') %}
+          {% if is_state('binary_sensor.table_drain_full', 'on') %}
             Full
-          {% elif is_state('binary_sensor.table_drain_empty_irrigation_tent', 'on') %}
+          {% elif is_state('binary_sensor.table_drain_empty', 'on') %}
             Half
           {% else %}
             Empty

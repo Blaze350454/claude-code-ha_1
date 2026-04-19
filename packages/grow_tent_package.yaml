@@ -1,0 +1,604 @@
+# Grow Tent Automation Package
+# This package contains all automations, sensors, and helpers for grow tent management
+#
+# To use this package:
+# 1. Copy this file to your Home Assistant config/packages/ directory
+# 2. Enable packages in configuration.yaml:
+#    homeassistant:
+#      packages: !include_dir_named packages
+# 3. Customize the entity IDs to match your devices
+# 4. Restart Home Assistant
+
+homeassistant:
+  customize:
+    # Customize your entities here
+    sensor.tent_temperature:
+      friendly_name: "Grow Tent Temperature"
+      icon: mdi:thermometer
+    sensor.tent_humidity:
+      friendly_name: "Grow Tent Humidity"
+      icon: mdi:water-percent
+
+# Input helpers for grow tent settings
+input_number:
+  grow_tent_target_temp:
+    name: "Target Temperature"
+    min: 15
+    max: 35
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer
+
+  grow_tent_target_humidity:
+    name: "Target Humidity"
+    min: 30
+    max: 90
+    step: 5
+    unit_of_measurement: "%"
+    icon: mdi:water-percent
+
+  grow_tent_light_duration:
+    name: "Light Duration"
+    min: 0
+    max: 24
+    step: 0.5
+    unit_of_measurement: "hours"
+    icon: mdi:clock-outline
+
+  tent_feed_duration:
+    name: "Tent Feed Duration"
+    min: 1
+    max: 60
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:timer-outline
+
+  tent_flush_duration:
+    name: "Tent Flush Duration"
+    min: 1
+    max: 30
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:timer-outline
+
+  humidifier_target_rh:
+    name: "Humidifier Target RH"
+    min: 30
+    max: 90
+    step: 1
+    initial: 65
+    unit_of_measurement: "%"
+    icon: mdi:water-percent
+
+  humidifier_hysteresis:
+    name: "Humidifier Hysteresis"
+    min: 2
+    max: 15
+    step: 1
+    initial: 5
+    unit_of_measurement: "%"
+    icon: mdi:arrow-expand-vertical
+
+  # --- AC Day/Night Climate Control ---
+  tent_day_temp_target:
+    name: "AC Day Temp Target"
+    min: 15
+    max: 30
+    step: 0.5
+    initial: 23
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-high
+
+  tent_night_temp_target:
+    name: "AC Night Temp Target"
+    min: 15
+    max: 25
+    step: 0.5
+    initial: 20
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-low
+
+  ac_day_fan_speed:
+    name: "AC Day Fan Speed"
+    min: 1
+    max: 100
+    step: 1
+    initial: 60
+    unit_of_measurement: "%"
+    icon: mdi:fan
+
+  ac_night_fan_speed:
+    name: "AC Night Fan Speed"
+    min: 1
+    max: 100
+    step: 1
+    initial: 30
+    unit_of_measurement: "%"
+    icon: mdi:fan
+
+  # --- Humidity Day/Night Targets ---
+  humidity_day_target:
+    name: "Humidity Day Target"
+    min: 30
+    max: 90
+    step: 1
+    initial: 65
+    unit_of_measurement: "%"
+    icon: mdi:water-percent
+
+  humidity_night_target:
+    name: "Humidity Night Target"
+    min: 30
+    max: 90
+    step: 1
+    initial: 60
+    unit_of_measurement: "%"
+    icon: mdi:water-percent
+
+  # --- VPD Targets & Tolerance ---
+  vpd_day_target:
+    name: "VPD Day Target"
+    min: 0.2
+    max: 2.0
+    step: 0.05
+    initial: 1.0
+    unit_of_measurement: "kPa"
+    icon: mdi:cloud-outline
+
+  vpd_night_target:
+    name: "VPD Night Target"
+    min: 0.2
+    max: 2.0
+    step: 0.05
+    initial: 0.8
+    unit_of_measurement: "kPa"
+    icon: mdi:cloud-outline
+
+  vpd_tolerance:
+    name: "VPD Alert Tolerance"
+    min: 0.1
+    max: 0.5
+    step: 0.05
+    initial: 0.3
+    unit_of_measurement: "kPa"
+    icon: mdi:arrow-expand-horizontal
+
+input_boolean:
+  grow_tent_automation_enabled:
+    name: "Enable Grow Tent Automation"
+    icon: mdi:auto-fix
+
+  grow_tent_vacation_mode:
+    name: "Vacation Mode"
+    icon: mdi:airplane
+
+  # --- Safety Overrides ---
+  flower_night_humidifier_block:
+    name: "Block Humidifier During Flower Nights"
+    icon: mdi:shield-alert
+    # ON = humidifier blocked during flower nights (default safe behavior)
+    # OFF = allow humidifier even during flower nights (manual override)
+
+  # --- Fan Coordination ---
+  circulation_fans_day:
+    name: "Circulation Fans During Day"
+    icon: mdi:fan
+    # ON = circulation fans run during lights on
+
+  circulation_fans_night:
+    name: "Circulation Fans During Night"
+    icon: mdi:fan
+    # ON = circulation fans run during lights off (reduced airflow)
+
+  ac_circ_fan_day:
+    name: "AC Circulation Fan During Day"
+    icon: mdi:fan-auto
+    # ON = AC circulation fan runs during lights on
+
+  ac_circ_fan_night:
+    name: "AC Circulation Fan During Night"
+    icon: mdi:fan-auto
+    # ON = AC circulation fan runs during lights off
+
+  # humidifier_enabled replaced by input_select.tent_humidity_mode
+
+input_datetime:
+  grow_tent_lights_on:
+    name: "Lights On Time"
+    has_date: false
+    has_time: true
+
+  grow_tent_watering_time:
+    name: "Watering Time"
+    has_date: false
+    has_time: true
+
+input_select:
+  grow_tent_growth_stage:
+    name: "Growth Stage"
+    options:
+      - Seedling
+      - Vegetative
+      - Flowering
+      - Harvest
+    icon: mdi:sprout
+
+  tent_humidity_mode:
+    name: "Humidity Mode"
+    options:
+      - Humidify
+      - Dehumidify
+      - "Off"
+    icon: mdi:water-percent
+
+  # --- AC Day/Night Airflow & Mode Selectors ---
+  ac_day_vertical:
+    name: "AC Day Vertical Direction"
+    options:
+      - "off"
+      - up
+      - up-mid
+      - middle
+      - down-mid
+      - down
+      - swing
+    initial: middle
+    icon: mdi:pan-vertical
+
+  ac_night_vertical:
+    name: "AC Night Vertical Direction"
+    options:
+      - "off"
+      - up
+      - up-mid
+      - middle
+      - down-mid
+      - down
+      - swing
+    initial: up
+    icon: mdi:pan-vertical
+
+  ac_day_horizontal:
+    name: "AC Day Horizontal Direction"
+    options:
+      - "off"
+      - left
+      - left-mid
+      - middle
+      - right-mid
+      - right
+      - swing
+    initial: swing
+    icon: mdi:pan-horizontal
+
+  ac_night_horizontal:
+    name: "AC Night Horizontal Direction"
+    options:
+      - "off"
+      - left
+      - left-mid
+      - middle
+      - right-mid
+      - right
+      - swing
+    initial: middle
+    icon: mdi:pan-horizontal
+
+  ac_day_wind_mode:
+    name: "AC Day Wind Mode"
+    options:
+      - normal
+      - natural
+      - indirect
+      - breezeless
+    initial: normal
+    icon: mdi:weather-windy
+
+  ac_night_wind_mode:
+    name: "AC Night Wind Mode"
+    options:
+      - normal
+      - natural
+      - indirect
+      - breezeless
+    initial: breezeless
+    icon: mdi:weather-windy
+
+  ac_day_power_mode:
+    name: "AC Day Power Mode"
+    options:
+      - normal
+      - eco
+      - sleep
+      - boost
+    initial: normal
+    icon: mdi:lightning-bolt
+
+  ac_night_power_mode:
+    name: "AC Night Power Mode"
+    options:
+      - normal
+      - eco
+      - sleep
+      - boost
+    initial: eco
+    icon: mdi:lightning-bolt
+
+# Template sensors
+sensor:
+  - platform: template
+    sensors:
+      grow_tent_vpd:
+        friendly_name: "Vapor Pressure Deficit"
+        unit_of_measurement: "kPa"
+        icon: mdi:cloud
+        value_template: >-
+          {# Calculate VPD from temperature and humidity #}
+          {% set temp = states('sensor.tent_temperature') | float(0) %}
+          {% set rh = states('sensor.tent_humidity') | float(0) %}
+          {% if temp > 0 and rh > 0 %}
+            {% set svp = 0.61078 * (2.71828 ** ((17.27 * temp) / (temp + 237.3))) %}
+            {% set vpd = svp * (1 - (rh / 100)) %}
+            {{ (vpd | float) | round(2) }}
+          {% else %}
+            unavailable
+          {% endif %}
+        availability_template: >-
+          {{ states('sensor.tent_temperature') not in ['unknown', 'unavailable'] and
+             states('sensor.tent_humidity') not in ['unknown', 'unavailable'] }}
+
+      grow_tent_dli:
+        friendly_name: "Daily Light Integral"
+        unit_of_measurement: "mol/m²/day"
+        icon: mdi:white-balance-sunny
+        value_template: >-
+          {# Calculate DLI from PPFD and light duration #}
+          {% set ppfd = states('sensor.grow_tent_ppfd') | float(0) %}
+          {% set hours = states('input_number.grow_tent_light_duration') | float(0) %}
+          {% if ppfd > 0 and hours > 0 %}
+            {{ ((ppfd * hours * 3.6) / 1000) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+
+      grow_tent_status:
+        friendly_name: "Grow Tent Status"
+        icon_template: >-
+          {% if is_state('binary_sensor.grow_tent_climate_ok', 'on') %}
+            mdi:check-circle
+          {% else %}
+            mdi:alert-circle
+          {% endif %}
+        value_template: >-
+          {% set temp = states('sensor.tent_temperature') | float(0) %}
+          {% set target_temp = states('input_number.grow_tent_target_temp') | float(0) %}
+          {% set humidity = states('sensor.tent_humidity') | float(0) %}
+          {% set target_humidity = states('input_number.grow_tent_target_humidity') | float(0) %}
+
+          {% if (temp - target_temp) | abs > 3 %}
+            Temperature Alert
+          {% elif (humidity - target_humidity) | abs > 10 %}
+            Humidity Alert
+          {% elif is_state('switch.grow_tent_lights', 'on') %}
+            Growing
+          {% else %}
+            Resting
+          {% endif %}
+
+# Humidifier threshold + averaged tent humidity (modern template format)
+template:
+  - sensor:
+      - name: "Humidifier On Threshold"
+        unique_id: humidifier_on_threshold
+        unit_of_measurement: "%"
+        state: >
+          {{ states('input_number.humidifier_target_rh') | float -
+             states('input_number.humidifier_hysteresis') | float }}
+
+      - name: "Active VPD Target"
+        unique_id: active_vpd_target
+        unit_of_measurement: "kPa"
+        icon: mdi:cloud-outline
+        state: >
+          {% if is_state('light.hlg', 'on') %}
+            {{ states('input_number.vpd_day_target') | float(1.0) }}
+          {% else %}
+            {{ states('input_number.vpd_night_target') | float(0.8) }}
+          {% endif %}
+
+      - name: "VPD Ideal RH"
+        unique_id: vpd_ideal_rh
+        unit_of_measurement: "%"
+        icon: mdi:water-percent
+        state: >
+          {% set temp = states('sensor.tent_temperature') | float(0) %}
+          {% set vpd_target = states('sensor.active_vpd_target') | float(1.0) %}
+          {% if temp > 0 %}
+            {% set svp = 0.61078 * (2.71828 ** ((17.27 * temp) / (temp + 237.3))) %}
+            {% set ideal_rh = 100 * (1 - vpd_target / svp) %}
+            {{ [0, [100, ideal_rh] | min] | max | round(1) }}
+          {% else %}
+            {{ none }}
+          {% endif %}
+        availability: >
+          {{ states('sensor.tent_temperature') not in ['unknown', 'unavailable'] }}
+
+
+      - name: "Tent Humidity"
+        unique_id: tent_humidity_averaged
+        unit_of_measurement: "%"
+        device_class: humidity
+        state_class: measurement
+        icon: mdi:water-percent
+        state: >
+          {% set sensors = [
+            states('sensor.canopy_humidity_tent'),
+            states('sensor.flower_humidity_tent'),
+            states('sensor.indoor_humidity_air_conditioner_tent'),
+            states('sensor.current_humidity_dehumidifier')
+          ] %}
+          {% set readings = sensors
+            | reject('in', ['unavailable', 'unknown'])
+            | map('float', default=none)
+            | reject('none')
+            | list %}
+          {% if readings | length == 0 %}
+            {{ none }}
+          {% else %}
+            {# Drop readings outside sane range (5-99%) #}
+            {% set sane = readings | select('>=', 5) | select('<=', 99) | list %}
+            {% if sane | length == 0 %}
+              {{ none }}
+            {% elif sane | length <= 2 %}
+              {{ (sane | sum / sane | length) | round(1) }}
+            {% else %}
+              {# 3+ readings: compute median, drop any >15% RH from median, average the rest #}
+              {% set sorted = sane | sort | list %}
+              {% set mid = (sorted | length / 2) | int %}
+              {% set median = sorted[mid] if sorted | length is odd else
+                 (sorted[mid - 1] + sorted[mid]) / 2 %}
+              {% set filtered = sane
+                | select('>=', median - 15)
+                | select('<=', median + 15)
+                | list %}
+              {% if filtered | length == 0 %}
+                {{ median | round(1) }}
+              {% else %}
+                {{ (filtered | sum / filtered | length) | round(1) }}
+              {% endif %}
+            {% endif %}
+          {% endif %}
+        availability: >
+          {{ [
+            states('sensor.canopy_humidity_tent'),
+            states('sensor.flower_humidity_tent'),
+            states('sensor.indoor_humidity_air_conditioner_tent'),
+            states('sensor.current_humidity_dehumidifier')
+          ] | reject('in', ['unavailable', 'unknown']) | list | length > 0 }}
+
+      - name: "Tent Temperature"
+        unique_id: tent_temperature_averaged
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        icon: mdi:thermometer
+        state: >
+          {% set sensors = [
+            states('sensor.canopy_temperature_tent'),
+            states('sensor.flower_temperature_tent'),
+            states('sensor.indoor_temperature_air_conditioner_tent'),
+            states('sensor.temperature_camera_tent')
+          ] %}
+          {% set readings = sensors
+            | reject('in', ['unavailable', 'unknown'])
+            | map('float', default=none)
+            | reject('none')
+            | list %}
+          {% if readings | length == 0 %}
+            {{ none }}
+          {% else %}
+            {# Drop readings outside sane range (5-50°C) #}
+            {% set sane = readings | select('>=', 5) | select('<=', 50) | list %}
+            {% if sane | length == 0 %}
+              {{ none }}
+            {% elif sane | length <= 2 %}
+              {{ (sane | sum / sane | length) | round(1) }}
+            {% else %}
+              {# 3+ readings: compute median, drop any >5°C from median, average the rest #}
+              {% set sorted = sane | sort | list %}
+              {% set mid = (sorted | length / 2) | int %}
+              {% set median = sorted[mid] if sorted | length is odd else
+                 (sorted[mid - 1] + sorted[mid]) / 2 %}
+              {% set filtered = sane
+                | select('>=', median - 5)
+                | select('<=', median + 5)
+                | list %}
+              {% if filtered | length == 0 %}
+                {{ median | round(1) }}
+              {% else %}
+                {{ (filtered | sum / filtered | length) | round(1) }}
+              {% endif %}
+            {% endif %}
+          {% endif %}
+        availability: >
+          {{ [
+            states('sensor.canopy_temperature_tent'),
+            states('sensor.flower_temperature_tent'),
+            states('sensor.indoor_temperature_air_conditioner_tent'),
+            states('sensor.temperature_camera_tent')
+          ] | reject('in', ['unavailable', 'unknown']) | list | length > 0 }}
+
+  - binary_sensor:
+      - name: "Climate OK"
+        unique_id: grow_tent_climate_ok
+        device_class: safety
+        state: >
+          {% set temp = states('sensor.tent_temperature') | float(0) %}
+          {% set target_temp = states('input_number.grow_tent_target_temp') | float(0) %}
+          {% set humidity = states('sensor.tent_humidity') | float(0) %}
+          {% set target_humidity = states('input_number.grow_tent_target_humidity') | float(0) %}
+          {{ (temp - target_temp) | abs <= 3 and (humidity - target_humidity) | abs <= 10 }}
+
+      - name: "Watering Needed"
+        unique_id: grow_tent_watering_needed
+        device_class: moisture
+        state: >
+          {% set moisture = states('sensor.grow_tent_soil_moisture') | float(100) %}
+          {{ moisture < 30 }}
+
+# Automations are included from separate files
+automation: !include_dir_merge_list automations/
+script: !include_dir_merge_named scripts/
+
+# --- Phase 2: Needle valve temp control (hot/cold mixing) ---
+# Requires Phase 2 stepper hardware installed on tent-irrigation-controller.
+# Feedback: sensor.reservoir_temperature_tent (°C, Dallas DS18B20)
+# Setpoint: input_number.grow_tent_target_temp (°C)
+# Actuator: number.needle_valve_position_tent_irrigation_controller (0–1000 steps)
+# Dead band: ±0.5°C. Adjusts ±10 steps per 2-minute cycle.
+# Disable this automation until Phase 2 hardware is installed.
+
+# automation:
+#   - id: needle_valve_temp_control
+#     alias: "Needle Valve — Reservoir Temp Control"
+#     description: >
+#       Hysteresis control: opens needle valve (more hot water) when reservoir is
+#       below setpoint, closes it when above setpoint + dead band.
+#     trigger:
+#       - platform: time_pattern
+#         minutes: "/2"
+#     condition:
+#       - condition: state
+#         entity_id: input_boolean.grow_tent_automation_enabled
+#         state: "on"
+#       - condition: template
+#         value_template: >
+#           {{ states('sensor.reservoir_temperature_tent') not in ['unknown', 'unavailable'] }}
+#     action:
+#       - variables:
+#           current_temp: "{{ states('sensor.reservoir_temperature_tent') | float }}"
+#           target_temp: "{{ states('input_number.grow_tent_target_temp') | float }}"
+#           current_pos: >
+#             {{ state_attr('number.needle_valve_position_tent_irrigation_controller',
+#                           'value') | float(500) }}
+#           dead_band: 0.5
+#           step: 10
+#       - choose:
+#           - conditions:
+#               - condition: template
+#                 value_template: "{{ current_temp < (target_temp - dead_band) }}"
+#             sequence:
+#               - service: number.set_value
+#                 target:
+#                   entity_id: number.needle_valve_position_tent_irrigation_controller
+#                 data:
+#                   value: "{{ [current_pos + step, 1000] | min }}"
+#           - conditions:
+#               - condition: template
+#                 value_template: "{{ current_temp > (target_temp + dead_band) }}"
+#             sequence:
+#               - service: number.set_value
+#                 target:
+#                   entity_id: number.needle_valve_position_tent_irrigation_controller
+#                 data:
+#                   value: "{{ [current_pos - step, 0] | max }}"

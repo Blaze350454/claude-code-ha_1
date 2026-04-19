@@ -45,3 +45,9 @@ custom_components/
 !.storage/input_text
 !.storage/input_select
 !.storage/input_button
+
+# Editor/ad-hoc backups
+
+# OGB integration runtime data (logs, local state)
+ogb_data/
+*.bak*
