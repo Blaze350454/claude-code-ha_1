@@ -26,5 +26,4 @@ jobs:
         with:
           path: "."
           version: "2026.4.0"
-          secrets: |
-            some_password: fake_password_for_ci
+          secrets: "ci/fake_secrets.yaml"
