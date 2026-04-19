@@ -1,0 +1,30 @@
+name: Validate HA Config
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  yamllint:
+    name: YAML Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run yamllint
+        run: yamllint .
+
+  ha-config-check:
+    name: Home Assistant Config Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Home Assistant Core Configuration Check
+        uses: frenck/action-home-assistant@v1
+        with:
+          path: "."
+          version: "2026.4.0"
+          secrets: |
+            some_password: fake_password_for_ci
