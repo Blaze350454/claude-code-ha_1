@@ -325,49 +325,7 @@ grow_tent:
       initial: eco
       icon: mdi:lightning-bolt
 
-# Template sensors
-  sensor:
-    - platform: template
-      sensors:
-        grow_tent_dli:
-          friendly_name: "Daily Light Integral"
-          unit_of_measurement: "mol/m²/day"
-          icon_template: "mdi:white-balance-sunny"
-          value_template: >-
-            {# Calculate DLI from PPFD and light duration #}
-            {% set ppfd = states('sensor.grow_tent_ppfd') | float(0) %}
-            {% set hours = states('input_number.grow_tent_light_duration') | float(0) %}
-            {% if ppfd > 0 and hours > 0 %}
-              {{ ((ppfd * hours * 3.6) / 1000) | round(1) }}
-            {% else %}
-              0
-            {% endif %}
-
-        grow_tent_status:
-          friendly_name: "Grow Tent Status"
-          icon_template: >-
-            {% if is_state('binary_sensor.grow_tent_climate_ok', 'on') %}
-              mdi:check-circle
-            {% else %}
-              mdi:alert-circle
-            {% endif %}
-          value_template: >-
-            {% set temp = states('sensor.tent_temperature') | float(0) %}
-            {% set target_temp = states('input_number.grow_tent_target_temp') | float(0) %}
-            {% set humidity = states('sensor.tent_humidity') | float(0) %}
-            {% set target_humidity = states('input_number.grow_tent_target_humidity') | float(0) %}
-
-            {% if (temp - target_temp) | abs > 3 %}
-              Temperature Alert
-            {% elif (humidity - target_humidity) | abs > 10 %}
-              Humidity Alert
-            {% elif is_state('switch.grow_tent_lights', 'on') %}
-              Growing
-            {% else %}
-              Resting
-            {% endif %}
-
-# Humidifier threshold + averaged tent humidity (modern template format)
+# Modern template sensors
   template:
     - sensor:
         - name: "Humidifier On Threshold"
@@ -404,6 +362,45 @@ grow_tent:
             {% endif %}
           availability: >
             {{ states('sensor.tent_temperature') not in ['unknown', 'unavailable'] }}
+
+        - name: "Daily Light Integral"
+          unique_id: grow_tent_dli
+          default_entity_id: sensor.grow_tent_dli
+          unit_of_measurement: "mol/m²/day"
+          icon: mdi:white-balance-sunny
+          state: >
+            {# Calculate DLI from PPFD and light duration #}
+            {% set ppfd = states('sensor.grow_tent_ppfd') | float(0) %}
+            {% set hours = states('input_number.grow_tent_light_duration') | float(0) %}
+            {% if ppfd > 0 and hours > 0 %}
+              {{ ((ppfd * hours * 3.6) / 1000) | round(1) }}
+            {% else %}
+              0
+            {% endif %}
+
+        - name: "Grow Tent Status"
+          unique_id: grow_tent_status
+          default_entity_id: sensor.grow_tent_status
+          icon: >-
+            {% if is_state('binary_sensor.grow_tent_climate_ok', 'on') %}
+              mdi:check-circle
+            {% else %}
+              mdi:alert-circle
+            {% endif %}
+          state: >
+            {% set temp = states('sensor.tent_temperature') | float(0) %}
+            {% set target_temp = states('input_number.grow_tent_target_temp') | float(0) %}
+            {% set humidity = states('sensor.tent_humidity') | float(0) %}
+            {% set target_humidity = states('input_number.grow_tent_target_humidity') | float(0) %}
+            {% if (temp - target_temp) | abs > 3 %}
+              Temperature Alert
+            {% elif (humidity - target_humidity) | abs > 10 %}
+              Humidity Alert
+            {% elif is_state('switch.grow_tent_lights', 'on') %}
+              Growing
+            {% else %}
+              Resting
+            {% endif %}
 
 
         - name: "Tent Humidity"
