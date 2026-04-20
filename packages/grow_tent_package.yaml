@@ -329,25 +329,6 @@ grow_tent:
   sensor:
     - platform: template
       sensors:
-        grow_tent_vpd:
-          friendly_name: "Vapor Pressure Deficit"
-          unit_of_measurement: "kPa"
-          icon_template: "mdi:cloud"
-          value_template: >-
-            {# Calculate VPD from temperature and humidity #}
-            {% set temp = states('sensor.tent_temperature') | float(0) %}
-            {% set rh = states('sensor.tent_humidity') | float(0) %}
-            {% if temp > 0 and rh > 0 %}
-              {% set svp = 0.61078 * (2.71828 ** ((17.27 * temp) / (temp + 237.3))) %}
-              {% set vpd = svp * (1 - (rh / 100)) %}
-              {{ (vpd | float) | round(2) }}
-            {% else %}
-              unavailable
-            {% endif %}
-          availability_template: >-
-            {{ states('sensor.tent_temperature') not in ['unknown', 'unavailable'] and
-               states('sensor.tent_humidity') not in ['unknown', 'unavailable'] }}
-
         grow_tent_dli:
           friendly_name: "Daily Light Integral"
           unit_of_measurement: "mol/m²/day"
