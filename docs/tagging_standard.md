@@ -1,8 +1,8 @@
 # Home Assistant Tagging Standard
 
 **Version:** v1 (2026-04-23)
-**Scope:** Phase 1a + 1b — Tent garden (irrigation + climate + lighting). Extensible to all gardens and whole-home subsystems.
-**Status:** Active. Phase 1a applied 2026-04-23. Phase 1b applied 2026-04-23.
+**Scope:** Phases 1a + 1b + 1c + 1d (Tent garden — irrigation + climate + lighting + helper cleanup) and Phase 3d (3D printer). Extensible to remaining gardens and whole-home subsystems.
+**Status:** Active. Phases 1a/1b/1c/1d applied 2026-04-23. Phase 3d (3D printer) applied 2026-04-23.
 
 ## Purpose
 
@@ -35,8 +35,9 @@ One per entity (mandatory). Defines what the entity belongs to at the highest fu
 | `sys_climate` | Temp / humidity / airflow / CO2 / dehumidification |
 | `sys_lighting` | Grow lights + schedules |
 | `sys_power` *(reserved)* | Dedicated power delivery infrastructure (only when not subsumed by another sys). No tent entities use this — all tent Sonoffs are subsumed by their downstream system (HLG Sonoff → sys_lighting, etc.). |
+| `sys_printer` | 3D printers + their Kasa power outlets + integration/spool/camera entities. Applied phase 3d. |
 
-*Phase 2+:* `sys_security`, `sys_camera`, `sys_hvac`, `sys_water`, `sys_network`, `sys_energy`, `sys_appliance`, `sys_printer`, `sys_access`, `sys_entertainment`
+*Phase 2+:* `sys_security`, `sys_camera`, `sys_hvac`, `sys_water`, `sys_network`, `sys_energy`, `sys_appliance`, `sys_access`, `sys_entertainment`
 
 ### `sub_` — Subsystem / loop / zone
 
@@ -78,6 +79,8 @@ One or more per entity. Describes **what the entity is** at the device/sensor le
 | `fn_fan` | Any fan (circulation, exhaust, fresh-air, PWM, dehumidifier fan-swing) |
 | `fn_light` | Grow-light fixtures (HA `light` domain entities) |
 | `fn_climate` | Climate-control appliances (AC, humidifier, dehumidifier as a unit) |
+| `fn_camera` | Camera entities + their enable/image-sensor switches. Applied phase 3d to the Bambu P1S chamber cam; will extend to tent-cam in phase 2. |
+| `fn_sensor_status` | Diagnostic / status / error sensors that report a printer/device state string or error flag rather than a physical quantity (e.g. `binary_sensor.hms_errors_p1s`, `sensor.print_status_p1s`, `update.firmware_*`). Applied phase 3d. |
 | `fn_sensor_ec` *(reserved)* | EC / TDS |
 | `fn_sensor_ph` *(reserved)* | pH |
 
@@ -96,6 +99,8 @@ Exactly one per entity (mandatory). Used for alert routing and dashboard priorit
 | Label | Meaning |
 |---|---|
 | `grow` | Marks entities belonging to the grow operation across every garden. Applied to every `sys_irrigation` / `sys_climate` / `sys_lighting` entity in phase 1a+1b. Enables a master grow dashboard spanning Tent + future Tower + Vegetable. |
+| `bambu` | Brand/vendor tag for Bambu Lab 3D printer entities (P1S + Bambu Lab integration + Kasa `switch.bambu`). Lets automations target one printer when multiple brands are present. |
+| `prusa` | Brand/vendor tag for Prusa 3D printer entities. Currently only the Kasa outlet (`switch.prusa`) + its power-meter siblings — printer not yet wired. Reserved so entities land correctly when hardware comes online. |
 
 ## Required labels per entity
 
@@ -202,9 +207,47 @@ Post-1b snapshot: `Container Home/migration_snapshots/20260423-050316Z_post-phas
 - **Kasa outdoor plug outlets** (`switch.kasa_smart_outdoor_plug_switch_1/2`) — not in use. Phase 1b tagged them `sys_irrigation` + `fn_controller` + `sev_warning` based on the device name ("Irrigation Multi - Plug"); re-evaluate labels/severity when they come into use.
 - **Whole-home labels** (`3d_printer`, `pc`, `camera`, `electricity`, `outside`, `battery`, `wi_fi`, `power_switch`, `bambu`, `phone`, `firmware`) remain unchanged — phase 2+ scope.
 
+### Phase 1c / 1d — 2026-04-23 (helper / AC-subcontrol cleanup)
+
+Same day, two residual passes brought the tent-scope invariants to 100 % green:
+
+- **Phase 1c (21 stragglers):** 11 irrigation helpers (`input_boolean.feed_cycle_*`, flush-related, watering helpers), 8 climate automations/helpers, 2 lighting helpers that were missed in 1a/1b. Additive label merge; full `sys_/sev_/grow` triple applied per helper rules.
+- **Phase 1d (23 AC/dehumidifier sub-controls):** per-appliance helpers under `sub_climate_ac` / `sub_climate_dehumidifier` that expose mode/fan/swing/child-lock/buzzer/light toggles. One entity (`binary_sensor.full_dust_air_conditioner_tent`) was special-cased because it already had `sev_warning` — avoided a double-`sev_` merge conflict.
+
+After 1d, the 5 tent invariants hold across all 297 tent-scope entities: exactly one `sys_`, exactly one `sev_`, `grow` on every entity, `fn_` on every non-helper (except the 3 documented aggregated template sensors), no `fn_` on helpers.
+
+Post-1c snapshot: `Container Home/migration_snapshots/20260423-0*Z_post-phase1c/`
+Post-1d snapshot: `Container Home/migration_snapshots/20260423-0*Z_post-phase1d/`
+
+### Phase 3d — 2026-04-23 (3D printer)
+
+First whole-home sub-phase applied. Brought the Bambu P1S and its Kasa + integration + spool + camera + automation entities under `sys_printer` with brand tags:
+
+- Created 4 new labels: `sys_printer`, `fn_camera`, `fn_sensor_status`, `prusa`.
+- Tagged 69 entities: 60 Bambu P1S entities, 2 Bambu Lab integration entities, 2 External Spool entities, `switch.bambu` + `update.firmware_2_p1s` (Kasa main power + firmware), and 4 Prusa Kasa entities (`switch.prusa`, current/power/voltage). Also re-tagged 2 automations (`automation.bambu_light_on_power`, `automation.bambu_turn_off_after_print`).
+- Moved the Bambu Lab integration device into area `3d_printer` so its entities inherit area via device (the 60 P1S entities already had area from their device).
+- Deleted the legacy `3d_printer` label (redundant with `sys_printer`). Stripped `camera` from the 3 printer cam entities only (`camera.camera_p1s`, `switch.enable_camera_p1s`, `switch.use_image_sensor_camera_p1s`) — the `camera` label is kept alive for the phase-2 tent-cam entities.
+
+Printer-scope severity rules:
+- Print controls (pause/resume/stop buttons, main Kasa outlet `switch.bambu`) → `sev_critical` (failure = print damage / fire risk).
+- Error sensors (`binary_sensor.hms_errors_p1s`, `binary_sensor.print_error_p1s`) → `sev_critical` + `fn_sensor_status`.
+- Bed / nozzle actual temps → `sev_warning` + `fn_sensor_temp` (runaway = fire).
+- Bed / nozzle target/setpoint (`number.*_target_temperature_p1s`) → `sev_warning` + `fn_controller` (wrong setpoint = damage).
+- Heatbreak fan → `sev_warning` + `fn_fan`; cooling fan → `sev_info` + `fn_fan`.
+- Chamber light → `sev_info` + `fn_light`. Camera + enable/image-sensor switches → `sev_info` + `fn_camera`.
+- Online sensor + firmware update → `sev_warning` + `fn_sensor_status`. Other telemetry (fall back) → `sev_info` + `fn_sensor_status`.
+- Prusa Kasa switch → `sev_critical` + `fn_controller`; Prusa current/power/voltage → `sev_info` + `fn_power_meter`.
+
+Post-3d-printer snapshot: `Container Home/migration_snapshots/20260423-182956Z_post-phase3-printer/` (785 entities, 47 labels).
+
 ## Tooling
 
 - `Container Home/tag_migration_phase1a.py` — phase 1a migrator (irrigation): creates labels, moves `tent_irrigation` → `tent` area, tags entities, deletes old labels/areas. Idempotent. Dry-run default; `--apply` commits.
 - `Container Home/tag_migration_phase1b.py` — phase 1b migrator (climate/lighting + residual-irrigation ancillaries + `grow`): creates the climate/lighting labels, tags entities, retroactively adds `grow` to phase-1a entities, strips and deletes 7 superseded labels. Idempotent. Dry-run default; `--apply` commits.
+- `Container Home/tag_migration_phase1c.py` — phase 1c straggler patch (21 irrigation/climate/lighting helpers missed in 1a/1b). Additive merge. Dry-run default; `--apply` commits.
+- `Container Home/tag_migration_phase1d.py` — phase 1d AC/dehumidifier sub-controls (23 entities). Additive merge with one hard-coded special case for `binary_sensor.full_dust_air_conditioner_tent` to avoid double-`sev_`. Dry-run default; `--apply` commits.
+- `Container Home/tag_migration_phase3_printer.py` — phase 3d printer migrator (sys_printer / fn_camera / fn_sensor_status / prusa + Bambu + Prusa entity tagging; moves Bambu integration device to area `3d_printer`; deletes legacy `3d_printer` label; scoped `camera`-label strip). Dry-run default; `--apply` commits.
+- `Container Home/verify_tent_invariants.py` — re-runs the 5 tent invariants against the live registry. Handles the aggregated-sensor exception + deferred scope filter.
+- `Container Home/verify_flood_stop_targets.py` — confirms the flood-stop safety automation's 4 label-intersection targets resolve to the expected feed/flush pumps + valves.
 - `Container Home/registry_export.py` — snapshots all 4 registries as JSON under `migration_snapshots/<timestamp>[_label]/`. Run before every migration.
 - `Container Home/area_labeler.py` — legacy one-shot for the pre-2026-04-23 tent/tent_irrigation split. Superseded by `tag_migration_phase1a.py`.
