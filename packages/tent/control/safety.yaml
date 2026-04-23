@@ -32,6 +32,62 @@ tent_control_safety:
               bud rot. Disable 'Block Humidifier During Flower Nights' toggle
               to override this behavior.
       mode: single
+    - id: safety_table_drain_flood_stop
+      alias: "Safety — Table Drain Flood Stop"
+      description: >
+        When the table drain float reports FULL, immediately close all inflow
+        valves (feed + flush loops) and stop feed/flush pumps to halt further
+        water entering the tent. Uses label_id targeting so the action auto-
+        scales to any new pump/valve tagged sys_irrigation+fn_pump/fn_valve
+        within the feed/flush loops. Drain loop is intentionally untouched —
+        the existing `Irrigation — Table Drain Pump` automation handles it.
+        Fires regardless of the automation-enabled master toggle (safety first).
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.table_drain_full
+          to: "on"
+          for: "00:00:03"
+      actions:
+        - action: valve.close_valve
+          target:
+            label_id:
+              - sys_irrigation
+              - fn_valve
+              - sub_irrigation_feed_loop
+        - action: valve.close_valve
+          target:
+            label_id:
+              - sys_irrigation
+              - fn_valve
+              - sub_irrigation_flush_loop
+        - action: switch.turn_off
+          target:
+            label_id:
+              - sys_irrigation
+              - fn_pump
+              - sub_irrigation_feed_loop
+        - action: switch.turn_off
+          target:
+            label_id:
+              - sys_irrigation
+              - fn_pump
+              - sub_irrigation_flush_loop
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: "TENT FLOOD STOP"
+            message: >
+              Table drain reported FULL at {{ now().strftime('%H:%M:%S') }}.
+              Closed feed+flush inflow valves, stopped feed+flush pumps.
+              Drain pump is handling overflow. Investigate before resuming.
+        - action: persistent_notification.create
+          data:
+            notification_id: tent_flood_stop
+            title: "Tent Flood Stop triggered"
+            message: >
+              {{ now().strftime('%Y-%m-%d %H:%M:%S') }} — binary_sensor.table_drain_full
+              went ON. All feed+flush inflow halted. Drain pump engaged.
+      mode: single
+
     - id: safety_flower_night_humidifier_warning
       alias: "Safety — Flower Night Humidity High Warning"
       description: >
