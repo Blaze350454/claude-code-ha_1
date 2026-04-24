@@ -1,8 +1,8 @@
 # Home Assistant Tagging Standard
 
 **Version:** v1 (2026-04-23)
-**Scope:** Phases 1a + 1b + 1c + 1d (Tent garden — irrigation + climate + lighting + helper cleanup) and Phase 3d (3D printer). Extensible to remaining gardens and whole-home subsystems.
-**Status:** Active. Phases 1a/1b/1c/1d applied 2026-04-23. Phase 3d (3D printer) applied 2026-04-23.
+**Scope:** Phases 1a + 1b + 1c + 1d (Tent garden — irrigation + climate + lighting + helper cleanup), Phase 3d (3D printer), Phase 2 (Blink cameras — whole home). Extensible to remaining whole-home subsystems.
+**Status:** Active. Phases 1a/1b/1c/1d/3d/2 all applied 2026-04-23.
 
 ## Purpose
 
@@ -36,8 +36,9 @@ One per entity (mandatory). Defines what the entity belongs to at the highest fu
 | `sys_lighting` | Grow lights + schedules |
 | `sys_power` *(reserved)* | Dedicated power delivery infrastructure (only when not subsumed by another sys). No tent entities use this — all tent Sonoffs are subsumed by their downstream system (HLG Sonoff → sys_lighting, etc.). |
 | `sys_printer` | 3D printers + their Kasa power outlets + integration/spool/camera entities. Applied phase 3d. |
+| `sys_camera` | Whole-home surveillance cameras (Blink + future doorbells) + their motion/battery/temp/signal sensors + motion-detection switches + Blink sync-module alarm panels. Applied phase 2. |
 
-*Phase 2+:* `sys_security`, `sys_camera`, `sys_hvac`, `sys_water`, `sys_network`, `sys_energy`, `sys_appliance`, `sys_access`, `sys_entertainment`
+*Future:* `sys_security`, `sys_hvac`, `sys_water`, `sys_network`, `sys_energy`, `sys_appliance`, `sys_access`, `sys_entertainment`
 
 ### `sub_` — Subsystem / loop / zone
 
@@ -57,6 +58,8 @@ Zero or one per entity. System-scoped: `sub_<sys>_<loop>` to avoid collisions wh
 | `sub_climate_canopy` | Canopy-position BME280 sensor cluster (temp/humidity/pressure) |
 | `sub_climate_flower` | Flower-position BME280 sensor cluster (temp/humidity/pressure) |
 | `sub_climate_co2` | CO2 concentration monitor (+ raw ADC / corrected voltage) |
+| `sub_camera_indoor` | Cameras + sync module installed inside the house (bath room, bedroom, hall, kitchen, tent-cam — tent treated as indoor since enclosed) |
+| `sub_camera_outdoor` | Cameras installed outside (back door, front, front door, front driveway, garage, garden, water side) |
 
 *Lighting has no `sub_` labels yet — only 2 fixtures (HLG, Chilled). Target by device or `fn_light` instead.*
 
@@ -80,7 +83,10 @@ One or more per entity. Describes **what the entity is** at the device/sensor le
 | `fn_light` | Grow-light fixtures (HA `light` domain entities) |
 | `fn_climate` | Climate-control appliances (AC, humidifier, dehumidifier as a unit) |
 | `fn_camera` | Camera entities + their enable/image-sensor switches. Applied phase 3d to the Bambu P1S chamber cam; will extend to tent-cam in phase 2. |
-| `fn_sensor_status` | Diagnostic / status / error sensors that report a printer/device state string or error flag rather than a physical quantity (e.g. `binary_sensor.hms_errors_p1s`, `sensor.print_status_p1s`, `update.firmware_*`). Applied phase 3d. |
+| `fn_sensor_status` | Diagnostic / status / error sensors that report a printer/device state string or error flag rather than a physical quantity (e.g. `binary_sensor.hms_errors_p1s`, `sensor.print_status_p1s`, `update.firmware_*`, `binary_sensor.*_camera_armed`). Applied phase 3d + phase 2. |
+| `fn_sensor_motion` | PIR / motion binary sensors (applied phase 2 to all 12 Blink cameras). |
+| `fn_sensor_battery` | Battery level / low-battery binary sensors. Applied phase 2. |
+| `fn_sensor_signal` | Wi-Fi / RF signal strength sensors (Blink cams + bambu wifi). Applied phase 2. |
 | `fn_sensor_ec` *(reserved)* | EC / TDS |
 | `fn_sensor_ph` *(reserved)* | pH |
 
@@ -101,6 +107,7 @@ Exactly one per entity (mandatory). Used for alert routing and dashboard priorit
 | `grow` | Marks entities belonging to the grow operation across every garden. Applied to every `sys_irrigation` / `sys_climate` / `sys_lighting` entity in phase 1a+1b. Enables a master grow dashboard spanning Tent + future Tower + Vegetable. |
 | `bambu` | Brand/vendor tag for Bambu Lab 3D printer entities (P1S + Bambu Lab integration + Kasa `switch.bambu`). Lets automations target one printer when multiple brands are present. |
 | `prusa` | Brand/vendor tag for Prusa 3D printer entities. Currently only the Kasa outlet (`switch.prusa`) + its power-meter siblings — printer not yet wired. Reserved so entities land correctly when hardware comes online. |
+| `blink` | Brand/vendor tag for Blink camera entities (all 12 cams + 2 sync modules). Lets automations scope to Blink when future doorbells or other brands land. |
 
 ## Required labels per entity
 
@@ -201,11 +208,16 @@ Post-1b snapshot: `Container Home/migration_snapshots/20260423-050316Z_post-phas
 
 ### Deferred after phase 1b
 
-- **Camera Tent** device (7 entities: `camera.tent`, `binary_sensor.motion_camera_tent`, `binary_sensor.battery_camera_tent`, `binary_sensor.tent_camera_armed`, `switch.motion_detection_camera_tent`, `sensor.temperature_camera_tent`, `sensor.wi_fi_signal_strength_camera_tent`) → phase 2 (`sys_camera` / `sys_security`).
+- ~~**Camera Tent** device — deferred after 1b.~~ Resolved in phase 2 (2026-04-23) with `sys_camera` + `sub_camera_indoor` + `blink` + `grow`.
 - **Grow Tent Two ESP32 plant/flood moisture sensors** (22 entities: `sensor.grow_tent_two_plant_{1..9}_{volts,moisture}`, `sensor.grow_tent_two_flood_{1..4}_{volts,moisture}`) → reserved for future irrigation hardware; tag when wired to `sys_irrigation` with `fn_sensor_level`.
 - **Not currently in use** (user confirmed 2026-04-23 — leave untagged until they come into use): `switch.blank_2` (Kasa reservoir prime pump 2-outlet, second outlet), `switch.humidifier_2` (second entity on Humidifier device), `switch.grow_tent_one_extra_relay` (spare relay on grow-tent-one ESP32).
 - **Kasa outdoor plug outlets** (`switch.kasa_smart_outdoor_plug_switch_1/2`) — not in use. Phase 1b tagged them `sys_irrigation` + `fn_controller` + `sev_warning` based on the device name ("Irrigation Multi - Plug"); re-evaluate labels/severity when they come into use.
-- **Whole-home labels** (`3d_printer`, `pc`, `camera`, `electricity`, `outside`, `battery`, `wi_fi`, `power_switch`, `bambu`, `phone`, `firmware`) remain unchanged — phase 2+ scope.
+- **Whole-home legacy labels** — many superseded during phases 2 / 3d:
+  - `3d_printer` → deleted in phase 3d (replaced by `sys_printer`).
+  - `camera` → deleted in phase 2 (replaced by `sys_camera` + `fn_camera`).
+  - `wi_fi` → deleted in phase 2 (replaced by `fn_sensor_signal`).
+  - `battery` → still alive, used by 2 phone entities; will be replaced by `fn_sensor_battery` when phone scope is tagged in a future phase.
+  - Remaining legacy (`pc`, `electricity`, `outside`, `power_switch`, `phone`, `firmware`) — re-evaluated per future sub-phase.
 
 ### Phase 1c / 1d — 2026-04-23 (helper / AC-subcontrol cleanup)
 
@@ -240,6 +252,28 @@ Printer-scope severity rules:
 
 Post-3d-printer snapshot: `Container Home/migration_snapshots/20260423-182956Z_post-phase3-printer/` (785 entities, 47 labels).
 
+### Phase 2 — 2026-04-23 (Blink cameras, whole-home)
+
+First phase-2 / cross-location rollout. Tagged every Blink-platform entity in HA (12 cameras + 2 sync-module alarm panels + 72 per-camera sensors/switches):
+
+- Created 7 new labels: `sys_camera`, `blink`, `sub_camera_indoor`, `sub_camera_outdoor`, `fn_sensor_motion`, `fn_sensor_battery`, `fn_sensor_signal`.
+- Tagged 86 entities: 5 indoor cam devices (bath room, bedroom, hall, kitchen, camera tent) and 7 outdoor cam devices (back door, front, front door, front driveway, garage, garden, water side), plus the `alarm_control_panel.blink_indoor` / `alarm_control_panel.blink_outdoor` sync modules.
+- Tent camera stays indoor-classified and carries `grow` (it's part of the grow op — the one cam whose motion events are dashboard telemetry, not security alerts).
+- Retrofit: added `fn_sensor_signal` to `sensor.wi_fi_signal_bambu` (replacing `fn_sensor_status`) so every wifi-signal sensor home-wide carries the same `fn_`. Stripped a stray `wi_fi` label from `sensor.flow_rate_irrigation_tent` (phase-1a era misfit).
+- Deleted 2 legacy loose labels: `camera`, `wi_fi` (no remaining holders after migration). `battery` left alive — still used by 2 phone entities that are future phase-3 scope.
+
+Camera-scope severity rules:
+- Security camera entity → `sev_warning` + `fn_camera` (outdoor + non-tent indoor). Tent cam → `sev_info` + `fn_camera` + `grow`.
+- Motion binary sensor → `sev_warning` + `fn_sensor_motion` (security) / `sev_info` (tent).
+- Motion-detection switch → `sev_warning` + `fn_controller` (security — disabling = security gap) / `sev_info` (tent).
+- Battery binary sensor → `sev_warning` + `fn_sensor_battery` (blind-spot risk on low battery).
+- Camera-armed binary sensor → `sev_info` + `fn_sensor_status`.
+- Temperature + wi-fi signal sensors → `sev_info` + `fn_sensor_temp` / `fn_sensor_signal`.
+- Blink sync modules (`alarm_control_panel.blink_{indoor,outdoor}`) → `sev_warning` + `fn_controller`.
+
+Pre-phase-2 snapshot: `Container Home/migration_snapshots/20260423-193321Z_pre-phase2-camera/`
+Post-phase-2 snapshot: `Container Home/migration_snapshots/20260423-193422Z_post-phase2-camera/` (52 labels).
+
 ## Tooling
 
 - `Container Home/tag_migration_phase1a.py` — phase 1a migrator (irrigation): creates labels, moves `tent_irrigation` → `tent` area, tags entities, deletes old labels/areas. Idempotent. Dry-run default; `--apply` commits.
@@ -247,6 +281,7 @@ Post-3d-printer snapshot: `Container Home/migration_snapshots/20260423-182956Z_p
 - `Container Home/tag_migration_phase1c.py` — phase 1c straggler patch (21 irrigation/climate/lighting helpers missed in 1a/1b). Additive merge. Dry-run default; `--apply` commits.
 - `Container Home/tag_migration_phase1d.py` — phase 1d AC/dehumidifier sub-controls (23 entities). Additive merge with one hard-coded special case for `binary_sensor.full_dust_air_conditioner_tent` to avoid double-`sev_`. Dry-run default; `--apply` commits.
 - `Container Home/tag_migration_phase3_printer.py` — phase 3d printer migrator (sys_printer / fn_camera / fn_sensor_status / prusa + Bambu + Prusa entity tagging; moves Bambu integration device to area `3d_printer`; deletes legacy `3d_printer` label; scoped `camera`-label strip). Dry-run default; `--apply` commits.
+- `Container Home/tag_migration_phase2_camera.py` — phase 2 Blink camera migrator (sys_camera / blink / sub_camera_indoor / sub_camera_outdoor / fn_sensor_motion / fn_sensor_battery / fn_sensor_signal + 86 Blink entities + bambu-wifi retrofit + stray-label strip + deletes `camera` and `wi_fi` loose labels). Dry-run default; `--apply` commits.
 - `Container Home/verify_tent_invariants.py` — re-runs the 5 tent invariants against the live registry. Handles the aggregated-sensor exception + deferred scope filter.
 - `Container Home/verify_flood_stop_targets.py` — confirms the flood-stop safety automation's 4 label-intersection targets resolve to the expected feed/flush pumps + valves.
 - `Container Home/registry_export.py` — snapshots all 4 registries as JSON under `migration_snapshots/<timestamp>[_label]/`. Run before every migration.
