@@ -274,6 +274,21 @@ Camera-scope severity rules:
 Pre-phase-2 snapshot: `Container Home/migration_snapshots/20260423-193321Z_pre-phase2-camera/`
 Post-phase-2 snapshot: `Container Home/migration_snapshots/20260423-193422Z_post-phase2-camera/` (52 labels).
 
+### Mom Grow onboarding — 2026-04-24
+
+Second grow garden added. Kasa EP40M 2-outlet plug strip installed with lights on plug 2; plug 1 is reserve (nothing plugged in yet).
+
+- Created `Main` floor (added to registry — first non-loft non-outside floor).
+- Created area `Mom Grow` on `Main` floor.
+- Renamed Kasa sub-device "Mom Grow 2" → "Mom Grow Lights".
+- Renamed every entity_id from `unnamed_ep40m_*` → `mom_grow_*` convention (16 entities).
+- Moved all 3 devices (parent strip + 2 outlet sub-devices) into `Mom Grow`.
+- Applied `sys_lighting` + `grow` + appropriate `fn_`/`sev_` to all 16 entities. Strip-level diagnostics (cloud connection, signal, SSID, device time, LED, auto-update) tagged under `sys_lighting` because the only active load on the strip is lights; plug 1 will be re-tagged when its future load arrives.
+- Plug-1 empty outlet (`switch.mom_grow_1`) tagged `sev_info` as reserve. Plug-2 lights outlet (`switch.mom_grow_lights`) tagged `sev_critical` (photoperiod failure stresses plants, same as tent HLG). Both overheated binary sensors → `sev_critical` + `fn_sensor_status`.
+
+Pre-mom-grow snapshot: `Container Home/migration_snapshots/20260424-015538Z_pre-mom-grow/`
+Post-mom-grow snapshot: `Container Home/migration_snapshots/20260424-015643Z_post-mom-grow/` (51 labels, 468 in-scope entities).
+
 ## Tooling
 
 - `Container Home/tag_migration_phase1a.py` — phase 1a migrator (irrigation): creates labels, moves `tent_irrigation` → `tent` area, tags entities, deletes old labels/areas. Idempotent. Dry-run default; `--apply` commits.
@@ -285,6 +300,7 @@ Post-phase-2 snapshot: `Container Home/migration_snapshots/20260423-193422Z_post
 - `Container Home/tag_migration_firmware_cleanup.py` — follow-up patch that added `fn_sensor_status` to 6 `update.*_firmware` entities in the tent scope (missed in 1a/1b/1c/1d because the `update` domain wasn't in the scope filter). Also stripped + deleted the loose `firmware` label (zero holders post-patch). Dry-run default; `--apply` commits.
 - `Container Home/verify_tent_invariants.py` — tent-scope verifier (5 invariants).
 - `Container Home/verify_whole_home_invariants.py` — whole-home verifier across every tagged `sys_`: 5 core invariants + 3 cross-cutting checks (`grow` on tent entities, `blink` on cameras, brand on printers). Excludes deferred and future-hardware entities. Authoritative verification after any migration.
+- `Container Home/tag_migration_mom_grow.py` — Mom Grow onboarding migrator: creates `Main` floor + `Mom Grow` area, renames the Kasa EP40M strip's plug-2 sub-device to "Mom Grow Lights", renames all 16 `unnamed_ep40m_*` entity IDs to the `mom_grow_*` convention, moves the 3 devices into the area, applies `sys_lighting` + `grow` + per-entity `fn_`/`sev_` tags. Idempotent. Dry-run default; `--apply` commits.
 - `Container Home/verify_tent_invariants.py` — re-runs the 5 tent invariants against the live registry. Handles the aggregated-sensor exception + deferred scope filter.
 - `Container Home/verify_flood_stop_targets.py` — confirms the flood-stop safety automation's 4 label-intersection targets resolve to the expected feed/flush pumps + valves.
 - `Container Home/registry_export.py` — snapshots all 4 registries as JSON under `migration_snapshots/<timestamp>[_label]/`. Run before every migration.
