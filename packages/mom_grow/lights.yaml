@@ -1,0 +1,256 @@
+mom_grow_lights:
+  # ------------------------------------------------------------------
+  # Helpers — UI-editable schedule + master toggle + enforcement latch.
+  # ------------------------------------------------------------------
+  input_boolean:
+    mom_grow_lights_automation_enabled:
+      name: Mom Grow Lights Automation Enabled
+      icon: mdi:clock-check
+    mom_grow_lights_enforce_fail:
+      name: Mom Grow Lights Enforcement Failed
+      icon: mdi:alert-circle
+
+  input_datetime:
+    mom_grow_lights_on_time:
+      name: Mom Grow Lights On Time
+      has_date: false
+      has_time: true
+      icon: mdi:lightbulb-on
+    mom_grow_lights_off_time:
+      name: Mom Grow Lights Off Time
+      has_date: false
+      has_time: true
+      icon: mdi:lightbulb-off
+
+  # ------------------------------------------------------------------
+  # Automations.
+  # ------------------------------------------------------------------
+  automation:
+    - id: mom_grow_lights_scheduler
+      alias: "Mom Grow Lights — Scheduler"
+      description: >
+        Every minute, compare switch.mom_grow_lights to the desired state
+        based on the on/off time helpers. If they disagree, issue an
+        explicit switch.turn_on or switch.turn_off (never toggle). Wait
+        15s and re-verify; retry once, then notify. Uses a latch helper
+        so the failure notification fires once per failure window instead
+        of every minute. Runs every minute so HA restarts, missed
+        triggers, and manual drift self-heal inside 60s.
+      triggers:
+        - trigger: time_pattern
+          minutes: /1
+      conditions:
+        - condition: state
+          entity_id: input_boolean.mom_grow_lights_automation_enabled
+          state: "on"
+        - condition: not
+          conditions:
+            - condition: state
+              entity_id: switch.mom_grow_lights
+              state: "unavailable"
+            - condition: state
+              entity_id: switch.mom_grow_lights
+              state: "unknown"
+      variables:
+        desired: >-
+          {%- set on_t = states('input_datetime.mom_grow_lights_on_time') -%}
+          {%- set off_t = states('input_datetime.mom_grow_lights_off_time') -%}
+          {%- set on_m = (on_t.split(':')[0] | int * 60) + (on_t.split(':')[1] | int) -%}
+          {%- set off_m = (off_t.split(':')[0] | int * 60) + (off_t.split(':')[1] | int) -%}
+          {%- set now_m = now().hour * 60 + now().minute -%}
+          {%- if on_m < off_m -%}
+          {{ 'on' if (now_m >= on_m and now_m < off_m) else 'off' }}
+          {%- else -%}
+          {{ 'on' if (now_m >= on_m or now_m < off_m) else 'off' }}
+          {%- endif -%}
+        current: "{{ states('switch.mom_grow_lights') }}"
+      actions:
+        - choose:
+            # --- Already in desired state: clear fail latch if set. ---
+            - conditions:
+                - condition: template
+                  value_template: "{{ current == desired }}"
+              sequence:
+                - if:
+                    - condition: state
+                      entity_id: input_boolean.mom_grow_lights_enforce_fail
+                      state: "on"
+                  then:
+                    - action: input_boolean.turn_off
+                      target:
+                        entity_id: input_boolean.mom_grow_lights_enforce_fail
+                    - action: persistent_notification.dismiss
+                      data:
+                        notification_id: mom_grow_lights_enforce_fail
+                    - action: notify.mobile_app_sm_a166w
+                      data:
+                        title: "Mom Grow Lights — Recovered"
+                        message: >
+                          switch.mom_grow_lights is now '{{ desired }}' as
+                          expected. Enforcement failure cleared.
+            # --- Drift detected: enforce with retry. ---
+            - conditions:
+                - condition: template
+                  value_template: "{{ current != desired }}"
+              sequence:
+                # Attempt 1 — explicit on/off, never toggle.
+                - choose:
+                    - conditions:
+                        - condition: template
+                          value_template: "{{ desired == 'on' }}"
+                      sequence:
+                        - action: switch.turn_on
+                          target:
+                            entity_id: switch.mom_grow_lights
+                    - conditions:
+                        - condition: template
+                          value_template: "{{ desired == 'off' }}"
+                      sequence:
+                        - action: switch.turn_off
+                          target:
+                            entity_id: switch.mom_grow_lights
+                - delay: "00:00:15"
+                # Attempt 2 (if still wrong).
+                - if:
+                    - condition: template
+                      value_template: "{{ states('switch.mom_grow_lights') != desired }}"
+                  then:
+                    - choose:
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ desired == 'on' }}"
+                          sequence:
+                            - action: switch.turn_on
+                              target:
+                                entity_id: switch.mom_grow_lights
+                        - conditions:
+                            - condition: template
+                              value_template: "{{ desired == 'off' }}"
+                          sequence:
+                            - action: switch.turn_off
+                              target:
+                                entity_id: switch.mom_grow_lights
+                    - delay: "00:00:10"
+                    # After 2 attempts, if still wrong, notify (latched).
+                    - if:
+                        - condition: template
+                          value_template: "{{ states('switch.mom_grow_lights') != desired }}"
+                        - condition: state
+                          entity_id: input_boolean.mom_grow_lights_enforce_fail
+                          state: "off"
+                      then:
+                        - action: input_boolean.turn_on
+                          target:
+                            entity_id: input_boolean.mom_grow_lights_enforce_fail
+                        - action: notify.mobile_app_sm_a166w
+                          data:
+                            title: "Mom Grow Lights — Enforcement Failed"
+                            message: >
+                              switch.mom_grow_lights failed to reach
+                              '{{ desired }}' after 2 attempts. Current
+                              state is '{{ states('switch.mom_grow_lights') }}'.
+                              Check the Kasa EP40M strip (plug 2).
+                        - action: persistent_notification.create
+                          data:
+                            notification_id: mom_grow_lights_enforce_fail
+                            title: "Mom Grow Lights — Enforcement Failed"
+                            message: >
+                              {{ now().strftime('%Y-%m-%d %H:%M:%S') }} —
+                              desired={{ desired }},
+                              actual={{ states('switch.mom_grow_lights') }}.
+                              Auto-retry every minute; this notification
+                              will not re-fire until enforcement recovers.
+      mode: single
+
+    - id: mom_grow_lights_offline_alert
+      alias: "Mom Grow Lights — Offline Alert"
+      description: >
+        Notify when the Kasa plug reports unavailable or unknown for 2
+        minutes. Covers Wi-Fi drop, Kasa cloud outage, or device power
+        loss. The scheduler skips runs while the switch is offline, so
+        no enforcement-fail spam can stack up alongside this alert.
+      triggers:
+        - trigger: state
+          entity_id: switch.mom_grow_lights
+          to: "unavailable"
+          for: "00:02:00"
+        - trigger: state
+          entity_id: switch.mom_grow_lights
+          to: "unknown"
+          for: "00:02:00"
+      actions:
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: "Mom Grow Lights — Offline"
+            message: >
+              switch.mom_grow_lights has been
+              {{ states('switch.mom_grow_lights') }} for 2 minutes.
+              Photoperiod cannot be enforced. Check Wi-Fi / power on
+              the Kasa EP40M strip.
+        - action: persistent_notification.create
+          data:
+            notification_id: mom_grow_lights_offline
+            title: "Mom Grow Lights — Offline"
+            message: >
+              {{ now().strftime('%Y-%m-%d %H:%M:%S') }} — switch went
+              {{ states('switch.mom_grow_lights') }}.
+      mode: single
+
+    - id: mom_grow_lights_recovered_alert
+      alias: "Mom Grow Lights — Back Online"
+      description: >
+        Notify once when the plug transitions from unavailable/unknown
+        back to a known state so we know the outage ended. Dismisses
+        the offline persistent notification.
+      triggers:
+        - trigger: state
+          entity_id: switch.mom_grow_lights
+          from: "unavailable"
+        - trigger: state
+          entity_id: switch.mom_grow_lights
+          from: "unknown"
+      conditions:
+        - condition: template
+          value_template: "{{ trigger.to_state.state in ['on', 'off'] }}"
+      actions:
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: "Mom Grow Lights — Back Online"
+            message: >
+              switch.mom_grow_lights is back online (state =
+              {{ states('switch.mom_grow_lights') }}). Scheduler will
+              resume within 60s.
+        - action: persistent_notification.dismiss
+          data:
+            notification_id: mom_grow_lights_offline
+      mode: single
+
+    - id: mom_grow_lights_overheated_alert
+      alias: "Mom Grow Lights — Plug Overheated"
+      description: >
+        The Kasa EP40M reports plug 2 as overheated. This is a hardware
+        protection trip — the strip shuts the outlet off on its own.
+        Notify critically and leave the strip alone; re-enabling is a
+        manual decision after investigating wiring / load / ambient.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.mom_grow_lights_overheated
+          to: "on"
+      actions:
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: "CRITICAL — Mom Grow Lights Overheated"
+            message: >
+              Kasa EP40M (plug 2 / Mom Grow Lights) reported OVERHEATED
+              at {{ now().strftime('%H:%M:%S') }}. Outlet shut off by
+              hardware protection. Check wiring, load, and ambient
+              temperature before re-enabling.
+        - action: persistent_notification.create
+          data:
+            notification_id: mom_grow_lights_overheated
+            title: "Mom Grow Lights — OVERHEATED"
+            message: >
+              {{ now().strftime('%Y-%m-%d %H:%M:%S') }} — hardware
+              overheat protection tripped on plug 2 (Mom Grow Lights).
+              Investigate before re-enabling the outlet.
+      mode: single
