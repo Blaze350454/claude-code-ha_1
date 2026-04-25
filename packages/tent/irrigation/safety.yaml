@@ -148,6 +148,58 @@ tent_irrigation_safety:
             title: Flush Blocked — Reservoir Dry
             message: Flush pump, stir pump, or valve turned off. Flush reservoir is dry.
       mode: single
+    - id: automation.irrigation_block_feed_fill_when_reservoir_full
+      alias: Irrigation — Block Feed Fill When Reservoir Full
+      description: Closes feed fill valve immediately if open while feed reservoir is full
+      triggers:
+        - trigger: state
+          entity_id: valve.feed_fill_valve_irrigation_tent
+          to: open
+        - trigger: state
+          entity_id: binary_sensor.feed_full_irrigation_tent
+          to: 'on'
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.feed_full_irrigation_tent
+          state: 'on'
+        - condition: state
+          entity_id: valve.feed_fill_valve_irrigation_tent
+          state: open
+      actions:
+        - action: valve.close_valve
+          target:
+            entity_id: valve.feed_fill_valve_irrigation_tent
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Feed Fill Blocked — Reservoir Full
+            message: Feed fill valve closed. Feed reservoir is full.
+      mode: single
+    - id: automation.irrigation_block_flush_fill_when_reservoir_full
+      alias: Irrigation — Block Flush Fill When Reservoir Full
+      description: Closes flush fill valve immediately if open while flush reservoir is full
+      triggers:
+        - trigger: state
+          entity_id: valve.flush_fill_valve_irrigation_tent
+          to: open
+        - trigger: state
+          entity_id: binary_sensor.flush_full_irrigation_tent
+          to: 'on'
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.flush_full_irrigation_tent
+          state: 'on'
+        - condition: state
+          entity_id: valve.flush_fill_valve_irrigation_tent
+          state: open
+      actions:
+        - action: valve.close_valve
+          target:
+            entity_id: valve.flush_fill_valve_irrigation_tent
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Flush Fill Blocked — Reservoir Full
+            message: Flush fill valve closed. Flush reservoir is full.
+      mode: single
     - id: automation.irrigation_table_drain_empty_block
       alias: Irrigation — Block Table Drain Pump When Dry
       description: Turns off table drain pump immediately if activated while table drain is empty
@@ -183,18 +235,20 @@ tent_irrigation_safety:
                 - action: automation.turn_off
                   target:
                     entity_id:
-                      - automation.irrigation_feed_empty_block
-                      - automation.irrigation_flush_empty_block
-                      - automation.irrigation_table_drain_empty_block
-                      - automation.irrigation_daily_setup
+                      - automation.irrigation_block_feed_when_reservoir_dry
+                      - automation.irrigation_block_flush_when_reservoir_dry
+                      - automation.irrigation_block_feed_fill_when_reservoir_full
+                      - automation.irrigation_block_flush_fill_when_reservoir_full
+                      - automation.irrigation_block_table_drain_pump_when_dry
+                      - automation.irrigation_daily_setup_at_lights_on
                       - automation.irrigation_feed_trigger
-                      - automation.irrigation_lights_off_stop
+                      - automation.irrigation_lights_off_cleanup
                       - automation.irrigation_night_cycle_start
                       - automation.irrigation_night_cycle_stop
-                      - automation.irrigation_pre_feed_start
-                      - automation.irrigation_pre_feed_stop
+                      - automation.irrigation_pre_feed_air_stir_start
+                      - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
-                      - automation.table_drain_pump_control
+                      - automation.irrigation_table_drain_pump
                       - automation.irrigation_watchdog
                       - automation.irrigation_maintenance_cycle
                 - action: script.turn_off
@@ -208,18 +262,20 @@ tent_irrigation_safety:
                 - action: automation.turn_on
                   target:
                     entity_id:
-                      - automation.irrigation_feed_empty_block
-                      - automation.irrigation_flush_empty_block
-                      - automation.irrigation_table_drain_empty_block
-                      - automation.irrigation_daily_setup
+                      - automation.irrigation_block_feed_when_reservoir_dry
+                      - automation.irrigation_block_flush_when_reservoir_dry
+                      - automation.irrigation_block_feed_fill_when_reservoir_full
+                      - automation.irrigation_block_flush_fill_when_reservoir_full
+                      - automation.irrigation_block_table_drain_pump_when_dry
+                      - automation.irrigation_daily_setup_at_lights_on
                       - automation.irrigation_feed_trigger
-                      - automation.irrigation_lights_off_stop
+                      - automation.irrigation_lights_off_cleanup
                       - automation.irrigation_night_cycle_start
                       - automation.irrigation_night_cycle_stop
-                      - automation.irrigation_pre_feed_start
-                      - automation.irrigation_pre_feed_stop
+                      - automation.irrigation_pre_feed_air_stir_start
+                      - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
-                      - automation.table_drain_pump_control
+                      - automation.irrigation_table_drain_pump
                       - automation.irrigation_maintenance_cycle
                       - automation.irrigation_watchdog
     - alias: Toggle — Irrigation Tent All Off
@@ -237,21 +293,22 @@ tent_irrigation_safety:
                 - action: automation.turn_off
                   target:
                     entity_id:
-                      - automation.air_pump_controll
                       - automation.fill_feed_reservoir
                       - automation.fill_flush_reservoir
-                      - automation.irrigation_feed_empty_block
-                      - automation.irrigation_flush_empty_block
-                      - automation.irrigation_table_drain_empty_block
-                      - automation.irrigation_daily_setup
+                      - automation.irrigation_block_feed_when_reservoir_dry
+                      - automation.irrigation_block_flush_when_reservoir_dry
+                      - automation.irrigation_block_feed_fill_when_reservoir_full
+                      - automation.irrigation_block_flush_fill_when_reservoir_full
+                      - automation.irrigation_block_table_drain_pump_when_dry
+                      - automation.irrigation_daily_setup_at_lights_on
                       - automation.irrigation_feed_trigger
-                      - automation.irrigation_lights_off_stop
+                      - automation.irrigation_lights_off_cleanup
                       - automation.irrigation_night_cycle_start
                       - automation.irrigation_night_cycle_stop
-                      - automation.irrigation_pre_feed_start
-                      - automation.irrigation_pre_feed_stop
+                      - automation.irrigation_pre_feed_air_stir_start
+                      - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
-                      - automation.table_drain_pump_control
+                      - automation.irrigation_table_drain_pump
                       - automation.irrigation_watchdog
                       - automation.irrigation_maintenance_cycle
                 - action: script.turn_off
@@ -288,21 +345,22 @@ tent_irrigation_safety:
                 - action: automation.turn_on
                   target:
                     entity_id:
-                      - automation.air_pump_controll
                       - automation.fill_feed_reservoir
                       - automation.fill_flush_reservoir
-                      - automation.irrigation_feed_empty_block
-                      - automation.irrigation_flush_empty_block
-                      - automation.irrigation_table_drain_empty_block
-                      - automation.irrigation_daily_setup
+                      - automation.irrigation_block_feed_when_reservoir_dry
+                      - automation.irrigation_block_flush_when_reservoir_dry
+                      - automation.irrigation_block_feed_fill_when_reservoir_full
+                      - automation.irrigation_block_flush_fill_when_reservoir_full
+                      - automation.irrigation_block_table_drain_pump_when_dry
+                      - automation.irrigation_daily_setup_at_lights_on
                       - automation.irrigation_feed_trigger
-                      - automation.irrigation_lights_off_stop
+                      - automation.irrigation_lights_off_cleanup
                       - automation.irrigation_night_cycle_start
                       - automation.irrigation_night_cycle_stop
-                      - automation.irrigation_pre_feed_start
-                      - automation.irrigation_pre_feed_stop
+                      - automation.irrigation_pre_feed_air_stir_start
+                      - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
-                      - automation.table_drain_pump_control
+                      - automation.irrigation_table_drain_pump
                       - automation.irrigation_maintenance_cycle
                       - automation.irrigation_watchdog
 
