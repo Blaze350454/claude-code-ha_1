@@ -17,7 +17,7 @@
       {
         "id": "flush_day_counter",
         "name": "Flush Day Counter",
-        "min": 1.0,
+        "min": 0.0,
         "max": 3.0,
         "step": 1.0,
         "mode": "box",
