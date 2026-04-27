@@ -2,7 +2,12 @@ tent_irrigation_safety:
   automation:
     - id: automation.irrigation_watchdog
       alias: Irrigation — Watchdog
-      description: Forces all pumps and valves off if any pump runs for more than 10 minutes
+      description: >
+        Forces all pumps and valves off if any pump runs longer than its
+        expected max. Tiered thresholds: feed/flush 10 min, stir 30 min
+        (covers full alternating cycles + buffer), air 60 min (covers night
+        cycle ramp + buffer), drain 35 min (drainage automation has 30 min
+        internal timeout).
       triggers:
         - trigger: state
           entity_id:
@@ -11,6 +16,23 @@ tent_irrigation_safety:
           to: 'on'
           for:
             minutes: 10
+        - trigger: state
+          entity_id:
+            - switch.feed_stir_pump_irrigation_tent
+            - switch.flush_stir_pump_irrigation_tent
+          to: 'on'
+          for:
+            minutes: 30
+        - trigger: state
+          entity_id: switch.air_pump_irrigation_tent
+          to: 'on'
+          for:
+            minutes: 60
+        - trigger: state
+          entity_id: switch.table_drain_pump_irrigation_tent
+          to: 'on'
+          for:
+            minutes: 35
       actions:
         - action: script.stop_alternating
         - action: script.turn_off
@@ -426,6 +448,62 @@ tent_irrigation_safety:
           target:
             entity_id: switch.air_pump_irrigation_tent
       mode: single
+
+    - id: automation.irrigation_low_flow_safety
+      alias: Irrigation — Low Flow Safety
+      description: >
+        If a feed/flush pump has been running for 2 minutes but flow rate is
+        still below 0.5 L/min, assume clogged emitter, dry pump head, kinked
+        line, or sensor failure. Force all pumps and valves off, set FAULT
+        status, notify. 2 min waits for the pulse-counter sensor (60 s update
+        interval) to publish at least one reading from a fully pump-on window.
+      triggers:
+        - trigger: state
+          entity_id:
+            - switch.feed_pump_irrigation_tent
+            - switch.flush_pump_irrigation_tent
+          to: 'on'
+          for:
+            minutes: 2
+      conditions:
+        - condition: numeric_state
+          entity_id: sensor.flow_rate_tent
+          below: 0.5
+      actions:
+        - action: script.stop_alternating
+        - action: script.turn_off
+          target:
+            entity_id:
+              - script.run_feed_cycle
+              - script.run_normal_flush
+              - script.run_day3_flush
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.feed_pump_irrigation_tent
+              - switch.flush_pump_irrigation_tent
+              - switch.feed_stir_pump_irrigation_tent
+              - switch.flush_stir_pump_irrigation_tent
+              - switch.air_pump_irrigation_tent
+        - action: valve.close_valve
+          target:
+            entity_id:
+              - valve.feed_valve_irrigation_tent
+              - valve.flush_valve_irrigation_tent
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.irrigation_status
+          data:
+            value: FAULT — Low flow with pump on
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Irrigation Low Flow Alert
+            message: >
+              Pump running but flow rate is {{ states('sensor.flow_rate_tent') }} L/min
+              after 2 min. Possible clogged emitter, dry pump, kinked line, or
+              sensor failure. All pumps and valves forced off — investigate.
+      mode: single
+
 # Humidity Control — mode-based switching between humidify / dehumidify
 # Mode selector: input_select.tent_humidity_mode (Humidify / Dehumidify / Off)
 # Fogger smart plug: switch.humidifier

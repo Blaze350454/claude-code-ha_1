@@ -11,6 +11,9 @@ tent_irrigation_schedule:
           entity_id: input_boolean.irrigation_enabled
           state: 'on'
       actions:
+        - action: automation.turn_on
+          target:
+            entity_id: automation.irrigation_maintenance_cycle
         - action: input_number.set_value
           target:
             entity_id: input_number.current_feed_number
@@ -127,6 +130,11 @@ tent_irrigation_schedule:
               - valve.feed_valve_irrigation_tent
               - valve.flush_valve_irrigation_tent
               - valve.flush_drain_valve_irrigation_tent
+        - action: automation.turn_off
+          target:
+            entity_id: automation.irrigation_maintenance_cycle
+          data:
+            stop_actions: true
         - action: input_text.set_value
           target:
             entity_id: input_text.irrigation_status
