@@ -409,7 +409,7 @@ tent_irrigation_safety:
               - switch.feed_stir_pump_irrigation_tent
               - switch.flush_stir_pump_irrigation_tent
         - delay:
-            minutes: "{{ states(input_number.maintenance_stir_minutes) | int }}"
+            minutes: "{{ states('input_number.maintenance_stir_minutes') | int }}"
         - action: switch.turn_off
           target:
             entity_id:
@@ -421,7 +421,7 @@ tent_irrigation_safety:
           target:
             entity_id: switch.air_pump_irrigation_tent
         - delay:
-            minutes: "{{ states(input_number.maintenance_air_minutes) | int }}"
+            minutes: "{{ states('input_number.maintenance_air_minutes') | int }}"
         - action: switch.turn_off
           target:
             entity_id: switch.air_pump_irrigation_tent
