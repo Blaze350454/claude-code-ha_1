@@ -2,45 +2,69 @@ tent_irrigation_reservoirs:
   automation:
     - id: automation.fill_feed_reservoir
       alias: Fill — Feed Reservoir
-      description: Opens feed fill valve until reservoir full sensor triggers or timeout
+      description: >
+        Whenever the feed fill valve opens (manually or scripted), waits for
+        the reservoir-full float to trip and then closes the valve. If the
+        float never trips, closes after 4 min 25 sec as a safety timeout.
       triggers:
-        - trigger: event
-          event_type: fill_feed_reservoir_start
+        - trigger: state
+          entity_id: valve.feed_fill_valve_irrigation_tent
+          to: 'open'
       actions:
-        - action: valve.open_valve
-          target:
-            entity_id: valve.feed_fill_valve_irrigation_tent
         - wait_for_trigger:
             - platform: state
               entity_id: binary_sensor.feed_full_irrigation_tent
               to: 'on'
           timeout:
-            minutes: 2
-            seconds: 30
+            minutes: 4
+            seconds: 25
         - action: valve.close_valve
           target:
             entity_id: valve.feed_fill_valve_irrigation_tent
+        - if:
+            - condition: template
+              value_template: '{{ wait.completed == false }}'
+          then:
+            - action: notify.mobile_app_sm_a166w
+              data:
+                title: Feed Fill Timeout
+                message: >
+                  Feed fill valve was open for 4 min 25 sec without the full
+                  float tripping — auto-closed. Verify reservoir level and
+                  float sensor.
       mode: single
     - id: automation.fill_flush_reservoir
       alias: Fill — Flush Reservoir
-      description: Opens flush fill valve until flush full sensor triggers or timeout
+      description: >
+        Whenever the flush fill valve opens (manually or scripted), waits for
+        the reservoir-full float to trip and then closes the valve. If the
+        float never trips, closes after 4 min 35 sec as a safety timeout.
       triggers:
-        - trigger: event
-          event_type: fill_flush_reservoir_start
+        - trigger: state
+          entity_id: valve.flush_fill_valve_irrigation_tent
+          to: 'open'
       actions:
-        - action: valve.open_valve
-          target:
-            entity_id: valve.flush_fill_valve_irrigation_tent
         - wait_for_trigger:
             - platform: state
               entity_id: binary_sensor.flush_full_irrigation_tent
               to: 'on'
           timeout:
-            minutes: 2
-            seconds: 30
+            minutes: 4
+            seconds: 35
         - action: valve.close_valve
           target:
             entity_id: valve.flush_fill_valve_irrigation_tent
+        - if:
+            - condition: template
+              value_template: '{{ wait.completed == false }}'
+          then:
+            - action: notify.mobile_app_sm_a166w
+              data:
+                title: Flush Fill Timeout
+                message: >
+                  Flush fill valve was open for 4 min 35 sec without the full
+                  float tripping — auto-closed. Verify reservoir level and
+                  float sensor.
       mode: single
     - id: automation.feed_reservoir_empty_alert
       alias: Alert — Feed Reservoir Dry

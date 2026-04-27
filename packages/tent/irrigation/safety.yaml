@@ -504,52 +504,6 @@ tent_irrigation_safety:
               sensor failure. All pumps and valves forced off — investigate.
       mode: single
 
-    - id: automation.irrigation_feed_fill_valve_timeout
-      alias: Irrigation — Feed Fill Valve Timeout
-      description: >
-        Auto-closes the feed reservoir fill valve after 4 min 25 sec of being
-        open, in case the user forgets to close it manually. Approximate fill
-        time for a full reservoir from the supply line. Adjust as needed.
-      triggers:
-        - trigger: state
-          entity_id: valve.feed_fill_valve_irrigation_tent
-          to: 'open'
-          for: '00:04:25'
-      actions:
-        - action: valve.close_valve
-          target:
-            entity_id: valve.feed_fill_valve_irrigation_tent
-        - action: notify.mobile_app_sm_a166w
-          data:
-            title: Feed Fill Valve Auto-Closed
-            message: >
-              Feed fill valve was open for 4 min 25 sec — auto-closed as a
-              safety measure. Verify the feed reservoir level.
-      mode: single
-
-    - id: automation.irrigation_flush_fill_valve_timeout
-      alias: Irrigation — Flush Fill Valve Timeout
-      description: >
-        Auto-closes the flush reservoir fill valve after 4 min 35 sec of being
-        open, in case the user forgets to close it manually. Approximate fill
-        time for a full reservoir from the supply line. Adjust as needed.
-      triggers:
-        - trigger: state
-          entity_id: valve.flush_fill_valve_irrigation_tent
-          to: 'open'
-          for: '00:04:35'
-      actions:
-        - action: valve.close_valve
-          target:
-            entity_id: valve.flush_fill_valve_irrigation_tent
-        - action: notify.mobile_app_sm_a166w
-          data:
-            title: Flush Fill Valve Auto-Closed
-            message: >
-              Flush fill valve was open for 4 min 35 sec — auto-closed as a
-              safety measure. Verify the flush reservoir level.
-      mode: single
-
 # Humidity Control — mode-based switching between humidify / dehumidify
 # Mode selector: input_select.tent_humidity_mode (Humidify / Dehumidify / Off)
 # Fogger smart plug: switch.humidifier
