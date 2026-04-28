@@ -87,12 +87,56 @@ tent_control_safety:
           target:
             entity_id: switch.air_pump_irrigation_tent
         - delay: "00:00:01"
-        - action: switch.turn_on
-          target:
-            entity_id:
-              - switch.irrigation_power_strip
-              - switch.irrigation_controller_tent
-              - switch.controller_tent
+        # Conditional guardrails — only re-power controllers that actually dropped.
+        # Unconditional switch.turn_on against the HS300 master triggers a firmware
+        # quirk that cascades ALL child outlets to ON, spuriously running every pump.
+        # If the master really did drop, we stagger-off the 5 pump outlets afterward
+        # to cancel that auto-on cascade. Drain pump outlet is intentionally left
+        # alone — it must stay free to run.
+        - if:
+            - condition: state
+              entity_id: switch.irrigation_power_strip
+              state: "off"
+          then:
+            - action: switch.turn_on
+              target:
+                entity_id: switch.irrigation_power_strip
+            - delay: "00:00:00.500"
+            - action: switch.turn_off
+              target:
+                entity_id: switch.feed_pump_irrigation_tent
+            - delay: "00:00:00.300"
+            - action: switch.turn_off
+              target:
+                entity_id: switch.flush_pump_irrigation_tent
+            - delay: "00:00:00.300"
+            - action: switch.turn_off
+              target:
+                entity_id: switch.feed_stir_pump_irrigation_tent
+            - delay: "00:00:00.300"
+            - action: switch.turn_off
+              target:
+                entity_id: switch.flush_stir_pump_irrigation_tent
+            - delay: "00:00:00.300"
+            - action: switch.turn_off
+              target:
+                entity_id: switch.air_pump_irrigation_tent
+        - if:
+            - condition: state
+              entity_id: switch.irrigation_controller_tent
+              state: "off"
+          then:
+            - action: switch.turn_on
+              target:
+                entity_id: switch.irrigation_controller_tent
+        - if:
+            - condition: state
+              entity_id: switch.controller_tent
+              state: "off"
+          then:
+            - action: switch.turn_on
+              target:
+                entity_id: switch.controller_tent
         - action: notify.mobile_app_sm_a166w
           data:
             title: "TENT FLOOD STOP"
