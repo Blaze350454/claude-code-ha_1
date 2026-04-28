@@ -35,12 +35,19 @@ tent_control_safety:
     - id: safety_table_drain_flood_stop
       alias: "Safety — Table Drain Flood Stop"
       description: >
-        When the table drain float reports FULL, immediately close all inflow
-        valves (feed + flush loops) and stop feed/flush pumps to halt further
-        water entering the tent. Uses label_id targeting so the action auto-
-        scales to any new pump/valve tagged sys_irrigation+fn_pump/fn_valve
-        within the feed/flush loops. Drain loop is intentionally untouched —
-        the existing `Irrigation — Table Drain Pump` automation handles it.
+        When the table drain float reports FULL, close inflow valves and stop
+        feed/flush pumps so no more water enters the tent. Drain loop is
+        intentionally untouched — the existing `Irrigation — Table Drain Pump`
+        automation runs the drain pump and must keep power.
+
+        Pump shutdowns are issued one outlet at a time with 300 ms between
+        them. A simultaneous burst against the HS300 (5 outlets at once via
+        label_id) was observed to also drop outlet E05 (the ESP32) and the
+        strip master, killing the drain pump and creating a flood deadlock.
+        At the end we explicitly turn the strip master, the ESP32 outlet,
+        and the sonoff tent controller back ON as a guardrail so any stray
+        cascade self-heals within seconds.
+
         Fires regardless of the automation-enabled master toggle (safety first).
       triggers:
         - trigger: state
@@ -62,16 +69,30 @@ tent_control_safety:
               - sub_irrigation_flush_loop
         - action: switch.turn_off
           target:
-            label_id:
-              - sys_irrigation
-              - fn_pump
-              - sub_irrigation_feed_loop
+            entity_id: switch.feed_pump_irrigation_tent
+        - delay: "00:00:00.300"
         - action: switch.turn_off
           target:
-            label_id:
-              - sys_irrigation
-              - fn_pump
-              - sub_irrigation_flush_loop
+            entity_id: switch.flush_pump_irrigation_tent
+        - delay: "00:00:00.300"
+        - action: switch.turn_off
+          target:
+            entity_id: switch.feed_stir_pump_irrigation_tent
+        - delay: "00:00:00.300"
+        - action: switch.turn_off
+          target:
+            entity_id: switch.flush_stir_pump_irrigation_tent
+        - delay: "00:00:00.300"
+        - action: switch.turn_off
+          target:
+            entity_id: switch.air_pump_irrigation_tent
+        - delay: "00:00:01"
+        - action: switch.turn_on
+          target:
+            entity_id:
+              - switch.irrigation_power_strip
+              - switch.irrigation_controller_tent
+              - switch.controller_tent
         - action: notify.mobile_app_sm_a166w
           data:
             title: "TENT FLOOD STOP"
