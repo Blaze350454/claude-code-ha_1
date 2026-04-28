@@ -5,7 +5,7 @@ tent_irrigation_reservoirs:
       description: >
         Whenever the feed fill valve opens (manually or scripted), waits for
         the reservoir-full float to trip and then closes the valve. If the
-        float never trips, closes after 4 min 25 sec as a safety timeout.
+        float never trips, closes after 3 min 50 sec as a safety timeout.
       triggers:
         - trigger: state
           entity_id: valve.feed_fill_valve_irrigation_tent
@@ -16,8 +16,8 @@ tent_irrigation_reservoirs:
               entity_id: binary_sensor.feed_full_irrigation_tent
               to: 'on'
           timeout:
-            minutes: 4
-            seconds: 25
+            minutes: 3
+            seconds: 50
         - action: valve.close_valve
           target:
             entity_id: valve.feed_fill_valve_irrigation_tent
@@ -29,7 +29,7 @@ tent_irrigation_reservoirs:
               data:
                 title: Feed Fill Timeout
                 message: >
-                  Feed fill valve was open for 4 min 25 sec without the full
+                  Feed fill valve was open for 3 min 50 sec without the full
                   float tripping — auto-closed. Verify reservoir level and
                   float sensor.
       mode: single
@@ -38,7 +38,7 @@ tent_irrigation_reservoirs:
       description: >
         Whenever the flush fill valve opens (manually or scripted), waits for
         the reservoir-full float to trip and then closes the valve. If the
-        float never trips, closes after 4 min 35 sec as a safety timeout.
+        float never trips, closes after 2 min 50 sec as a safety timeout.
       triggers:
         - trigger: state
           entity_id: valve.flush_fill_valve_irrigation_tent
@@ -49,8 +49,8 @@ tent_irrigation_reservoirs:
               entity_id: binary_sensor.flush_full_irrigation_tent
               to: 'on'
           timeout:
-            minutes: 4
-            seconds: 35
+            minutes: 2
+            seconds: 50
         - action: valve.close_valve
           target:
             entity_id: valve.flush_fill_valve_irrigation_tent
@@ -62,7 +62,7 @@ tent_irrigation_reservoirs:
               data:
                 title: Flush Fill Timeout
                 message: >
-                  Flush fill valve was open for 4 min 35 sec without the full
+                  Flush fill valve was open for 2 min 50 sec without the full
                   float tripping — auto-closed. Verify reservoir level and
                   float sensor.
       mode: single
