@@ -350,7 +350,6 @@ tent_irrigation_safety:
                       - switch.flush_pump_irrigation_tent
                       - switch.flush_stir_pump_irrigation_tent
                       - switch.air_pump_irrigation_tent
-                      - switch.irrigation_controller_tent
                 - action: valve.close_valve
                   target:
                     entity_id:
