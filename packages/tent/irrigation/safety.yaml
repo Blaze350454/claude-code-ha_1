@@ -39,8 +39,6 @@ tent_irrigation_safety:
           target:
             entity_id:
               - script.run_feed_cycle
-              - script.run_normal_flush
-              - script.run_day3_flush
           data: {}
         - action: switch.turn_off
           target:
@@ -79,8 +77,6 @@ tent_irrigation_safety:
           target:
             entity_id:
               - script.run_feed_cycle
-              - script.run_normal_flush
-              - script.run_day3_flush
               - script.run_alternating
           data: {}
         - action: input_boolean.turn_off
@@ -372,9 +368,7 @@ tent_irrigation_safety:
                     entity_id:
                       - script.irrigation_advance_to_next_feed
                       - script.run_alternating
-                      - script.run_day3_flush
                       - script.run_feed_cycle
-                      - script.run_normal_flush
                       - script.stop_alternating
                 - action: switch.turn_off
                   target:
@@ -436,12 +430,6 @@ tent_irrigation_safety:
           conditions:
             - condition: state
               entity_id: script.run_feed_cycle
-              state: "on"
-            - condition: state
-              entity_id: script.run_normal_flush
-              state: "on"
-            - condition: state
-              entity_id: script.run_day3_flush
               state: "on"
         - condition: template
           value_template: >
@@ -508,8 +496,6 @@ tent_irrigation_safety:
           target:
             entity_id:
               - script.run_feed_cycle
-              - script.run_normal_flush
-              - script.run_day3_flush
         - action: switch.turn_off
           target:
             entity_id:

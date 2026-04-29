@@ -76,24 +76,31 @@ tent_irrigation_schedule:
           data:
             datetime: '{{ night_stop_dt }}'
         - variables:
-            current_day: '{{ states(''input_number.flush_day_counter'') | int }}'
+            current_day: '{{ states(''input_number.irrigation_day_counter'') | int }}'
+            interval: '{{ states(''input_number.flush_day_interval'') | int }}'
         - choose:
             - conditions:
                 - condition: template
-                  value_template: '{{ current_day >= 3 }}'
+                  value_template: '{{ current_day > interval * 2 }}'
               sequence:
                 - action: input_number.set_value
                   target:
-                    entity_id: input_number.flush_day_counter
+                    entity_id: input_number.irrigation_day_counter
                   data:
                     value: 0
+                - action: notify.mobile_app_sm_a166w
+                  data:
+                    title: Irrigation Counter Reset
+                    message: >
+                      Day counter was {{ current_day }} (>2x interval of {{ interval }}).
+                      Reset to 0. Investigate why flushes have been missing.
             - conditions:
                 - condition: template
                   value_template: '{{ true }}'
               sequence:
                 - action: input_number.increment
                   target:
-                    entity_id: input_number.flush_day_counter
+                    entity_id: input_number.irrigation_day_counter
         - action: input_text.set_value
           target:
             entity_id: input_text.irrigation_status
@@ -112,8 +119,6 @@ tent_irrigation_schedule:
           target:
             entity_id:
               - script.run_feed_cycle
-              - script.run_normal_flush
-              - script.run_day3_flush
           data: {}
         - action: switch.turn_off
           target:

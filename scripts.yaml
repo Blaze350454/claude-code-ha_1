@@ -69,88 +69,6 @@ run_alternating:
   mode: restart
   icon: mdi:sync
 
-run_normal_flush:
-  alias: Run Normal End Flush
-  sequence:
-  - if:
-    - condition: state
-      entity_id: binary_sensor.flush_empty_irrigation_tent
-      state: 'off'
-    then:
-    - action: notify.mobile_app_sm_a166w
-      data:
-        title: Flush Blocked — Reservoir Dry
-        message: Normal flush blocked. Flush reservoir is dry.
-    - stop: "Flush reservoir dry"
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.irrigation_status
-    data:
-      value: Flushing
-  - action: valve.open_valve
-    target:
-      entity_id: valve.flush_valve_irrigation_tent
-  - action: switch.turn_on
-    target:
-      entity_id: switch.flush_pump_irrigation_tent
-  - delay:
-      minutes: '{{ states(''input_number.flush_duration_minutes'') | float }}'
-  - action: switch.turn_off
-    target:
-      entity_id: switch.flush_pump_irrigation_tent
-  - action: valve.close_valve
-    target:
-      entity_id: valve.flush_valve_irrigation_tent
-  mode: single
-  icon: mdi:water-outline
-
-run_day3_flush:
-  alias: Run Day 3 Flush Cycle
-  sequence:
-  - if:
-    - condition: state
-      entity_id: binary_sensor.flush_empty_irrigation_tent
-      state: 'off'
-    then:
-    - action: notify.mobile_app_sm_a166w
-      data:
-        title: Deep Flush Blocked — Reservoir Dry
-        message: Deep flush blocked. Flush reservoir is dry.
-    - stop: "Flush reservoir dry"
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.irrigation_status
-    data:
-      value: Deep Flush
-  - action: valve.open_valve
-    target:
-      entity_id: valve.flush_valve_irrigation_tent
-  - action: switch.turn_on
-    target:
-      entity_id: switch.flush_pump_irrigation_tent
-  - delay:
-      minutes: '{{ states(''input_number.flush_cycle_plant_minutes'') | int }}'
-  - action: valve.open_valve
-    target:
-      entity_id: valve.flush_drain_valve_irrigation_tent
-  - delay:
-      minutes: '{{ states(''input_number.flush_cycle_drain_minutes'') | int }}'
-  - action: switch.turn_off
-    target:
-      entity_id: switch.flush_pump_irrigation_tent
-  - action: valve.close_valve
-    target:
-      entity_id:
-      - valve.flush_valve_irrigation_tent
-      - valve.flush_drain_valve_irrigation_tent
-  - action: input_number.set_value
-    target:
-      entity_id: input_number.flush_day_counter
-    data:
-      value: 0
-  mode: single
-  icon: mdi:water-sync
-
 run_feed_cycle:
   alias: Run Feed Cycle
   sequence:
@@ -165,42 +83,119 @@ run_feed_cycle:
         message: Feed cycle blocked. Feed reservoir is dry. Refill before next feed.
     - stop: "Feed reservoir dry"
   - action: script.stop_alternating
-  - action: input_text.set_value
-    target:
-      entity_id: input_text.irrigation_status
-    data:
-      value: Feeding
-  - action: valve.open_valve
-    target:
-      entity_id: valve.feed_valve_irrigation_tent
-  - action: switch.turn_on
-    target:
-      entity_id: switch.feed_pump_irrigation_tent
-  - delay:
-      minutes: '{{ states(''input_number.feed_duration_minutes'') | float }}'
-  - action: switch.turn_off
-    target:
-      entity_id: switch.feed_pump_irrigation_tent
-  - action: valve.close_valve
-    target:
-      entity_id: valve.feed_valve_irrigation_tent
+  - variables:
+      is_last_feed: >
+        {{ states('input_number.current_feed_number') | int
+           >= states('input_number.feeds_per_day_2') | int }}
+      is_flush_day: >
+        {{ states('input_number.irrigation_day_counter') | int
+           >= states('input_number.flush_day_interval') | int }}
+      flush_dry: "{{ is_state('binary_sensor.flush_empty_irrigation_tent', 'off') }}"
+      feed_minutes: "{{ states('input_number.feed_duration_minutes') | float }}"
+      clear_minutes: "{{ states('input_number.line_clear_minutes') | float }}"
   - choose:
     - conditions:
       - condition: template
-        value_template: >
-          {{ states('input_number.flush_day_counter') | int == 3
-             and states('input_number.current_feed_number') | int >= states('input_number.feeds_per_day_2') | int }}
+        value_template: "{{ is_last_feed and is_flush_day and not flush_dry }}"
       sequence:
-      - action: script.run_day3_flush
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.irrigation_status
+        data:
+          value: Feeding
+      - action: valve.open_valve
+        target:
+          entity_id: valve.feed_valve_irrigation_tent
+      - action: switch.turn_on
+        target:
+          entity_id: switch.feed_pump_irrigation_tent
+      - delay:
+          minutes: "{{ [feed_minutes - clear_minutes, 0.1] | max }}"
+      - action: switch.turn_off
+        target:
+          entity_id: switch.feed_pump_irrigation_tent
+      - action: valve.close_valve
+        target:
+          entity_id: valve.feed_valve_irrigation_tent
+      - action: valve.open_valve
+        target:
+          entity_id: valve.flush_valve_irrigation_tent
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.irrigation_status
+        data:
+          value: Clearing Lines
+      - action: switch.turn_on
+        target:
+          entity_id: switch.flush_pump_irrigation_tent
+      - delay:
+          minutes: "{{ clear_minutes }}"
+      - action: valve.open_valve
+        target:
+          entity_id: valve.flush_drain_valve_irrigation_tent
+      - delay:
+          seconds: 5
+      - action: valve.close_valve
+        target:
+          entity_id: valve.flush_drain_valve_irrigation_tent
+      - action: switch.turn_off
+        target:
+          entity_id: switch.flush_pump_irrigation_tent
+      - action: valve.close_valve
+        target:
+          entity_id: valve.flush_valve_irrigation_tent
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.irrigation_day_counter
+        data:
+          value: 0
     - conditions:
       - condition: template
-        value_template: '{{ true }}'
+        value_template: "{{ is_last_feed and is_flush_day and flush_dry }}"
       sequence:
-      - action: script.run_normal_flush
-  - wait_template: >
-      {{ not is_state('script.run_day3_flush', 'on')
-         and not is_state('script.run_normal_flush', 'on') }}
-    timeout: '01:00:00'
+      - action: notify.mobile_app_sm_a166w
+        data:
+          title: Flush Blocked — Reservoir Dry
+          message: Line clear skipped — flush reservoir is dry. Running feed-only; will retry next day.
+      - action: input_text.set_value
+        target:
+          entity_id: input_text.irrigation_status
+        data:
+          value: Feeding
+      - action: valve.open_valve
+        target:
+          entity_id: valve.feed_valve_irrigation_tent
+      - action: switch.turn_on
+        target:
+          entity_id: switch.feed_pump_irrigation_tent
+      - delay:
+          minutes: "{{ feed_minutes }}"
+      - action: switch.turn_off
+        target:
+          entity_id: switch.feed_pump_irrigation_tent
+      - action: valve.close_valve
+        target:
+          entity_id: valve.feed_valve_irrigation_tent
+    default:
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.irrigation_status
+      data:
+        value: Feeding
+    - action: valve.open_valve
+      target:
+        entity_id: valve.feed_valve_irrigation_tent
+    - action: switch.turn_on
+      target:
+        entity_id: switch.feed_pump_irrigation_tent
+    - delay:
+        minutes: "{{ feed_minutes }}"
+    - action: switch.turn_off
+      target:
+        entity_id: switch.feed_pump_irrigation_tent
+    - action: valve.close_valve
+      target:
+        entity_id: valve.feed_valve_irrigation_tent
   - action: input_text.set_value
     target:
       entity_id: input_text.irrigation_status
