@@ -10,15 +10,8 @@ grow_tent:
 # 3. Customize the entity IDs to match your devices
 # 4. Restart Home Assistant
 
-  homeassistant:
-    customize:
-    # Customize your entities here
-      sensor.tent_temperature:
-        friendly_name: "Grow Tent Temperature"
-        icon: mdi:thermometer
-      sensor.tent_humidity:
-        friendly_name: "Grow Tent Humidity"
-        icon: mdi:water-percent
+  # Customize block removed — template sensors now carry their own
+  # name + icon (Tent Average Temperature / Humidity / Pressure below).
 
 # Input helpers for grow tent settings
   input_number:
@@ -351,7 +344,7 @@ grow_tent:
           unit_of_measurement: "%"
           icon: mdi:water-percent
           state: >
-            {% set temp = states('sensor.tent_temperature') | float(0) %}
+            {% set temp = states('sensor.tent_average_temperature') | float(0) %}
             {% set vpd_target = states('sensor.active_vpd_target') | float(1.0) %}
             {% if temp > 0 %}
               {% set svp = 0.61078 * (2.71828 ** ((17.27 * temp) / (temp + 237.3))) %}
@@ -361,7 +354,7 @@ grow_tent:
               {{ none }}
             {% endif %}
           availability: >
-            {{ states('sensor.tent_temperature') not in ['unknown', 'unavailable'] }}
+            {{ states('sensor.tent_average_temperature') not in ['unknown', 'unavailable'] }}
 
         - name: "Daily Light Integral"
           unique_id: grow_tent_dli
@@ -388,9 +381,9 @@ grow_tent:
               mdi:alert-circle
             {% endif %}
           state: >
-            {% set temp = states('sensor.tent_temperature') | float(0) %}
+            {% set temp = states('sensor.tent_average_temperature') | float(0) %}
             {% set target_temp = states('input_number.grow_tent_target_temp') | float(0) %}
-            {% set humidity = states('sensor.tent_humidity') | float(0) %}
+            {% set humidity = states('sensor.tent_average_humidity') | float(0) %}
             {% set target_humidity = states('input_number.grow_tent_target_humidity') | float(0) %}
             {% if (temp - target_temp) | abs > 3 %}
               Temperature Alert
@@ -403,8 +396,9 @@ grow_tent:
             {% endif %}
 
 
-        - name: "Tent Humidity"
-          unique_id: tent_humidity_averaged
+        - name: "Tent Average Humidity"
+          unique_id: tent_average_humidity
+          default_entity_id: sensor.tent_average_humidity
           unit_of_measurement: "%"
           device_class: humidity
           state_class: measurement
@@ -455,8 +449,9 @@ grow_tent:
               states('sensor.current_humidity_dehumidifier')
             ] | reject('in', ['unavailable', 'unknown']) | list | length > 0 }}
 
-        - name: "Tent Temperature"
-          unique_id: tent_temperature_averaged
+        - name: "Tent Average Temperature"
+          unique_id: tent_average_temperature
+          default_entity_id: sensor.tent_average_temperature
           unit_of_measurement: "°C"
           device_class: temperature
           state_class: measurement
@@ -507,14 +502,67 @@ grow_tent:
               states('sensor.temperature_camera_tent')
             ] | reject('in', ['unavailable', 'unknown']) | list | length > 0 }}
 
+        - name: "Tent Average Pressure"
+          unique_id: tent_average_pressure
+          default_entity_id: sensor.tent_average_pressure
+          unit_of_measurement: "hPa"
+          device_class: pressure
+          state_class: measurement
+          icon: mdi:gauge
+          state: >
+            {% set sensors = [
+              states('sensor.canopy_pressure_tent'),
+              states('sensor.flower_pressure_tent'),
+              states('sensor.grow_tent_two_canopy_pressure'),
+              states('sensor.grow_tent_two_flower_pressure')
+            ] %}
+            {% set readings = sensors
+              | reject('in', ['unavailable', 'unknown'])
+              | map('float', default=none)
+              | reject('none')
+              | list %}
+            {% if readings | length == 0 %}
+              {{ none }}
+            {% else %}
+              {# Drop readings outside sane atmospheric range (900-1100 hPa) #}
+              {% set sane = readings | select('>=', 900) | select('<=', 1100) | list %}
+              {% if sane | length == 0 %}
+                {{ none }}
+              {% elif sane | length <= 2 %}
+                {{ (sane | sum / sane | length) | round(2) }}
+              {% else %}
+                {# 3+ readings: compute median, drop any >5 hPa from median, average the rest #}
+                {% set sorted = sane | sort | list %}
+                {% set mid = (sorted | length / 2) | int %}
+                {% set median = sorted[mid] if sorted | length is odd else
+                   (sorted[mid - 1] + sorted[mid]) / 2 %}
+                {% set filtered = sane
+                  | select('>=', median - 5)
+                  | select('<=', median + 5)
+                  | list %}
+                {% if filtered | length == 0 %}
+                  {{ median | round(2) }}
+                {% else %}
+                  {{ (filtered | sum / filtered | length) | round(2) }}
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          availability: >
+            {{ [
+              states('sensor.canopy_pressure_tent'),
+              states('sensor.flower_pressure_tent'),
+              states('sensor.grow_tent_two_canopy_pressure'),
+              states('sensor.grow_tent_two_flower_pressure')
+            ] | reject('in', ['unavailable', 'unknown']) | list | length > 0 }}
+
     - binary_sensor:
         - name: "Climate OK"
           unique_id: grow_tent_climate_ok
           device_class: safety
           state: >
-            {% set temp = states('sensor.tent_temperature') | float(0) %}
+            {% set temp = states('sensor.tent_average_temperature') | float(0) %}
             {% set target_temp = states('input_number.grow_tent_target_temp') | float(0) %}
-            {% set humidity = states('sensor.tent_humidity') | float(0) %}
+            {% set humidity = states('sensor.tent_average_humidity') | float(0) %}
             {% set target_humidity = states('input_number.grow_tent_target_humidity') | float(0) %}
             {{ (temp - target_temp) | abs <= 3 and (humidity - target_humidity) | abs <= 10 }}
 

@@ -5,7 +5,7 @@ tent_climate_humidifier:
       trigger:
         - platform: template
           value_template: >
-            {{ states('sensor.tent_humidity') | float(0) <
+            {{ states('sensor.tent_average_humidity') | float(0) <
                (states('input_number.humidifier_target_rh') | float(65) -
                 states('input_number.humidifier_hysteresis') | float(5)) }}
       condition:
@@ -15,10 +15,10 @@ tent_climate_humidifier:
         - condition: not
           conditions:
             - condition: state
-              entity_id: sensor.tent_humidity
+              entity_id: sensor.tent_average_humidity
               state: "unavailable"
             - condition: state
-              entity_id: sensor.tent_humidity
+              entity_id: sensor.tent_average_humidity
               state: "unknown"
     # Safety: block humidifier during flower nights (bud rot prevention)
         - condition: template
@@ -43,7 +43,7 @@ tent_climate_humidifier:
       trigger:
         - platform: template
           value_template: >
-            {{ states('sensor.tent_humidity') | float(0) >=
+            {{ states('sensor.tent_average_humidity') | float(0) >=
                states('input_number.humidifier_target_rh') | float(65) }}
       condition:
         - condition: state

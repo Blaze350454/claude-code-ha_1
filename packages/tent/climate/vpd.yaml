@@ -28,8 +28,8 @@ tent_climate_vpd:
             message: >
               VPD is {{ states('sensor.grow_tent_vpd') }} kPa
               (target: {{ states('sensor.active_vpd_target') }} kPa ± {{ states('input_number.vpd_tolerance') }}).
-              Temp: {{ states('sensor.tent_temperature') }}°C,
-              RH: {{ states('sensor.tent_humidity') }}%.
+              Temp: {{ states('sensor.tent_average_temperature') }}°C,
+              RH: {{ states('sensor.tent_average_humidity') }}%.
               Ideal RH for current temp: {{ states('sensor.vpd_ideal_rh') }}%.
       mode: single
     - id: vpd_recovered_alert

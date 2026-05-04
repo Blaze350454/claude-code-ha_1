@@ -529,7 +529,7 @@ tent_irrigation_safety:
 # Fan PWM: fan.grow_tent_one_humidifier_fan_pwm (grow-tent-one ESP32-C3)
 # Dehumidifier: humidifier.dehumidifier_tent (Midea, standalone)
 # AC dry mode: climate.air_conditioner_tent (Midea, set to 'dry')
-# Humidity sensor: sensor.tent_humidity (averaged template)
+# Humidity sensor: sensor.tent_average_humidity (averaged template)
 
 ########## MODE SWITCHING ##########
 

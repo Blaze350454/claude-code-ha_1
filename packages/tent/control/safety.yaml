@@ -160,7 +160,7 @@ tent_control_safety:
         humidifier is blocked — may need to run dehumidifier.
       triggers:
         - trigger: numeric_state
-          entity_id: sensor.tent_humidity
+          entity_id: sensor.tent_average_humidity
           above: 60
           for:
             minutes: 10
@@ -179,7 +179,7 @@ tent_control_safety:
           data:
             title: "Flower Night — High Humidity Warning"
             message: >
-              Humidity is {{ states('sensor.tent_humidity') }}% during flower night.
+              Humidity is {{ states('sensor.tent_average_humidity') }}% during flower night.
               Risk of bud rot above 60%. Consider switching to Dehumidify mode
               or increasing ventilation.
       mode: single
