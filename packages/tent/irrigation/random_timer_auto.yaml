@@ -1,0 +1,5 @@
+tent_irrigation_random_timer_auto:
+  input_boolean:
+    random_timer_running:
+      name: Random Timer Running
+      icon: mdi:timer-play-outline

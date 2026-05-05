@@ -3,6 +3,25 @@ title: AI
 # pipeline. Cards that prove themselves get copy-pasted into the
 # UI-managed Tent dashboard (or wherever else they belong).
 views:
+  - title: Tools
+    path: tools
+    icon: mdi:tools
+    cards:
+      - type: markdown
+        content: |
+          ## Random Timer Auto
+          Tap the button to open the script. Pick targets, set the duration
+          slider, then **Run Script**. Tap again while running to cancel
+          (entities OFF, timer reset). Next tap starts a fresh timer.
+      - type: button
+        name: Random Timer Auto
+        icon: mdi:timer-play-outline
+        icon_height: 56px
+        entity: script.random_timer_auto
+        show_state: true
+        tap_action:
+          action: more-info
+
   - title: VPD
     path: vpd
     icon: mdi:chart-scatter-plot
