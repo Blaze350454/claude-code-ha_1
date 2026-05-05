@@ -23,7 +23,8 @@ tent_climate_humidifier:
     # Safety: block humidifier during flower nights (bud rot prevention)
         - condition: template
           value_template: >
-            {% set is_flower = is_state('input_select.grow_tent_growth_stage', 'Flowering') %}
+            {% set stage = states('input_select.grow_tent_growth_stage') %}
+            {% set is_flower = stage in ['Early Flower', 'Flower', 'Late Flower'] %}
             {% set lights_off = is_state('light.hlg', 'off') %}
             {% set block_on = is_state('input_boolean.flower_night_humidifier_block', 'on') %}
             {{ not (is_flower and lights_off and block_on) }}

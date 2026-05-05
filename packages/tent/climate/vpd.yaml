@@ -32,6 +32,39 @@ tent_climate_vpd:
               RH: {{ states('sensor.tent_average_humidity') }}%.
               Ideal RH for current temp: {{ states('sensor.vpd_ideal_rh') }}%.
       mode: single
+    # Option A: humidifier loop tracks VPD via vpd_ideal_rh.
+    # Whenever the ideal RH (back-solved from active VPD target + current temp)
+    # changes, push the value into humidifier_target_rh, clamped by per-stage
+    # min/max RH (set by the growth_stage_change_defaults automation).
+    - id: vpd_sync_humidifier_target_rh
+      alias: "VPD — Sync Humidifier Target RH (clamped)"
+      description: >
+        Copies sensor.vpd_ideal_rh into input_number.humidifier_target_rh on
+        every change, clamped to [humidifier_min_rh, humidifier_max_rh] so the
+        target never strays outside what's safe for the current growth stage.
+      triggers:
+        - trigger: state
+          entity_id: sensor.vpd_ideal_rh
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+        - condition: template
+          value_template: >
+            {{ states('sensor.vpd_ideal_rh') not in ['unknown', 'unavailable', 'none', 'None'] }}
+      variables:
+        ideal: "{{ states('sensor.vpd_ideal_rh') | float(none) }}"
+        rh_min: "{{ states('input_number.humidifier_min_rh') | float(40) }}"
+        rh_max: "{{ states('input_number.humidifier_max_rh') | float(75) }}"
+        clamped: "{{ [[ideal, rh_min] | max, rh_max] | min | round(1) }}"
+      actions:
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.humidifier_target_rh
+          data:
+            value: "{{ clamped }}"
+      mode: single
+
     - id: vpd_recovered_alert
       alias: "VPD — Back in Range"
       description: >

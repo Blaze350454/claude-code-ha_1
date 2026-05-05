@@ -73,6 +73,24 @@ grow_tent:
       unit_of_measurement: "%"
       icon: mdi:arrow-expand-vertical
 
+    humidifier_min_rh:
+      name: "Humidifier Min RH Clamp"
+      min: 20
+      max: 80
+      step: 1
+      initial: 40
+      unit_of_measurement: "%"
+      icon: mdi:arrow-collapse-down
+
+    humidifier_max_rh:
+      name: "Humidifier Max RH Clamp"
+      min: 30
+      max: 95
+      step: 1
+      initial: 75
+      unit_of_measurement: "%"
+      icon: mdi:arrow-collapse-up
+
   # --- AC Day/Night Climate Control ---
     tent_day_temp_target:
       name: "AC Day Temp Target"
@@ -212,9 +230,13 @@ grow_tent:
       name: "Growth Stage"
       options:
         - Seedling
-        - Vegetative
-        - Flowering
-        - Harvest
+        - Early Veg
+        - Veg
+        - Transition
+        - Early Flower
+        - Flower
+        - Late Flower
+      initial: Veg
       icon: mdi:sprout
 
     tent_humidity_mode:

@@ -12,7 +12,7 @@ tent_lights:
           id: light_off
       conditions:
         - condition: state
-          entity_id: input_select.growth_stage
+          entity_id: input_select.grow_tent_growth_stage
           state: Transition
         - condition: state
           entity_id: light.chilled
@@ -48,9 +48,9 @@ tent_lights:
               sequence:
                 - action: input_select.select_option
                   target:
-                    entity_id: input_select.growth_stage
+                    entity_id: input_select.grow_tent_growth_stage
                   data:
-                    option: Flower
+                    option: Early Flower
                 - action: input_number.set_value
                   target:
                     entity_id: input_number.transition_day_counter
@@ -79,13 +79,13 @@ tent_lights:
           minutes: /1
           id: check_lights
         - trigger: state
-          entity_id: input_select.growth_stage
+          entity_id: input_select.grow_tent_growth_stage
           id: stage_change
       actions:
         - choose:
             - conditions:
                 - condition: template
-                  value_template: "{%- set stage = states('input_select.growth_stage') -%}\n{%- if stage in ['Vegetative', 'Transition'] -%}\n  {%- set on_t = states('input_datetime.veg_lights_on_time') -%}\n  {%- set off_t = states('input_datetime.veg_lights_off_time') -%}\n{%- else -%}\n  {%- set on_t = states('input_datetime.flower_lights_on_time') -%}\n  {%- set off_t = states('input_datetime.flower_lights_off_time') -%}\n{%- endif -%}\n{%- set on_m = (on_t.split(':')[0]|int * 60) + on_t.split(':')[1]|int -%}\n{%- set off_m = (off_t.split(':')[0]|int * 60) + off_t.split(':')[1]|int -%}\n{%- set now_m = now().hour * 60 + now().minute -%}\n{%- if on_m < off_m -%}{{ now_m >= on_m and now_m < off_m }}\n{%- else -%}{{ now_m >= on_m or now_m < off_m }}\n{%- endif -%}\n"
+                  value_template: "{%- set stage = states('input_select.grow_tent_growth_stage') -%}\n{%- if stage in ['Seedling', 'Early Veg', 'Veg', 'Transition'] -%}\n  {%- set on_t = states('input_datetime.veg_lights_on_time') -%}\n  {%- set off_t = states('input_datetime.veg_lights_off_time') -%}\n{%- else -%}\n  {%- set on_t = states('input_datetime.flower_lights_on_time') -%}\n  {%- set off_t = states('input_datetime.flower_lights_off_time') -%}\n{%- endif -%}\n{%- set on_m = (on_t.split(':')[0]|int * 60) + on_t.split(':')[1]|int -%}\n{%- set off_m = (off_t.split(':')[0]|int * 60) + off_t.split(':')[1]|int -%}\n{%- set now_m = now().hour * 60 + now().minute -%}\n{%- if on_m < off_m -%}{{ now_m >= on_m and now_m < off_m }}\n{%- else -%}{{ now_m >= on_m or now_m < off_m }}\n{%- endif -%}\n"
                 - condition: or
                   conditions:
                     - condition: state
@@ -104,7 +104,7 @@ tent_lights:
                     brightness_pct: 100
             - conditions:
                 - condition: template
-                  value_template: "{%- set stage = states('input_select.growth_stage') -%}\n{%- if stage in ['Vegetative', 'Transition'] -%}\n  {%- set on_t = states('input_datetime.veg_lights_on_time') -%}\n  {%- set off_t = states('input_datetime.veg_lights_off_time') -%}\n{%- else -%}\n  {%- set on_t = states('input_datetime.flower_lights_on_time') -%}\n  {%- set off_t = states('input_datetime.flower_lights_off_time') -%}\n{%- endif -%}\n{%- set on_m = (on_t.split(':')[0]|int * 60) + on_t.split(':')[1]|int -%}\n{%- set off_m = (off_t.split(':')[0]|int * 60) + off_t.split(':')[1]|int -%}\n{%- set now_m = now().hour * 60 + now().minute -%}\n{%- if on_m < off_m -%}{{ now_m < on_m or now_m >= off_m }}\n{%- else -%}{{ now_m < on_m and now_m >= off_m }}\n{%- endif -%}\n"
+                  value_template: "{%- set stage = states('input_select.grow_tent_growth_stage') -%}\n{%- if stage in ['Seedling', 'Early Veg', 'Veg', 'Transition'] -%}\n  {%- set on_t = states('input_datetime.veg_lights_on_time') -%}\n  {%- set off_t = states('input_datetime.veg_lights_off_time') -%}\n{%- else -%}\n  {%- set on_t = states('input_datetime.flower_lights_on_time') -%}\n  {%- set off_t = states('input_datetime.flower_lights_off_time') -%}\n{%- endif -%}\n{%- set on_m = (on_t.split(':')[0]|int * 60) + on_t.split(':')[1]|int -%}\n{%- set off_m = (off_t.split(':')[0]|int * 60) + off_t.split(':')[1]|int -%}\n{%- set now_m = now().hour * 60 + now().minute -%}\n{%- if on_m < off_m -%}{{ now_m < on_m or now_m >= off_m }}\n{%- else -%}{{ now_m < on_m and now_m >= off_m }}\n{%- endif -%}\n"
                 - condition: or
                   conditions:
                     - condition: state

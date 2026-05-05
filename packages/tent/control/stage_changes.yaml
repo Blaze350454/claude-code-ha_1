@@ -46,14 +46,15 @@ tent_control_stage_changes:
                   target:
                     entity_id: humidifier.dehumidifier_tent
 
-########## HUMIDIFY MODE ##########
-
-# Turn ON fogger + fan when RH drops below (target - hysteresis)
-    - id: ac_stage_change_defaults
-      alias: "AC — Stage Change Defaults"
+    # Single consolidated stage-change defaults automation. When growth stage
+    # changes, sets day/night temp + RH + VPD targets, RH clamps, and light
+    # duration in one shot. User can still override any individual value
+    # afterward from the dashboard.
+    - id: growth_stage_change_defaults
+      alias: "Growth Stage — Apply Defaults"
       description: >
-        When growth stage changes, auto-set day/night temperature targets
-        to recommended cannabis values. Other selectors are not changed.
+        On growth stage change, apply per-stage temp/RH/VPD/light/clamp defaults.
+        Values are mainstream cannabis guidelines (Pulse Labs / AROYA-style).
       triggers:
         - trigger: state
           entity_id: input_select.grow_tent_growth_stage
@@ -61,234 +62,146 @@ tent_control_stage_changes:
         - condition: state
           entity_id: input_boolean.grow_tent_automation_enabled
           state: "on"
+      variables:
+        # Per-stage value table. Edit here to retune defaults.
+        # Keys must match input_select.grow_tent_growth_stage options exactly.
+        stage_defaults:
+          Seedling:
+            temp_day: 24
+            temp_night: 22
+            rh_day: 70
+            rh_night: 65
+            vpd_day: 0.5
+            vpd_night: 0.5
+            rh_min: 65
+            rh_max: 80
+            light_hours: 18
+          Early Veg:
+            temp_day: 25
+            temp_night: 22
+            rh_day: 65
+            rh_night: 60
+            vpd_day: 0.7
+            vpd_night: 0.6
+            rh_min: 60
+            rh_max: 75
+            light_hours: 18
+          Veg:
+            temp_day: 26
+            temp_night: 22
+            rh_day: 60
+            rh_night: 55
+            vpd_day: 0.9
+            vpd_night: 0.8
+            rh_min: 50
+            rh_max: 70
+            light_hours: 18
+          Transition:
+            temp_day: 26
+            temp_night: 22
+            rh_day: 55
+            rh_night: 50
+            vpd_day: 1.0
+            vpd_night: 0.9
+            rh_min: 50
+            rh_max: 65
+            # light_hours intentionally omitted — driven by tent_lights_transition
+          Early Flower:
+            temp_day: 26
+            temp_night: 22
+            rh_day: 50
+            rh_night: 45
+            vpd_day: 1.1
+            vpd_night: 1.0
+            rh_min: 45
+            rh_max: 60
+            light_hours: 12
+          Flower:
+            temp_day: 25
+            temp_night: 21
+            rh_day: 45
+            rh_night: 40
+            vpd_day: 1.2
+            vpd_night: 1.0
+            rh_min: 40
+            rh_max: 55
+            light_hours: 12
+          Late Flower:
+            temp_day: 23
+            temp_night: 19
+            rh_day: 40
+            rh_night: 35
+            vpd_day: 1.4
+            vpd_night: 1.2
+            rh_min: 35
+            rh_max: 50
+            light_hours: 12
+        current_stage: "{{ states('input_select.grow_tent_growth_stage') }}"
+        defaults: "{{ stage_defaults.get(current_stage, {}) }}"
       actions:
-        - choose:
-            - conditions:
-                - condition: state
-                  entity_id: input_select.grow_tent_growth_stage
-                  state: Seedling
-              sequence:
+        - if:
+            - condition: template
+              value_template: "{{ defaults | length > 0 }}"
+          then:
+            - action: input_number.set_value
+              target:
+                entity_id: input_number.tent_day_temp_target
+              data:
+                value: "{{ defaults.temp_day }}"
+            - action: input_number.set_value
+              target:
+                entity_id: input_number.tent_night_temp_target
+              data:
+                value: "{{ defaults.temp_night }}"
+            - action: input_number.set_value
+              target:
+                entity_id: input_number.humidity_day_target
+              data:
+                value: "{{ defaults.rh_day }}"
+            - action: input_number.set_value
+              target:
+                entity_id: input_number.humidity_night_target
+              data:
+                value: "{{ defaults.rh_night }}"
+            - action: input_number.set_value
+              target:
+                entity_id: input_number.vpd_day_target
+              data:
+                value: "{{ defaults.vpd_day }}"
+            - action: input_number.set_value
+              target:
+                entity_id: input_number.vpd_night_target
+              data:
+                value: "{{ defaults.vpd_night }}"
+            - action: input_number.set_value
+              target:
+                entity_id: input_number.humidifier_min_rh
+              data:
+                value: "{{ defaults.rh_min }}"
+            - action: input_number.set_value
+              target:
+                entity_id: input_number.humidifier_max_rh
+              data:
+                value: "{{ defaults.rh_max }}"
+            # Only set light_hours when the stage table provides one
+            # (Transition is driven by the per-day transition counter).
+            - if:
+                - condition: template
+                  value_template: "{{ 'light_hours' in defaults }}"
+              then:
                 - action: input_number.set_value
                   target:
-                    entity_id: input_number.tent_day_temp_target
+                    entity_id: input_number.grow_tent_light_duration
                   data:
-                    value: 23
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.tent_night_temp_target
-                  data:
-                    value: 20
-            - conditions:
-                - condition: state
-                  entity_id: input_select.grow_tent_growth_stage
-                  state: Vegetative
-              sequence:
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.tent_day_temp_target
-                  data:
-                    value: 25
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.tent_night_temp_target
-                  data:
-                    value: 20
-            - conditions:
-                - condition: state
-                  entity_id: input_select.grow_tent_growth_stage
-                  state: Flowering
-              sequence:
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.tent_day_temp_target
-                  data:
-                    value: 24
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.tent_night_temp_target
-                  data:
-                    value: 19
-            - conditions:
-                - condition: state
-                  entity_id: input_select.grow_tent_growth_stage
-                  state: Harvest
-              sequence:
-                - action: climate.set_hvac_mode
-                  target:
-                    entity_id: climate.air_conditioner_tent
-                  data:
-                    hvac_mode: "off"
-        - action: persistent_notification.create
-          data:
-            title: "AC — Stage Defaults Updated"
-            message: >
-              Growth stage changed to {{ states('input_select.grow_tent_growth_stage') }}.
-              Day target: {{ states('input_number.tent_day_temp_target') }}°C,
-              Night target: {{ states('input_number.tent_night_temp_target') }}°C.
+                    value: "{{ defaults.light_hours }}"
+            - action: persistent_notification.create
+              data:
+                title: "Growth Stage — Defaults Applied"
+                message: >
+                  Stage: {{ current_stage }}.
+                  Temp day/night: {{ defaults.temp_day }}/{{ defaults.temp_night }}°C.
+                  RH day/night: {{ defaults.rh_day }}/{{ defaults.rh_night }}%
+                  (clamps {{ defaults.rh_min }}–{{ defaults.rh_max }}%).
+                  VPD day/night: {{ defaults.vpd_day }}/{{ defaults.vpd_night }} kPa.
+                  {% if 'light_hours' in defaults %}Lights: {{ defaults.light_hours }}h.{% endif %}
       mode: single
-    - id: humidity_stage_change_defaults
-      alias: "Humidity — Stage Change Defaults"
-      description: >
-        When growth stage changes, auto-set day/night humidity targets to
-        recommended cannabis values. User can still override from dashboard.
-      triggers:
-        - trigger: state
-          entity_id: input_select.grow_tent_growth_stage
-      conditions:
-        - condition: state
-          entity_id: input_boolean.grow_tent_automation_enabled
-          state: "on"
-      actions:
-        - choose:
-            - conditions:
-                - condition: state
-                  entity_id: input_select.grow_tent_growth_stage
-                  state: Seedling
-              sequence:
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.humidity_day_target
-                  data:
-                    value: 65
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.humidity_night_target
-                  data:
-                    value: 60
-            - conditions:
-                - condition: state
-                  entity_id: input_select.grow_tent_growth_stage
-                  state: Vegetative
-              sequence:
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.humidity_day_target
-                  data:
-                    value: 60
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.humidity_night_target
-                  data:
-                    value: 55
-            - conditions:
-                - condition: state
-                  entity_id: input_select.grow_tent_growth_stage
-                  state: Flowering
-              sequence:
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.humidity_day_target
-                  data:
-                    value: 45
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.humidity_night_target
-                  data:
-                    value: 40
-            - conditions:
-                - condition: state
-                  entity_id: input_select.grow_tent_growth_stage
-                  state: Harvest
-              sequence:
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.humidity_day_target
-                  data:
-                    value: 45
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.humidity_night_target
-                  data:
-                    value: 40
-        - action: persistent_notification.create
-          data:
-            title: "Humidity — Stage Defaults Updated"
-            message: >
-              Growth stage changed to {{ states('input_select.grow_tent_growth_stage') }}.
-              Day RH target: {{ states('input_number.humidity_day_target') }}%,
-              Night RH target: {{ states('input_number.humidity_night_target') }}%.
-      mode: single
-
-    - id: vpd_stage_change_defaults
-      alias: "VPD — Stage Change Defaults"
-      description: >
-        When growth stage changes, auto-set VPD day/night targets to
-        recommended cannabis values. User can override from dashboard.
-      triggers:
-        - trigger: state
-          entity_id: input_select.grow_tent_growth_stage
-      conditions:
-        - condition: state
-          entity_id: input_boolean.grow_tent_automation_enabled
-          state: "on"
-      actions:
-        - choose:
-            - conditions:
-                - condition: state
-                  entity_id: input_select.grow_tent_growth_stage
-                  state: Seedling
-              sequence:
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.vpd_day_target
-                  data:
-                    value: 0.6
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.vpd_night_target
-                  data:
-                    value: 0.5
-            - conditions:
-                - condition: state
-                  entity_id: input_select.grow_tent_growth_stage
-                  state: Vegetative
-              sequence:
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.vpd_day_target
-                  data:
-                    value: 1.0
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.vpd_night_target
-                  data:
-                    value: 0.8
-            - conditions:
-                - condition: state
-                  entity_id: input_select.grow_tent_growth_stage
-                  state: Flowering
-              sequence:
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.vpd_day_target
-                  data:
-                    value: 1.2
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.vpd_night_target
-                  data:
-                    value: 1.0
-            - conditions:
-                - condition: state
-                  entity_id: input_select.grow_tent_growth_stage
-                  state: Harvest
-              sequence:
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.vpd_day_target
-                  data:
-                    value: 1.2
-                - action: input_number.set_value
-                  target:
-                    entity_id: input_number.vpd_night_target
-                  data:
-                    value: 1.0
-        - action: persistent_notification.create
-          data:
-            title: "VPD — Stage Defaults Updated"
-            message: >
-              Growth stage changed to {{ states('input_select.grow_tent_growth_stage') }}.
-              VPD day target: {{ states('input_number.vpd_day_target') }} kPa,
-              VPD night target: {{ states('input_number.vpd_night_target') }} kPa.
-      mode: single
-

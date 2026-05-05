@@ -3,17 +3,18 @@ tent_control_safety:
     - id: safety_flower_night_humidifier_shutoff
       alias: "Safety — Flower Night Humidifier Shutoff"
       description: >
-        When lights turn off during Flowering stage, immediately shut off the
-        humidifier fogger and fan to prevent bud rot. Only fires if the safety
-        block toggle is enabled.
+        When lights turn off during any flower stage (Early Flower / Flower /
+        Late Flower), immediately shut off the humidifier fogger and fan to
+        prevent bud rot. Only fires if the safety block toggle is enabled.
       triggers:
         - trigger: state
           entity_id: light.hlg
           to: "off"
       conditions:
-        - condition: state
-          entity_id: input_select.grow_tent_growth_stage
-          state: Flowering
+        - condition: template
+          value_template: >
+            {{ states('input_select.grow_tent_growth_stage')
+               in ['Early Flower', 'Flower', 'Late Flower'] }}
         - condition: state
           entity_id: input_boolean.flower_night_humidifier_block
           state: "on"
@@ -28,9 +29,9 @@ tent_control_safety:
           data:
             title: "Humidifier Blocked — Flower Night"
             message: >
-              Lights off during Flowering stage. Humidifier shut off to prevent
-              bud rot. Disable 'Block Humidifier During Flower Nights' toggle
-              to override this behavior.
+              Lights off during {{ states('input_select.grow_tent_growth_stage') }}
+              stage. Humidifier shut off to prevent bud rot. Disable
+              'Block Humidifier During Flower Nights' toggle to override.
       mode: single
     - id: safety_table_drain_flood_stop
       alias: "Safety — Table Drain Flood Stop"
@@ -165,9 +166,10 @@ tent_control_safety:
           for:
             minutes: 10
       conditions:
-        - condition: state
-          entity_id: input_select.grow_tent_growth_stage
-          state: Flowering
+        - condition: template
+          value_template: >
+            {{ states('input_select.grow_tent_growth_stage')
+               in ['Early Flower', 'Flower', 'Late Flower'] }}
         - condition: state
           entity_id: light.hlg
           state: "off"
