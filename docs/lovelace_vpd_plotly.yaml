@@ -5,20 +5,25 @@
 #
 # X axis = temp (°C), Y axis = RH (%). Plots:
 #   - Green curve: (T, RH) combos that yield the active VPD target.
-#   - Two dashed orange curves: target ± vpd_tolerance, with a soft green
+#   - Two dashed orange curves: target ± vpd_tolerance with a soft green
 #     band filling between them = "in target zone".
 #   - Grey dotted crosshair: current temp (vertical) + current RH (horizontal).
-#   - Big red dot: current (T, RH) point with "Now" label.
+#   - Big red dot: current (T, RH) point.
 #
-# Why plotly and not apexcharts: apexcharts-card v2 is hard-wired to
-# time-series x-axes, so [temp, rh] data was being plotted on a millisecond
-# timeline. plotly-graph-card supports arbitrary numeric X via $fn data
-# generators.
+# Implementation notes for future tweaks:
+#   - layout.xaxis.type: linear is REQUIRED. Without it plotly auto-detects
+#     and treats x values as Unix timestamps (curves stack as if on a
+#     timeline, x-axis labels say "20:00:00 Dec 31").
+#   - entity: '' on every trace skips history fetching. With a real entity
+#     bound, plotly-graph-card iterates the entity's history samples and
+#     calls $fn once per sample, drawing one curve per past state — you
+#     get visible "ghost" copies of every curve.
+#   - refresh_interval drives all updates; 30s is fine for tent climate.
 
 type: custom:plotly-graph
 title: VPD Status
 refresh_interval: 30
-hours_to_show: 0.01
+hours_to_show: 0
 ha_theme: false
 
 layout:
@@ -33,19 +38,23 @@ layout:
     b: 60
     l: 70
   xaxis:
+    type: linear
     title: Temperature (°C)
     range: [15, 35]
     dtick: 2
     gridcolor: '#3a3a3a'
     zeroline: false
     showspikes: false
+    fixedrange: true
   yaxis:
+    type: linear
     title: Relative Humidity (%)
     range: [30, 90]
     dtick: 10
     gridcolor: '#3a3a3a'
     zeroline: false
     showspikes: false
+    fixedrange: true
   showlegend: true
   legend:
     orientation: h
@@ -56,7 +65,7 @@ layout:
 
 entities:
   # 1) Target VPD curve (drawn first — band traces will fill relative to this)
-  - entity: sensor.active_vpd_target
+  - entity: ''
     name: Target VPD
     mode: lines
     line:
@@ -82,7 +91,7 @@ entities:
 
   # 2) Upper tolerance — drier, LOWER RH curve (drawn before lower so the
   #    band trace can fill upward to the lower-tolerance curve)
-  - entity: input_number.vpd_tolerance
+  - entity: ''
     name: '+ tol'
     mode: lines
     line:
@@ -111,7 +120,7 @@ entities:
 
   # 3) Lower tolerance — wetter, HIGHER RH curve, fills DOWN to trace #2
   #    creating the green target band between the two tolerance curves
-  - entity: input_number.vpd_tolerance
+  - entity: ''
     name: '− tol'
     mode: lines
     line:
@@ -141,7 +150,7 @@ entities:
       }
 
   # 4) Vertical crosshair @ current temp
-  - entity: sensor.tent_average_temperature
+  - entity: ''
     name: T
     mode: lines
     showlegend: false
@@ -158,7 +167,7 @@ entities:
       $fn ({hass}) => [30, 90]
 
   # 5) Horizontal crosshair @ current RH
-  - entity: sensor.tent_average_humidity
+  - entity: ''
     name: RH
     mode: lines
     showlegend: false
@@ -175,7 +184,7 @@ entities:
       }
 
   # 6) Current (T, RH) point — big red dot, drawn last so it sits on top
-  - entity: sensor.grow_tent_vpd
+  - entity: ''
     name: Now
     mode: markers
     marker:
