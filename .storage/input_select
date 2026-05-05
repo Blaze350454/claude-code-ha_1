@@ -3,17 +3,6 @@
   "minor_version": 2,
   "key": "input_select",
   "data": {
-    "items": [
-      {
-        "id": "growth_stage",
-        "name": "Growth Stage",
-        "icon": "mdi:sprout-outline",
-        "options": [
-          "Vegetative",
-          "Transition",
-          "Flower"
-        ]
-      }
-    ]
+    "items": []
   }
 }
