@@ -276,15 +276,47 @@ irrigation_advance_to_next_feed:
 random_timer_auto:
   alias: Random Timer Auto
   description: >
-    Toggle pulse driven entirely by helpers on the AI > Tools dashboard:
-    `input_number.random_timer_minutes` for duration, and the
+    Toggle the timer.random_timer countdown on the AI > Tools dashboard.
+    Reads `input_number.random_timer_minutes` for duration and the
     `input_boolean.rt_target_*` checkboxes for which entities to pulse.
-    First run turns the checked targets ON for the configured minutes then
-    OFF. Re-running while the timer is active turns ALL candidate targets
-    OFF (safety net) and cancels the timer; next run starts fresh.
+
+    Tap once: turns checked targets ON, starts timer for the configured
+    minutes. The visible countdown lives on timer.random_timer.
+    Tap while timer is active: cancels the timer and turns those exact
+    targets OFF. Tap again: starts fresh.
+
+    Natural completion (timer.finished) is handled by the
+    `random_timer_finished` automation in
+    packages/tent/irrigation/random_timer_auto.yaml.
   icon: mdi:timer-play-outline
   mode: restart
   sequence:
+    - choose:
+        # Toggle: timer is running → cancel and turn off whatever's active
+        - conditions:
+            - condition: state
+              entity_id: timer.random_timer
+              state: 'active'
+          sequence:
+            - action: timer.cancel
+              target:
+                entity_id: timer.random_timer
+            - variables:
+                active: >
+                  {{ states('input_text.random_timer_active_targets').split(',')
+                     | reject('eq', '') | list }}
+            - if: "{{ active | length > 0 }}"
+              then:
+                - action: homeassistant.turn_off
+                  data:
+                    entity_id: "{{ active }}"
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.random_timer_active_targets
+              data:
+                value: ""
+            - stop: Cancelled — entities OFF, timer reset
+    # Start fresh
     - variables:
         target_map:
           - { picker: input_boolean.rt_target_feed_pump, ent: switch.feed_pump_irrigation_tent }
@@ -297,7 +329,7 @@ random_timer_auto:
           - { picker: input_boolean.rt_target_feed_fill_valve, ent: valve.feed_fill_valve_irrigation_tent }
           - { picker: input_boolean.rt_target_flush_fill_valve, ent: valve.flush_fill_valve_irrigation_tent }
           - { picker: input_boolean.rt_target_flush_drain_valve, ent: valve.flush_drain_valve_irrigation_tent }
-        targets: >-
+        targets: >
           {%- set ns = namespace(out=[]) -%}
           {%- for row in target_map -%}
             {%- if is_state(row.picker, 'on') -%}
@@ -305,42 +337,23 @@ random_timer_auto:
             {%- endif -%}
           {%- endfor -%}
           {{ ns.out }}
-        all_candidates: "{{ target_map | map(attribute='ent') | list }}"
         minutes: "{{ states('input_number.random_timer_minutes') | int(5) }}"
-    - choose:
-        # Toggle: timer running → cancel + safety-off all candidates
-        - conditions:
-            - condition: state
-              entity_id: input_boolean.random_timer_running
-              state: 'on'
-          sequence:
-            - action: input_boolean.turn_off
-              target:
-                entity_id: input_boolean.random_timer_running
-            - action: homeassistant.turn_off
-              data:
-                entity_id: '{{ all_candidates }}'
-            - stop: Cancelled — all candidate targets OFF, timer reset
-        # No targets checked → bail with a notice, no state change
-        - conditions:
-            - condition: template
-              value_template: '{{ targets | length == 0 }}'
-          sequence:
-            - stop: No targets selected — nothing to do
-    - action: input_boolean.turn_on
+    - if: "{{ targets | length == 0 }}"
+      then:
+        - stop: No targets selected — check at least one box and try again
+    - action: input_text.set_value
       target:
-        entity_id: input_boolean.random_timer_running
+        entity_id: input_text.random_timer_active_targets
+      data:
+        value: "{{ targets | join(',') }}"
     - action: homeassistant.turn_on
       data:
-        entity_id: '{{ targets }}'
-    - delay:
-        minutes: '{{ minutes }}'
-    - action: homeassistant.turn_off
-      data:
-        entity_id: '{{ targets }}'
-    - action: input_boolean.turn_off
+        entity_id: "{{ targets }}"
+    - action: timer.start
       target:
-        entity_id: input_boolean.random_timer_running
+        entity_id: timer.random_timer
+      data:
+        duration: "{{ '%02d:%02d:00' | format(minutes // 60, minutes % 60) }}"
 
 # --- AUTOMATIONS ---
 
