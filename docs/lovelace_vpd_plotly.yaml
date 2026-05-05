@@ -35,7 +35,7 @@ layout:
   margin:
     t: 30
     r: 20
-    b: 60
+    b: 80
     l: 70
   xaxis:
     type: linear
