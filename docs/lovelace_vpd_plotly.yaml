@@ -1,0 +1,196 @@
+# VPD Status — plotly-graph-card
+#
+# Lovelace card YAML. Paste into Edit Dashboard → Add Card → Manual.
+# Requires HACS dbuezas/lovelace-plotly-graph-card (custom repo).
+#
+# X axis = temp (°C), Y axis = RH (%). Plots:
+#   - Green curve: (T, RH) combos that yield the active VPD target.
+#   - Two dashed orange curves: target ± vpd_tolerance, with a soft green
+#     band filling between them = "in target zone".
+#   - Grey dotted crosshair: current temp (vertical) + current RH (horizontal).
+#   - Big red dot: current (T, RH) point with "Now" label.
+#
+# Why plotly and not apexcharts: apexcharts-card v2 is hard-wired to
+# time-series x-axes, so [temp, rh] data was being plotted on a millisecond
+# timeline. plotly-graph-card supports arbitrary numeric X via $fn data
+# generators.
+
+type: custom:plotly-graph
+title: VPD Status
+refresh_interval: 30
+hours_to_show: 0.01
+ha_theme: false
+
+layout:
+  height: 460
+  paper_bgcolor: '#1c1c1e'
+  plot_bgcolor: '#1c1c1e'
+  font:
+    color: '#e6e6e6'
+  margin:
+    t: 30
+    r: 20
+    b: 60
+    l: 70
+  xaxis:
+    title: Temperature (°C)
+    range: [15, 35]
+    dtick: 2
+    gridcolor: '#3a3a3a'
+    zeroline: false
+    showspikes: false
+  yaxis:
+    title: Relative Humidity (%)
+    range: [30, 90]
+    dtick: 10
+    gridcolor: '#3a3a3a'
+    zeroline: false
+    showspikes: false
+  showlegend: true
+  legend:
+    orientation: h
+    y: 1.08
+    x: 0
+    bgcolor: rgba(0,0,0,0)
+  hovermode: closest
+
+entities:
+  # 1) Target VPD curve (drawn first — band traces will fill relative to this)
+  - entity: sensor.active_vpd_target
+    name: Target VPD
+    mode: lines
+    line:
+      color: '#30d158'
+      width: 3
+    x: |
+      $fn ({hass}) => {
+        const xs = [];
+        for (let t = 15; t <= 35.01; t += 0.25) xs.push(t);
+        return xs;
+      }
+    "y": |
+      $fn ({hass}) => {
+        const target = parseFloat(hass.states['sensor.active_vpd_target']?.state);
+        if (isNaN(target)) return [];
+        const ys = [];
+        for (let t = 15; t <= 35.01; t += 0.25) {
+          const svp = 0.61078 * Math.exp((17.27 * t) / (t + 237.3));
+          ys.push(100 * (1 - target / svp));
+        }
+        return ys;
+      }
+
+  # 2) Upper tolerance — drier, LOWER RH curve (drawn before lower so the
+  #    band trace can fill upward to the lower-tolerance curve)
+  - entity: input_number.vpd_tolerance
+    name: '+ tol'
+    mode: lines
+    line:
+      color: '#ff9500'
+      width: 1
+      dash: dash
+    x: |
+      $fn ({hass}) => {
+        const xs = [];
+        for (let t = 15; t <= 35.01; t += 0.25) xs.push(t);
+        return xs;
+      }
+    "y": |
+      $fn ({hass}) => {
+        const tgt = parseFloat(hass.states['sensor.active_vpd_target']?.state);
+        const tol = parseFloat(hass.states['input_number.vpd_tolerance']?.state);
+        if (isNaN(tgt) || isNaN(tol)) return [];
+        const v = tgt + tol;
+        const ys = [];
+        for (let t = 15; t <= 35.01; t += 0.25) {
+          const svp = 0.61078 * Math.exp((17.27 * t) / (t + 237.3));
+          ys.push(100 * (1 - v / svp));
+        }
+        return ys;
+      }
+
+  # 3) Lower tolerance — wetter, HIGHER RH curve, fills DOWN to trace #2
+  #    creating the green target band between the two tolerance curves
+  - entity: input_number.vpd_tolerance
+    name: '− tol'
+    mode: lines
+    line:
+      color: '#ff9500'
+      width: 1
+      dash: dash
+    fill: tonexty
+    fillcolor: 'rgba(48,209,88,0.10)'
+    x: |
+      $fn ({hass}) => {
+        const xs = [];
+        for (let t = 15; t <= 35.01; t += 0.25) xs.push(t);
+        return xs;
+      }
+    "y": |
+      $fn ({hass}) => {
+        const tgt = parseFloat(hass.states['sensor.active_vpd_target']?.state);
+        const tol = parseFloat(hass.states['input_number.vpd_tolerance']?.state);
+        if (isNaN(tgt) || isNaN(tol)) return [];
+        const v = Math.max(0.05, tgt - tol);
+        const ys = [];
+        for (let t = 15; t <= 35.01; t += 0.25) {
+          const svp = 0.61078 * Math.exp((17.27 * t) / (t + 237.3));
+          ys.push(100 * (1 - v / svp));
+        }
+        return ys;
+      }
+
+  # 4) Vertical crosshair @ current temp
+  - entity: sensor.tent_average_temperature
+    name: T
+    mode: lines
+    showlegend: false
+    line:
+      color: '#888'
+      width: 1
+      dash: dot
+    x: |
+      $fn ({hass}) => {
+        const t = parseFloat(hass.states['sensor.tent_average_temperature']?.state);
+        return isNaN(t) ? [] : [t, t];
+      }
+    "y": |
+      $fn ({hass}) => [30, 90]
+
+  # 5) Horizontal crosshair @ current RH
+  - entity: sensor.tent_average_humidity
+    name: RH
+    mode: lines
+    showlegend: false
+    line:
+      color: '#888'
+      width: 1
+      dash: dot
+    x: |
+      $fn ({hass}) => [15, 35]
+    "y": |
+      $fn ({hass}) => {
+        const r = parseFloat(hass.states['sensor.tent_average_humidity']?.state);
+        return isNaN(r) ? [] : [r, r];
+      }
+
+  # 6) Current (T, RH) point — big red dot, drawn last so it sits on top
+  - entity: sensor.grow_tent_vpd
+    name: Now
+    mode: markers
+    marker:
+      color: '#ff3b30'
+      size: 18
+      line:
+        color: '#ffffff'
+        width: 2
+    x: |
+      $fn ({hass}) => {
+        const t = parseFloat(hass.states['sensor.tent_average_temperature']?.state);
+        return isNaN(t) ? [] : [t];
+      }
+    "y": |
+      $fn ({hass}) => {
+        const r = parseFloat(hass.states['sensor.tent_average_humidity']?.state);
+        return isNaN(r) ? [] : [r];
+      }
