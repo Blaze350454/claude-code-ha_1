@@ -19,7 +19,7 @@ template: !include_dir_merge_list templates/
 lovelace:
   mode: storage
   dashboards:
-    ai:
+    ai-sandbox:
       mode: yaml
       title: AI
       icon: mdi:robot
