@@ -1,4 +1,7 @@
-title: Tent
+title: AI
+# Sandbox dashboard — Claude edits this file directly via the deploy
+# pipeline. Cards that prove themselves get copy-pasted into the
+# UI-managed Tent dashboard (or wherever else they belong).
 views:
   - title: VPD
     path: vpd

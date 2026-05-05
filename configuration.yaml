@@ -13,15 +13,15 @@ script: !include scripts.yaml
 scene: !include scenes.yaml
 template: !include_dir_merge_list templates/
 
-# Default dashboard stays UI-managed (storage). Additional YAML-mode
-# dashboards live under dashboards/ so the deploy pipeline can edit
-# them directly without touching .storage.
+# Default dashboard stays UI-managed (storage). The AI dashboard is
+# YAML-mode so Claude can edit it directly via the deploy pipeline;
+# finalized cards get copy-pasted from AI into UI-managed dashboards.
 lovelace:
   mode: storage
   dashboards:
-    tent:
+    ai:
       mode: yaml
-      title: Tent
-      icon: mdi:leaf
+      title: AI
+      icon: mdi:robot
       show_in_sidebar: true
-      filename: dashboards/tent.yaml
+      filename: dashboards/ai.yaml
