@@ -12,3 +12,16 @@ automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
 template: !include_dir_merge_list templates/
+
+# Default dashboard stays UI-managed (storage). Additional YAML-mode
+# dashboards live under dashboards/ so the deploy pipeline can edit
+# them directly without touching .storage.
+lovelace:
+  mode: storage
+  dashboards:
+    tent:
+      mode: yaml
+      title: Tent
+      icon: mdi:leaf
+      show_in_sidebar: true
+      filename: dashboards/tent.yaml
