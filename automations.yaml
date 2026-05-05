@@ -6,7 +6,9 @@
     to cancel and turn them OFF immediately. Edit the entity list and
     duration in the Actions section below.
   mode: restart
-  trigger: []
+  trigger:
+    - platform: state
+      entity_id: input_button.random_timer_trigger
   condition: []
   action:
     - choose:
