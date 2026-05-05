@@ -22,7 +22,7 @@ header:
   show_states: true
   colorize_states: true
   title: VPD Status
-chart_type: scatter
+chart_type: line
 graph_span: 1m
 update_interval: 30s
 
@@ -85,7 +85,8 @@ series:
   # ---- 1) Current temp/RH point — big red marker ---------------------------
   - entity: sensor.grow_tent_vpd
     name: Now
-    type: scatter
+    type: line
+    stroke_width: 0
     color: '#ff3b30'
     show:
       legend_value: true
