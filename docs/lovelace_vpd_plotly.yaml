@@ -62,6 +62,24 @@ layout:
     x: 0
     bgcolor: rgba(0,0,0,0)
   hovermode: closest
+  annotations:
+    # Stage + active VPD target badge, top-left inside the plot
+    - xref: paper
+      yref: paper
+      x: 0.02
+      y: 0.98
+      xanchor: left
+      yanchor: top
+      showarrow: false
+      bgcolor: 'rgba(28,28,30,0.75)'
+      bordercolor: '#3a3a3a'
+      borderwidth: 1
+      borderpad: 6
+      font:
+        color: '#30d158'
+        size: 12
+      text: |
+        $ex 'Stage: ' + hass.states['input_select.grow_tent_growth_stage'].state + '  •  Target: ' + parseFloat(hass.states['sensor.active_vpd_target'].state).toFixed(2) + ' kPa'
 
 entities:
   # 1) Target VPD curve (drawn first — band traces will fill relative to this)
