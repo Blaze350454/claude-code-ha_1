@@ -10,17 +10,60 @@ views:
       - type: markdown
         content: |
           ## Random Timer Auto
-          Tap the button to open the script. Pick targets, set the duration
-          slider, then **Run Script**. Tap again while running to cancel
-          (entities OFF, timer reset). Next tap starts a fresh timer.
+          Set the duration slider, check which entities to pulse, then hit
+          **Start / Stop**. While the timer is running, hitting the button
+          again turns ALL candidate targets OFF and resets the timer.
+
+      - type: entities
+        title: Duration & Status
+        show_header_toggle: false
+        entities:
+          - entity: input_number.random_timer_minutes
+            name: Duration (minutes)
+          - entity: input_boolean.random_timer_running
+            name: Running
+            icon: mdi:timer-sand
+
+      - type: horizontal-stack
+        cards:
+          - type: entities
+            title: Pumps
+            show_header_toggle: false
+            entities:
+              - entity: input_boolean.rt_target_feed_pump
+                name: Feed Pump
+              - entity: input_boolean.rt_target_flush_pump
+                name: Flush Pump
+              - entity: input_boolean.rt_target_feed_stir_pump
+                name: Feed Stir Pump
+              - entity: input_boolean.rt_target_flush_stir_pump
+                name: Flush Stir Pump
+              - entity: input_boolean.rt_target_air_pump
+                name: Air Pump
+          - type: entities
+            title: Valves
+            show_header_toggle: false
+            entities:
+              - entity: input_boolean.rt_target_feed_valve
+                name: Feed Valve
+              - entity: input_boolean.rt_target_flush_valve
+                name: Flush Valve
+              - entity: input_boolean.rt_target_feed_fill_valve
+                name: Feed Fill Valve
+              - entity: input_boolean.rt_target_flush_fill_valve
+                name: Flush Fill Valve
+              - entity: input_boolean.rt_target_flush_drain_valve
+                name: Flush Drain Valve
+
       - type: button
-        name: Random Timer Auto
-        icon: mdi:timer-play-outline
-        icon_height: 56px
+        name: Start / Stop
+        icon: mdi:play-pause
+        icon_height: 64px
         entity: script.random_timer_auto
         show_state: true
         tap_action:
-          action: more-info
+          action: perform-action
+          perform_action: script.random_timer_auto
 
   - title: VPD
     path: vpd

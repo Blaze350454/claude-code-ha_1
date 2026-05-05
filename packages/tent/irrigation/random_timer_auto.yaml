@@ -3,3 +3,43 @@ tent_irrigation_random_timer_auto:
     random_timer_running:
       name: Random Timer Running
       icon: mdi:timer-play-outline
+    rt_target_feed_pump:
+      name: "RT Target — Feed Pump"
+      icon: mdi:pump
+    rt_target_flush_pump:
+      name: "RT Target — Flush Pump"
+      icon: mdi:pump
+    rt_target_feed_stir_pump:
+      name: "RT Target — Feed Stir Pump"
+      icon: mdi:pump
+    rt_target_flush_stir_pump:
+      name: "RT Target — Flush Stir Pump"
+      icon: mdi:pump
+    rt_target_air_pump:
+      name: "RT Target — Air Pump"
+      icon: mdi:weather-windy
+    rt_target_feed_valve:
+      name: "RT Target — Feed Valve"
+      icon: mdi:valve
+    rt_target_flush_valve:
+      name: "RT Target — Flush Valve"
+      icon: mdi:valve
+    rt_target_feed_fill_valve:
+      name: "RT Target — Feed Fill Valve"
+      icon: mdi:valve
+    rt_target_flush_fill_valve:
+      name: "RT Target — Flush Fill Valve"
+      icon: mdi:valve
+    rt_target_flush_drain_valve:
+      name: "RT Target — Flush Drain Valve"
+      icon: mdi:valve
+  input_number:
+    random_timer_minutes:
+      name: Random Timer Minutes
+      min: 1
+      max: 60
+      step: 1
+      initial: 5
+      unit_of_measurement: min
+      mode: slider
+      icon: mdi:timer-outline
