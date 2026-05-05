@@ -17,6 +17,14 @@ tent_irrigation_random_timer_auto:
       mode: slider
       icon: mdi:timer-outline
 
+  group:
+    random_timer_targets:
+      name: Random Timer Targets
+      icon: mdi:format-list-checks
+      entities:
+        - switch.feed_pump_irrigation_tent
+        - valve.feed_valve_irrigation_tent
+
   automation:
     - id: random_timer_finished
       alias: "Random Timer — Finished cleanup"

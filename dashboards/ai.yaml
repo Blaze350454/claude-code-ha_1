@@ -33,9 +33,10 @@ views:
 
       - type: markdown
         content: >
-          **Edit which entities the timer pulses:** Settings → Devices &
-          Services → Helpers → **Random Timer Targets** → pencil icon →
-          add/remove members. Switches and valves are both supported.
+          **Default targets:** feed pump + feed valve. Members of
+          `group.random_timer_targets` are defined in YAML (package
+          `tent/irrigation/random_timer_auto.yaml`) — ask Claude to swap
+          or add members. Mixed switches and valves are supported.
 
   - title: VPD
     path: vpd
