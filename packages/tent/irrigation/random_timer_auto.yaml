@@ -17,70 +17,23 @@ tent_irrigation_random_timer_auto:
       mode: slider
       icon: mdi:timer-outline
 
-  input_text:
-    random_timer_active_targets:
-      name: Random Timer Active Targets
-      max: 255
-      initial: ""
-
-  input_boolean:
-    rt_target_feed_pump:
-      name: "RT Target — Feed Pump"
-      icon: mdi:pump
-    rt_target_flush_pump:
-      name: "RT Target — Flush Pump"
-      icon: mdi:pump
-    rt_target_feed_stir_pump:
-      name: "RT Target — Feed Stir Pump"
-      icon: mdi:pump
-    rt_target_flush_stir_pump:
-      name: "RT Target — Flush Stir Pump"
-      icon: mdi:pump
-    rt_target_air_pump:
-      name: "RT Target — Air Pump"
-      icon: mdi:weather-windy
-    rt_target_feed_valve:
-      name: "RT Target — Feed Valve"
-      icon: mdi:valve
-    rt_target_flush_valve:
-      name: "RT Target — Flush Valve"
-      icon: mdi:valve
-    rt_target_feed_fill_valve:
-      name: "RT Target — Feed Fill Valve"
-      icon: mdi:valve
-    rt_target_flush_fill_valve:
-      name: "RT Target — Flush Fill Valve"
-      icon: mdi:valve
-    rt_target_flush_drain_valve:
-      name: "RT Target — Flush Drain Valve"
-      icon: mdi:valve
-
   automation:
     - id: random_timer_finished
       alias: "Random Timer — Finished cleanup"
       description: >
-        When timer.random_timer fires its finished event, turn off the
-        entities the Random Timer Auto script started and clear the
-        active-targets store. Cancel cleanup is handled inline by the
-        script itself.
+        When timer.random_timer finishes naturally, close the feed valve
+        and turn off the feed pump. The script handles cancel cleanup
+        inline.
       triggers:
         - platform: event
           event_type: timer.finished
           event_data:
             entity_id: timer.random_timer
       actions:
-        - variables:
-            active: >
-              {{ states('input_text.random_timer_active_targets').split(',')
-                 | reject('eq', '') | list }}
-        - if: "{{ active | length > 0 }}"
-          then:
-            - action: homeassistant.turn_off
-              data:
-                entity_id: "{{ active }}"
-        - action: input_text.set_value
+        - action: switch.turn_off
           target:
-            entity_id: input_text.random_timer_active_targets
-          data:
-            value: ""
+            entity_id: switch.feed_pump_irrigation_tent
+        - action: valve.close_valve
+          target:
+            entity_id: valve.feed_valve_irrigation_tent
       mode: single

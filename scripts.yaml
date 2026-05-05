@@ -276,23 +276,17 @@ irrigation_advance_to_next_feed:
 random_timer_auto:
   alias: Random Timer Auto
   description: >
-    Toggle the timer.random_timer countdown on the AI > Tools dashboard.
-    Reads `input_number.random_timer_minutes` for duration and the
-    `input_boolean.rt_target_*` checkboxes for which entities to pulse.
-
-    Tap once: turns checked targets ON, starts timer for the configured
-    minutes. The visible countdown lives on timer.random_timer.
-    Tap while timer is active: cancels the timer and turns those exact
-    targets OFF. Tap again: starts fresh.
-
-    Natural completion (timer.finished) is handled by the
-    `random_timer_finished` automation in
-    packages/tent/irrigation/random_timer_auto.yaml.
+    Toggle the feed pump + feed valve via timer.random_timer. Reads
+    `input_number.random_timer_minutes` for duration. Tap once: opens
+    feed valve, turns on feed pump, starts the timer. Tap again while
+    the timer is active: cancels the timer, closes the valve, turns
+    off the pump. The visible countdown lives on timer.random_timer
+    on the AI > Tools dashboard. Natural completion is handled by the
+    `random_timer_finished` automation.
   icon: mdi:timer-play-outline
   mode: restart
   sequence:
     - choose:
-        # Toggle: timer is running → cancel and turn off whatever's active
         - conditions:
             - condition: state
               entity_id: timer.random_timer
@@ -301,54 +295,21 @@ random_timer_auto:
             - action: timer.cancel
               target:
                 entity_id: timer.random_timer
-            - variables:
-                active: >
-                  {{ states('input_text.random_timer_active_targets').split(',')
-                     | reject('eq', '') | list }}
-            - if: "{{ active | length > 0 }}"
-              then:
-                - action: homeassistant.turn_off
-                  data:
-                    entity_id: "{{ active }}"
-            - action: input_text.set_value
+            - action: switch.turn_off
               target:
-                entity_id: input_text.random_timer_active_targets
-              data:
-                value: ""
-            - stop: Cancelled — entities OFF, timer reset
-    # Start fresh
+                entity_id: switch.feed_pump_irrigation_tent
+            - action: valve.close_valve
+              target:
+                entity_id: valve.feed_valve_irrigation_tent
+            - stop: Cancelled — feed pump + valve OFF, timer reset
     - variables:
-        target_map:
-          - { picker: input_boolean.rt_target_feed_pump, ent: switch.feed_pump_irrigation_tent }
-          - { picker: input_boolean.rt_target_flush_pump, ent: switch.flush_pump_irrigation_tent }
-          - { picker: input_boolean.rt_target_feed_stir_pump, ent: switch.feed_stir_pump_irrigation_tent }
-          - { picker: input_boolean.rt_target_flush_stir_pump, ent: switch.flush_stir_pump_irrigation_tent }
-          - { picker: input_boolean.rt_target_air_pump, ent: switch.air_pump_irrigation_tent }
-          - { picker: input_boolean.rt_target_feed_valve, ent: valve.feed_valve_irrigation_tent }
-          - { picker: input_boolean.rt_target_flush_valve, ent: valve.flush_valve_irrigation_tent }
-          - { picker: input_boolean.rt_target_feed_fill_valve, ent: valve.feed_fill_valve_irrigation_tent }
-          - { picker: input_boolean.rt_target_flush_fill_valve, ent: valve.flush_fill_valve_irrigation_tent }
-          - { picker: input_boolean.rt_target_flush_drain_valve, ent: valve.flush_drain_valve_irrigation_tent }
-        targets: >
-          {%- set ns = namespace(out=[]) -%}
-          {%- for row in target_map -%}
-            {%- if is_state(row.picker, 'on') -%}
-              {%- set ns.out = ns.out + [row.ent] -%}
-            {%- endif -%}
-          {%- endfor -%}
-          {{ ns.out }}
         minutes: "{{ states('input_number.random_timer_minutes') | int(5) }}"
-    - if: "{{ targets | length == 0 }}"
-      then:
-        - stop: No targets selected — check at least one box and try again
-    - action: input_text.set_value
+    - action: valve.open_valve
       target:
-        entity_id: input_text.random_timer_active_targets
-      data:
-        value: "{{ targets | join(',') }}"
-    - action: homeassistant.turn_on
-      data:
-        entity_id: "{{ targets }}"
+        entity_id: valve.feed_valve_irrigation_tent
+    - action: switch.turn_on
+      target:
+        entity_id: switch.feed_pump_irrigation_tent
     - action: timer.start
       target:
         entity_id: timer.random_timer

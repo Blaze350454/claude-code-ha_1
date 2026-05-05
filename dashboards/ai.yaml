@@ -11,44 +11,21 @@ views:
         entity: timer.random_timer
         name: Random Timer
 
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: input_number.random_timer_minutes
+            name: Duration (minutes)
+
       - type: button
-        name: Start / Stop
-        icon: mdi:play-pause
+        name: Start / Stop — Feed Pump + Feed Valve
+        icon: mdi:water-pump
         icon_height: 64px
         entity: script.random_timer_auto
         show_state: false
         tap_action:
           action: perform-action
           perform_action: script.random_timer_auto
-
-      - type: entities
-        title: Setup
-        show_header_toggle: false
-        entities:
-          - entity: input_number.random_timer_minutes
-            name: Duration (minutes)
-          - type: divider
-          - entity: input_boolean.rt_target_feed_pump
-            name: Feed Pump
-          - entity: input_boolean.rt_target_flush_pump
-            name: Flush Pump
-          - entity: input_boolean.rt_target_feed_stir_pump
-            name: Feed Stir Pump
-          - entity: input_boolean.rt_target_flush_stir_pump
-            name: Flush Stir Pump
-          - entity: input_boolean.rt_target_air_pump
-            name: Air Pump
-          - type: divider
-          - entity: input_boolean.rt_target_feed_valve
-            name: Feed Valve
-          - entity: input_boolean.rt_target_flush_valve
-            name: Flush Valve
-          - entity: input_boolean.rt_target_feed_fill_valve
-            name: Feed Fill Valve
-          - entity: input_boolean.rt_target_flush_fill_valve
-            name: Flush Fill Valve
-          - entity: input_boolean.rt_target_flush_drain_valve
-            name: Flush Drain Valve
 
   - title: VPD
     path: vpd
