@@ -12,20 +12,30 @@ views:
         name: Random Timer
 
       - type: entities
+        title: Setup
         show_header_toggle: false
         entities:
           - entity: input_number.random_timer_minutes
             name: Duration (minutes)
+          - entity: group.random_timer_targets
+            name: Targets
+            secondary_info: last-changed
 
       - type: button
-        name: Start / Stop — Feed Pump + Feed Valve
-        icon: mdi:water-pump
+        name: Start / Stop
+        icon: mdi:play-pause
         icon_height: 64px
         entity: script.random_timer_auto
         show_state: false
         tap_action:
           action: perform-action
           perform_action: script.random_timer_auto
+
+      - type: markdown
+        content: >
+          **Edit which entities the timer pulses:** Settings → Devices &
+          Services → Helpers → **Random Timer Targets** → pencil icon →
+          add/remove members. Switches and valves are both supported.
 
   - title: VPD
     path: vpd

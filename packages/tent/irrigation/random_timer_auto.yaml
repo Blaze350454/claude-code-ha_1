@@ -21,19 +21,26 @@ tent_irrigation_random_timer_auto:
     - id: random_timer_finished
       alias: "Random Timer — Finished cleanup"
       description: >
-        When timer.random_timer finishes naturally, close the feed valve
-        and turn off the feed pump. The script handles cancel cleanup
-        inline.
+        When timer.random_timer finishes naturally, turn OFF every member
+        of group.random_timer_targets (valves close, switches turn off).
+        Cancel cleanup is handled inline by the random_timer_auto script.
       triggers:
         - platform: event
           event_type: timer.finished
           event_data:
             entity_id: timer.random_timer
       actions:
-        - action: switch.turn_off
-          target:
-            entity_id: switch.feed_pump_irrigation_tent
-        - action: valve.close_valve
-          target:
-            entity_id: valve.feed_valve_irrigation_tent
+        - repeat:
+            for_each: "{{ expand('group.random_timer_targets') | map(attribute='entity_id') | list }}"
+            sequence:
+              - choose:
+                  - conditions: "{{ repeat.item.startswith('valve.') }}"
+                    sequence:
+                      - action: valve.close_valve
+                        target:
+                          entity_id: "{{ repeat.item }}"
+                default:
+                  - action: switch.turn_off
+                    target:
+                      entity_id: "{{ repeat.item }}"
       mode: single
