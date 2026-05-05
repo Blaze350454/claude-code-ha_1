@@ -12,26 +12,19 @@ views:
           - type: entity
             entity: timer.random_timer
             name: Timer
-          - type: entity
-            entity: group.random_timer_targets
-            name: Targets
-            tap_action:
-              action: navigate
-              navigation_path: /config/helpers
           - type: button
-            name: Start / Stop
-            icon: mdi:play-pause
-            entity: script.random_timer_auto
+            name: Random Timer Auto
+            icon: mdi:timer-play-outline
             show_state: false
             tap_action:
               action: perform-action
-              perform_action: script.random_timer_auto
-
-      - type: entities
-        show_header_toggle: false
-        entities:
-          - entity: input_number.random_timer_minutes
-            name: Duration (minutes)
+              perform_action: automation.trigger
+              target:
+                entity_id: automation.random_timer_auto
+      - type: markdown
+        content: >
+          Edit entities or duration: **Settings → Automations & Scenes →
+          Random Timer Auto → Actions**.
 
   - title: VPD
     path: vpd

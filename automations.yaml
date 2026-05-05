@@ -1,4 +1,57 @@
-# Automations now live in packages/. This file is kept empty so the
-# `automation: !include automations.yaml` line in configuration.yaml
-# still resolves to valid YAML.
-[]
+- id: random_timer_auto
+  alias: Random Timer Auto
+  description: >
+    Manual-trigger pulse. Tap the dashboard button to turn the listed
+    entities ON for the duration, then OFF. Tap again while running
+    to cancel and turn them OFF immediately. Edit the entity list and
+    duration in the Actions section below.
+  mode: restart
+  trigger: []
+  condition: []
+  action:
+    - choose:
+        - conditions:
+            - condition: state
+              entity_id: timer.random_timer
+              state: active
+          sequence:
+            - action: timer.cancel
+              target:
+                entity_id: timer.random_timer
+            - action: switch.turn_off
+              target:
+                entity_id:
+                  - switch.feed_pump_irrigation_tent
+            - action: valve.close_valve
+              target:
+                entity_id:
+                  - valve.feed_valve_irrigation_tent
+            - stop: Cancelled by second tap
+    - action: switch.turn_on
+      target:
+        entity_id:
+          - switch.feed_pump_irrigation_tent
+    - action: valve.open_valve
+      target:
+        entity_id:
+          - valve.feed_valve_irrigation_tent
+    - action: timer.start
+      target:
+        entity_id: timer.random_timer
+      data:
+        duration: "00:05:00"
+    - wait_for_trigger:
+        - platform: event
+          event_type: timer.finished
+          event_data:
+            entity_id: timer.random_timer
+      timeout: "01:00:00"
+      continue_on_timeout: true
+    - action: switch.turn_off
+      target:
+        entity_id:
+          - switch.feed_pump_irrigation_tent
+    - action: valve.close_valve
+      target:
+        entity_id:
+          - valve.feed_valve_irrigation_tent
