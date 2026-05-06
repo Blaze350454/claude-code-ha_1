@@ -34,13 +34,13 @@ views:
         hours_to_show: 0
         ha_theme: false
         layout:
-          height: 600
+          height: 750
           paper_bgcolor: '#1c1c1e'
           plot_bgcolor: '#1c1c1e'
           font:
             color: '#e6e6e6'
           margin:
-            t: 190
+            t: 215
             r: 105
             b: 80
             l: 105
