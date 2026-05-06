@@ -41,7 +41,7 @@ views:
             color: '#e6e6e6'
           margin:
             t: 190
-            r: 20
+            r: 105
             b: 80
             l: 105
           xaxis:
@@ -81,9 +81,9 @@ views:
                 color: '#e6e6e6'
                 size: 20
               text: |
-                $ex 'VPD — ' + hass.states['input_select.grow_tent_growth_stage'].state + ' — Humidity — ' + hass.states['input_select.tent_humidity_mode'].state
+                $ex 'VPD — ' + hass.states['input_select.grow_tent_growth_stage'].state + ' — ' + hass.states['input_select.tent_humidity_mode'].state
 
-            # Row 1 — icons / labels (default blue), centered over each column
+            # Row 1 — temp 🌡 (orange), humidity 💧 (blue), VPD (light red), tolerance ± (light green)
             - xref: paper
               yref: paper
               x: 0.125
@@ -91,7 +91,7 @@ views:
               xanchor: center
               yanchor: middle
               showarrow: false
-              font: { size: 32, color: '#0a84ff' }
+              font: { size: 32, color: '#ff9500' }
               text: '🌡'
             - xref: paper
               yref: paper
@@ -109,7 +109,7 @@ views:
               xanchor: center
               yanchor: middle
               showarrow: false
-              font: { size: 18, color: '#0a84ff' }
+              font: { size: 18, color: '#ff6b6b' }
               text: '<b>VPD</b>'
             - xref: paper
               yref: paper
@@ -118,7 +118,7 @@ views:
               xanchor: center
               yanchor: middle
               showarrow: false
-              font: { size: 28, color: '#0a84ff' }
+              font: { size: 28, color: '#4ade80' }
               text: '±'
 
             # Row 2 — "Target" label (left margin) + targets (yellow)
