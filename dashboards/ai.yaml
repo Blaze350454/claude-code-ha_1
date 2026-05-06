@@ -41,9 +41,9 @@ views:
             color: '#e6e6e6'
           margin:
             t: 215
-            r: 60
+            r: 90
             b: 80
-            l: 60
+            l: 90
           xaxis:
             type: linear
             title: Temperature (°C)
@@ -64,10 +64,11 @@ views:
             fixedrange: true
           showlegend: false
           hovermode: closest
-          # Header strip. 4 columns share x-paper coords [0.125, 0.375,
-          # 0.625, 0.875]; rows stack via descending y-paper. Title sits
-          # above icons. "Target"/"Current" row labels live in the left
-          # margin (x slightly negative, xanchor: right).
+          # Header strip. 4 columns share x-paper coords [0.08, 0.36,
+          # 0.64, 0.92] — tighter to the plot edges than the default
+          # 12.5% inset, so the chart visually fills the width while
+          # leaving space in the left margin for "Target"/"Current"
+          # row labels (x=-0.025, xanchor: right). Title sits above icons.
           annotations:
             # Title row — centered above the chart
             - xref: paper
@@ -86,7 +87,7 @@ views:
             # Row 1 — temp 🌡 (orange), humidity 💧 (blue), VPD (light red), tolerance ± (light green)
             - xref: paper
               yref: paper
-              x: 0.125
+              x: 0.08
               y: 1.30
               xanchor: center
               yanchor: middle
@@ -95,7 +96,7 @@ views:
               text: '🌡'
             - xref: paper
               yref: paper
-              x: 0.375
+              x: 0.36
               y: 1.30
               xanchor: center
               yanchor: middle
@@ -104,7 +105,7 @@ views:
               text: '💧'
             - xref: paper
               yref: paper
-              x: 0.625
+              x: 0.64
               y: 1.30
               xanchor: center
               yanchor: middle
@@ -113,7 +114,7 @@ views:
               text: '<b>VPD</b>'
             - xref: paper
               yref: paper
-              x: 0.875
+              x: 0.92
               y: 1.30
               xanchor: center
               yanchor: middle
@@ -121,19 +122,19 @@ views:
               font: { size: 28, color: '#4ade80' }
               text: '±'
 
-            # Row 2 — "Target" label (top-left, inside plot) + targets (yellow)
+            # Row 2 — "Target" label (left margin) + targets (yellow)
             - xref: paper
               yref: paper
-              x: 0.005
+              x: -0.025
               y: 1.20
-              xanchor: left
+              xanchor: right
               yanchor: middle
               showarrow: false
               font: { size: 13, color: '#ffd60a' }
               text: 'Target'
             - xref: paper
               yref: paper
-              x: 0.125
+              x: 0.08
               y: 1.20
               xanchor: center
               yanchor: middle
@@ -143,7 +144,7 @@ views:
                 $ex (hass.states['light.hlg'].state === 'on' ? parseFloat(hass.states['input_number.tent_day_temp_target'].state) : parseFloat(hass.states['input_number.tent_night_temp_target'].state)).toFixed(1) + ' °C'
             - xref: paper
               yref: paper
-              x: 0.375
+              x: 0.36
               y: 1.20
               xanchor: center
               yanchor: middle
@@ -153,7 +154,7 @@ views:
                 $ex parseFloat(hass.states['input_number.humidifier_target_rh'].state).toFixed(0) + ' %'
             - xref: paper
               yref: paper
-              x: 0.625
+              x: 0.64
               y: 1.20
               xanchor: center
               yanchor: middle
@@ -163,7 +164,7 @@ views:
                 $ex parseFloat(hass.states['sensor.active_vpd_target'].state).toFixed(2) + ' kPa'
             - xref: paper
               yref: paper
-              x: 0.875
+              x: 0.92
               y: 1.20
               xanchor: center
               yanchor: middle
@@ -172,20 +173,20 @@ views:
               text: |
                 $ex '± ' + parseFloat(hass.states['input_number.vpd_tolerance'].state).toFixed(2) + ' kPa'
 
-            # Row 3 — "Current" label (top-left, inside plot) + actuals (lime green);
+            # Row 3 — "Current" label (left margin) + actuals (lime green);
             # tolerance column has no actual.
             - xref: paper
               yref: paper
-              x: 0.005
+              x: -0.025
               y: 1.10
-              xanchor: left
+              xanchor: right
               yanchor: middle
               showarrow: false
               font: { size: 13, color: '#32cd32' }
               text: 'Current'
             - xref: paper
               yref: paper
-              x: 0.125
+              x: 0.08
               y: 1.10
               xanchor: center
               yanchor: middle
@@ -195,7 +196,7 @@ views:
                 $ex parseFloat(hass.states['sensor.tent_average_temperature'].state).toFixed(1) + ' °C'
             - xref: paper
               yref: paper
-              x: 0.375
+              x: 0.36
               y: 1.10
               xanchor: center
               yanchor: middle
@@ -205,7 +206,7 @@ views:
                 $ex parseFloat(hass.states['sensor.tent_average_humidity'].state).toFixed(1) + ' %'
             - xref: paper
               yref: paper
-              x: 0.625
+              x: 0.64
               y: 1.10
               xanchor: center
               yanchor: middle
@@ -215,7 +216,7 @@ views:
                 $ex parseFloat(hass.states['sensor.grow_tent_vpd'].state).toFixed(2) + ' kPa'
             - xref: paper
               yref: paper
-              x: 0.875
+              x: 0.92
               y: 1.10
               xanchor: center
               yanchor: middle
