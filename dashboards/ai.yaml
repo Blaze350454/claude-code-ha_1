@@ -41,9 +41,9 @@ views:
             color: '#e6e6e6'
           margin:
             t: 215
-            r: 90
+            r: 70
             b: 80
-            l: 90
+            l: 70
           xaxis:
             type: linear
             title: Temperature (°C)
@@ -68,7 +68,7 @@ views:
           # 0.64, 0.92] — tighter to the plot edges than the default
           # 12.5% inset, so the chart visually fills the width while
           # leaving space in the left margin for "Target"/"Current"
-          # row labels (x=-0.025, xanchor: right). Title sits above icons.
+          # row labels (x=-0.05, xanchor: right). Title sits above icons.
           annotations:
             # Title row — centered above the chart
             - xref: paper
@@ -125,12 +125,12 @@ views:
             # Row 2 — "Target" label (left margin) + targets (yellow)
             - xref: paper
               yref: paper
-              x: -0.025
+              x: -0.05
               y: 1.20
               xanchor: right
               yanchor: middle
               showarrow: false
-              font: { size: 13, color: '#ffd60a' }
+              font: { size: 12, color: '#ffd60a' }
               text: 'Target'
             - xref: paper
               yref: paper
@@ -177,12 +177,12 @@ views:
             # tolerance column has no actual.
             - xref: paper
               yref: paper
-              x: -0.025
+              x: -0.05
               y: 1.10
               xanchor: right
               yanchor: middle
               showarrow: false
-              font: { size: 13, color: '#32cd32' }
+              font: { size: 12, color: '#32cd32' }
               text: 'Current'
             - xref: paper
               yref: paper
