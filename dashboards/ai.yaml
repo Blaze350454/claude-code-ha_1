@@ -19,34 +19,42 @@ views:
     path: vpd
     icon: mdi:chart-scatter-plot
     cards:
-      # Quick-glance: current vitals + active stage / target
-      - type: glance
-        title: Now
-        columns: 4
-        entities:
-          - entity: sensor.tent_average_temperature
-            name: Temp
-          - entity: sensor.tent_average_humidity
-            name: RH
-          - entity: sensor.grow_tent_vpd
-            name: VPD
-          - entity: sensor.active_vpd_target
-            name: Target
-          - entity: input_select.grow_tent_growth_stage
-            name: Stage
-          - entity: input_number.vpd_tolerance
-            name: Tol
-          - entity: input_number.humidifier_target_rh
-            name: RH Tgt
-          - entity: input_select.tent_humidity_mode
-            name: Mode
+      # Header + vitals strip. Replaces the old glance "Now" card.
+      #   Title:  VPD — <stage> — Humidity — <mode>
+      #   Row 1 (blue):   temp / humidity / VPD / tolerance icons
+      #   Row 2 (yellow): targets under each icon
+      #   Row 3 (lime):   actuals under each icon (tolerance has no actual)
+      # Active temp target switches on light.hlg state (lights-on = day target).
+      - type: markdown
+        content: |
+          ## VPD &mdash; {{ states('input_select.grow_tent_growth_stage') }} &mdash; Humidity &mdash; {{ states('input_select.tent_humidity_mode') }}
+
+          <table style="width:100%; text-align:center; border-collapse:collapse; table-layout:fixed">
+            <tr style="color: var(--primary-color); font-size: 28px; line-height: 1.2">
+              <td><ha-icon icon="mdi:thermometer"></ha-icon></td>
+              <td><ha-icon icon="mdi:water-percent"></ha-icon></td>
+              <td><ha-icon icon="mdi:gauge"></ha-icon></td>
+              <td><ha-icon icon="mdi:plus-minus-variant"></ha-icon></td>
+            </tr>
+            <tr style="color: #ffd60a; font-weight: 600">
+              <td>{{ ('%.1f' | format(states('input_number.tent_day_temp_target') | float)) if is_state('light.hlg','on') else ('%.1f' | format(states('input_number.tent_night_temp_target') | float)) }} &deg;C</td>
+              <td>{{ '%.0f' | format(states('input_number.humidifier_target_rh') | float) }} %</td>
+              <td>{{ '%.2f' | format(states('sensor.active_vpd_target') | float) }} kPa</td>
+              <td>&plusmn; {{ '%.2f' | format(states('input_number.vpd_tolerance') | float) }} kPa</td>
+            </tr>
+            <tr style="color: #32cd32; font-weight: 600">
+              <td>{{ '%.1f' | format(states('sensor.tent_average_temperature') | float) }} &deg;C</td>
+              <td>{{ '%.1f' | format(states('sensor.tent_average_humidity') | float) }} %</td>
+              <td>{{ '%.2f' | format(states('sensor.grow_tent_vpd') | float) }} kPa</td>
+              <td>&mdash;</td>
+            </tr>
+          </table>
 
       # The VPD scatter — temp/RH grid with target curve, tolerance band,
       # crosshair on current point. Definition mirrors
       # docs/lovelace_vpd_plotly.yaml; that file remains a reference
       # snippet for pasting into UI-managed dashboards.
       - type: custom:plotly-graph
-        title: VPD Status
         refresh_interval: 30
         hours_to_show: 0
         ha_theme: false
@@ -79,30 +87,8 @@ views:
             zeroline: false
             showspikes: false
             fixedrange: true
-          showlegend: true
-          legend:
-            orientation: h
-            y: 1.08
-            x: 0
-            bgcolor: rgba(0,0,0,0)
+          showlegend: false
           hovermode: closest
-          annotations:
-            - xref: paper
-              yref: paper
-              x: 0.02
-              y: 0.98
-              xanchor: left
-              yanchor: top
-              showarrow: false
-              bgcolor: 'rgba(28,28,30,0.75)'
-              bordercolor: '#3a3a3a'
-              borderwidth: 1
-              borderpad: 6
-              font:
-                color: '#30d158'
-                size: 12
-              text: |
-                $ex 'Stage: ' + hass.states['input_select.grow_tent_growth_stage'].state + '  •  Target: ' + parseFloat(hass.states['sensor.active_vpd_target'].state).toFixed(2) + ' kPa'
         entities:
           - entity: ''
             name: Target VPD
