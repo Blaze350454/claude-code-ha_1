@@ -33,10 +33,17 @@ views:
         refresh_interval: 30
         hours_to_show: 0
         ha_theme: false
+        card_mod:
+          style: |
+            ha-card {
+              background: transparent !important;
+              box-shadow: none !important;
+              border: none !important;
+            }
         layout:
           height: 750
-          paper_bgcolor: '#1c1c1e'
-          plot_bgcolor: '#1c1c1e'
+          paper_bgcolor: 'rgba(0,0,0,0)'
+          plot_bgcolor: 'rgba(0,0,0,0)'
           font:
             color: '#e6e6e6'
           margin:
