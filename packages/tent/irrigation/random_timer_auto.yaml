@@ -1,7 +1,0 @@
-tent_irrigation_random_timer_auto:
-  timer:
-    random_timer:
-      name: Random Timer
-      icon: mdi:timer-outline
-      duration: "00:05:00"
-      restore: true

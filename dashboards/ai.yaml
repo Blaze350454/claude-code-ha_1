@@ -7,23 +7,12 @@ views:
     path: tools
     icon: mdi:tools
     cards:
-      - type: horizontal-stack
-        cards:
-          - type: entity
-            entity: timer.random_timer
-            name: Timer
-          - type: button
-            name: Random Timer Auto
-            icon: mdi:timer-play-outline
-            show_state: false
-            tap_action:
-              action: perform-action
-              perform_action: automation.trigger
-              target:
-                entity_id: automation.random_timer_auto
+      - type: entity
+        entity: input_button.random_timer_trigger
+        name: Random Timer Trigger
       - type: markdown
         content: >
-          Edit entities or duration: **Settings → Automations & Scenes →
+          Edit entities or delay: **Settings → Automations & Scenes →
           Random Timer Auto → Actions**.
 
   - title: VPD
