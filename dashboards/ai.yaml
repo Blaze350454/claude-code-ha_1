@@ -41,9 +41,9 @@ views:
             color: '#e6e6e6'
           margin:
             t: 215
-            r: 105
+            r: 60
             b: 80
-            l: 105
+            l: 60
           xaxis:
             type: linear
             title: Temperature (°C)
@@ -121,12 +121,12 @@ views:
               font: { size: 28, color: '#4ade80' }
               text: '±'
 
-            # Row 2 — "Target" label (left margin) + targets (yellow)
+            # Row 2 — "Target" label (top-left, inside plot) + targets (yellow)
             - xref: paper
               yref: paper
-              x: -0.025
+              x: 0.005
               y: 1.20
-              xanchor: right
+              xanchor: left
               yanchor: middle
               showarrow: false
               font: { size: 13, color: '#ffd60a' }
@@ -172,13 +172,13 @@ views:
               text: |
                 $ex '± ' + parseFloat(hass.states['input_number.vpd_tolerance'].state).toFixed(2) + ' kPa'
 
-            # Row 3 — "Current" label (left margin) + actuals (lime green);
+            # Row 3 — "Current" label (top-left, inside plot) + actuals (lime green);
             # tolerance column has no actual.
             - xref: paper
               yref: paper
-              x: -0.025
+              x: 0.005
               y: 1.10
-              xanchor: right
+              xanchor: left
               yanchor: middle
               showarrow: false
               font: { size: 13, color: '#32cd32' }
