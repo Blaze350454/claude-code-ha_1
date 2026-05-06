@@ -3,6 +3,12 @@
   "minor_version": 1,
   "key": "input_button",
   "data": {
-    "items": []
+    "items": [
+      {
+        "id": "random_timer_trigger",
+        "name": "Random Timer Trigger",
+        "icon": "mdi:camera-timer"
+      }
+    ]
   }
 }
