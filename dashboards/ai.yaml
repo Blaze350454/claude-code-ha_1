@@ -19,53 +19,28 @@ views:
     path: vpd
     icon: mdi:chart-scatter-plot
     cards:
-      # Header + vitals strip. Replaces the old glance "Now" card.
-      #   Title:  VPD — <stage> — Humidity — <mode>
-      #   Row 1 (blue):   temp / humidity / VPD / tolerance icons
-      #   Row 2 (yellow): targets under each icon
-      #   Row 3 (lime):   actuals under each icon (tolerance has no actual)
-      # Active temp target switches on light.hlg state (lights-on = day target).
-      - type: markdown
-        content: |
-          ## VPD &mdash; {{ states('input_select.grow_tent_growth_stage') }} &mdash; Humidity &mdash; {{ states('input_select.tent_humidity_mode') }}
-
-          <table style="width:100%; text-align:center; border-collapse:collapse; table-layout:fixed">
-            <tr style="color: var(--primary-color); font-size: 28px; line-height: 1.2">
-              <td><ha-icon icon="mdi:thermometer"></ha-icon></td>
-              <td><ha-icon icon="mdi:water-percent"></ha-icon></td>
-              <td><ha-icon icon="mdi:gauge"></ha-icon></td>
-              <td><ha-icon icon="mdi:plus-minus-variant"></ha-icon></td>
-            </tr>
-            <tr style="color: #ffd60a; font-weight: 600">
-              <td>{{ ('%.1f' | format(states('input_number.tent_day_temp_target') | float)) if is_state('light.hlg','on') else ('%.1f' | format(states('input_number.tent_night_temp_target') | float)) }} &deg;C</td>
-              <td>{{ '%.0f' | format(states('input_number.humidifier_target_rh') | float) }} %</td>
-              <td>{{ '%.2f' | format(states('sensor.active_vpd_target') | float) }} kPa</td>
-              <td>&plusmn; {{ '%.2f' | format(states('input_number.vpd_tolerance') | float) }} kPa</td>
-            </tr>
-            <tr style="color: #32cd32; font-weight: 600">
-              <td>{{ '%.1f' | format(states('sensor.tent_average_temperature') | float) }} &deg;C</td>
-              <td>{{ '%.1f' | format(states('sensor.tent_average_humidity') | float) }} %</td>
-              <td>{{ '%.2f' | format(states('sensor.grow_tent_vpd') | float) }} kPa</td>
-              <td>&mdash;</td>
-            </tr>
-          </table>
-
-      # The VPD scatter — temp/RH grid with target curve, tolerance band,
-      # crosshair on current point. Definition mirrors
-      # docs/lovelace_vpd_plotly.yaml; that file remains a reference
-      # snippet for pasting into UI-managed dashboards.
+      # All-in-one plotly card. Header (title + 3 stat rows) lives inside
+      # the chart's top margin via layout.annotations, so there's a single
+      # card chrome around the whole thing — no separate markdown card,
+      # no <h2> bottom rule, no inline-style stripping by the markdown
+      # sanitizer.
+      #
+      #   Title (white):  VPD — <stage> — Humidity — <mode>
+      #   Row 1 (blue):   emoji icons centered over each value column
+      #   Row 2 (yellow): targets (temp picks day/night via light.hlg)
+      #   Row 3 (lime):   actuals (tolerance column has no actual)
       - type: custom:plotly-graph
         refresh_interval: 30
         hours_to_show: 0
         ha_theme: false
         layout:
-          height: 460
+          height: 580
           paper_bgcolor: '#1c1c1e'
           plot_bgcolor: '#1c1c1e'
           font:
             color: '#e6e6e6'
           margin:
-            t: 30
+            t: 150
             r: 20
             b: 80
             l: 70
@@ -89,6 +64,143 @@ views:
             fixedrange: true
           showlegend: false
           hovermode: closest
+          # Header strip. 4 columns share x-paper coords [0.125, 0.375,
+          # 0.625, 0.875]; rows stack downward via descending y-paper.
+          annotations:
+            # Title row — centered in the whole card (xref: container)
+            - xref: container
+              yref: container
+              x: 0.5
+              y: 0.96
+              xanchor: center
+              yanchor: top
+              showarrow: false
+              font:
+                color: '#e6e6e6'
+                size: 18
+              text: |
+                $ex 'VPD — ' + hass.states['input_select.grow_tent_growth_stage'].state + ' — Humidity — ' + hass.states['input_select.tent_humidity_mode'].state
+
+            # Row 1 — icons (default blue), centered over each column
+            - xref: paper
+              yref: paper
+              x: 0.125
+              y: 1.22
+              xanchor: center
+              yanchor: middle
+              showarrow: false
+              font: { size: 24, color: '#0a84ff' }
+              text: '🌡'
+            - xref: paper
+              yref: paper
+              x: 0.375
+              y: 1.22
+              xanchor: center
+              yanchor: middle
+              showarrow: false
+              font: { size: 24, color: '#0a84ff' }
+              text: '💧'
+            - xref: paper
+              yref: paper
+              x: 0.625
+              y: 1.22
+              xanchor: center
+              yanchor: middle
+              showarrow: false
+              font: { size: 24, color: '#0a84ff' }
+              text: '📊'
+            - xref: paper
+              yref: paper
+              x: 0.875
+              y: 1.22
+              xanchor: center
+              yanchor: middle
+              showarrow: false
+              font: { size: 28, color: '#0a84ff' }
+              text: '±'
+
+            # Row 2 — targets (yellow)
+            - xref: paper
+              yref: paper
+              x: 0.125
+              y: 1.12
+              xanchor: center
+              yanchor: middle
+              showarrow: false
+              font: { size: 14, color: '#ffd60a' }
+              text: |
+                $ex (hass.states['light.hlg'].state === 'on' ? parseFloat(hass.states['input_number.tent_day_temp_target'].state) : parseFloat(hass.states['input_number.tent_night_temp_target'].state)).toFixed(1) + ' °C'
+            - xref: paper
+              yref: paper
+              x: 0.375
+              y: 1.12
+              xanchor: center
+              yanchor: middle
+              showarrow: false
+              font: { size: 14, color: '#ffd60a' }
+              text: |
+                $ex parseFloat(hass.states['input_number.humidifier_target_rh'].state).toFixed(0) + ' %'
+            - xref: paper
+              yref: paper
+              x: 0.625
+              y: 1.12
+              xanchor: center
+              yanchor: middle
+              showarrow: false
+              font: { size: 14, color: '#ffd60a' }
+              text: |
+                $ex parseFloat(hass.states['sensor.active_vpd_target'].state).toFixed(2) + ' kPa'
+            - xref: paper
+              yref: paper
+              x: 0.875
+              y: 1.12
+              xanchor: center
+              yanchor: middle
+              showarrow: false
+              font: { size: 14, color: '#ffd60a' }
+              text: |
+                $ex '± ' + parseFloat(hass.states['input_number.vpd_tolerance'].state).toFixed(2) + ' kPa'
+
+            # Row 3 — actuals (lime green); tolerance column has no actual
+            - xref: paper
+              yref: paper
+              x: 0.125
+              y: 1.02
+              xanchor: center
+              yanchor: middle
+              showarrow: false
+              font: { size: 14, color: '#32cd32' }
+              text: |
+                $ex parseFloat(hass.states['sensor.tent_average_temperature'].state).toFixed(1) + ' °C'
+            - xref: paper
+              yref: paper
+              x: 0.375
+              y: 1.02
+              xanchor: center
+              yanchor: middle
+              showarrow: false
+              font: { size: 14, color: '#32cd32' }
+              text: |
+                $ex parseFloat(hass.states['sensor.tent_average_humidity'].state).toFixed(1) + ' %'
+            - xref: paper
+              yref: paper
+              x: 0.625
+              y: 1.02
+              xanchor: center
+              yanchor: middle
+              showarrow: false
+              font: { size: 14, color: '#32cd32' }
+              text: |
+                $ex parseFloat(hass.states['sensor.grow_tent_vpd'].state).toFixed(2) + ' kPa'
+            - xref: paper
+              yref: paper
+              x: 0.875
+              y: 1.02
+              xanchor: center
+              yanchor: middle
+              showarrow: false
+              font: { size: 14, color: '#32cd32' }
+              text: '—'
         entities:
           - entity: ''
             name: Target VPD
