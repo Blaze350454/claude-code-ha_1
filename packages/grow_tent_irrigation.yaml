@@ -6,6 +6,13 @@ grow_tent_irrigation:
 # --- HELPERS ---
 
   input_datetime:
+    daily_setup_time:
+      name: Daily Setup Time
+      has_date: false
+      has_time: true
+      initial: "17:00:00"
+      icon: mdi:calendar-clock
+
     night_pulse_veg_1:
       name: Night Pulse Veg 1
       has_date: false

@@ -2,10 +2,17 @@ tent_irrigation_schedule:
   automation:
     - id: automation.irrigation_daily_setup
       alias: Irrigation — Daily Setup at Lights On
-      description: Resets daily counters, calculates feed schedule, sets next_feed_time to first feed
+      description: >
+        Resets daily counters, calculates feed schedule, sets next_feed_time to
+        first feed. Triggered by input_datetime.daily_setup_time (default 17:00,
+        i.e. ~1 hour before veg_lights_on_time of 18:00) so that pre-feed
+        datetimes computed here land in the future relative to "now" — otherwise
+        the pre-feed time trigger for the first feed of the day silently fails.
+        If you shift veg_lights_on_time, also shift daily_setup_time to stay
+        comfortably ahead of (first_feed - air_stir_lead_minutes).
       triggers:
         - platform: time
-          at: input_datetime.veg_lights_on_time
+          at: input_datetime.daily_setup_time
       conditions:
         - condition: state
           entity_id: input_boolean.irrigation_enabled
