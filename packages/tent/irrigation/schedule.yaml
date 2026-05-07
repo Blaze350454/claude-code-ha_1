@@ -4,12 +4,14 @@ tent_irrigation_schedule:
       alias: Irrigation — Daily Setup at Lights On
       description: >
         Resets daily counters, calculates feed schedule, sets next_feed_time to
-        first feed. Triggered by input_datetime.daily_setup_time (default 17:00,
-        i.e. ~1 hour before veg_lights_on_time of 18:00) so that pre-feed
-        datetimes computed here land in the future relative to "now" — otherwise
-        the pre-feed time trigger for the first feed of the day silently fails.
-        If you shift veg_lights_on_time, also shift daily_setup_time to stay
-        comfortably ahead of (first_feed - air_stir_lead_minutes).
+        the **next future feed in today's window** (not just the first one).
+        Normally fires at input_datetime.daily_setup_time (~17:00) when all of
+        today's feeds are in the future, so the chosen feed = feed 1.
+        When fired mid-day via automation.irrigation_re_enable_maintenance_on_enable
+        (user re-enabled irrigation after some of today's feeds already passed),
+        iterates today's planned feeds, picks the first one still in the future,
+        and sets current_feed_number = (chosen_n - 1) so feed_trigger increments
+        cleanly. Falls back to tomorrow's first feed if all of today's are past.
       triggers:
         - platform: time
           at: input_datetime.daily_setup_time
@@ -21,12 +23,9 @@ tent_irrigation_schedule:
         - action: automation.turn_on
           target:
             entity_id: automation.irrigation_maintenance_cycle
-        - action: input_number.set_value
-          target:
-            entity_id: input_number.current_feed_number
-          data:
-            value: 0
         - variables:
+            feeds_per_day: '{{ states(''input_number.feeds_per_day_2'') | int }}'
+            lead_min: '{{ states(''input_number.air_stir_lead_minutes'') | int }}'
             lights_on_h: '{{ states(''input_datetime.veg_lights_on_time'')[0:2] | int }}'
             lights_on_m: '{{ states(''input_datetime.veg_lights_on_time'')[3:5] | int }}'
             lights_off_h: '{{ states(''input_datetime.veg_lights_off_time'')[0:2] | int }}'
@@ -34,34 +33,58 @@ tent_irrigation_schedule:
             today_str: '{{ now().date() | string }}'
             on_total_min: '{{ lights_on_h * 60 + lights_on_m }}'
             off_total_min: '{{ lights_off_h * 60 + lights_off_m }}'
-            first_feed_total_min: '{{ on_total_min + 5 }}'
-            first_feed_h: '{{ (first_feed_total_min // 60) % 24 }}'
-            first_feed_m: '{{ first_feed_total_min % 60 }}'
-            first_feed_dt: '{{ today_str ~ '' '' ~ (''0'' ~ (first_feed_h | string))[-2:] ~ '':'' ~ (''0'' ~ (first_feed_m | string))[-2:] ~ '':00'' }}'
-            lead_min: '{{ states(''input_number.air_stir_lead_minutes'') | int }}'
-            pre_start_total: '{{ first_feed_total_min - lead_min }}'
-            pre_start_h: '{{ (pre_start_total // 60) % 24 }}'
-            pre_start_m: '{{ pre_start_total % 60 }}'
-            pre_start_dt: '{{ today_str ~ '' '' ~ (''0'' ~ (pre_start_h | string))[-2:] ~ '':'' ~ (''0'' ~ (pre_start_m | string))[-2:] ~ '':00'' }}'
-            pre_stop_total: '{{ first_feed_total_min - 5 }}'
-            pre_stop_h: '{{ (pre_stop_total // 60) % 24 }}'
-            pre_stop_m: '{{ pre_stop_total % 60 }}'
-            pre_stop_dt: '{{ today_str ~ '' '' ~ (''0'' ~ (pre_stop_h | string))[-2:] ~ '':'' ~ (''0'' ~ (pre_stop_m | string))[-2:] ~ '':00'' }}'
+            lights_on_duration_min: >-
+              {% if off_total_min | int > on_total_min | int %}{{ off_total_min | int - on_total_min | int }}{% else %}{{ (24 * 60 - on_total_min | int) + off_total_min | int }}{% endif %}
+            interval_min: >-
+              {% set dur = lights_on_duration_min | int - 35 %}
+              {% if feeds_per_day > 1 %}{{ (dur / (feeds_per_day - 1)) | round(0) | int }}{% else %}{{ dur | int }}{% endif %}
+            base_lights_on: '{{ today_str ~ '' '' ~ ''%02d:%02d:00'' | format(lights_on_h, lights_on_m) }}'
+            chosen_summary: >-
+              {% set base = strptime(base_lights_on, '%Y-%m-%d %H:%M:%S') %}
+              {% set ns = namespace(n=0, dt=none) %}
+              {% for n in range(1, feeds_per_day + 1) %}
+                {% set offset = 5 + (n - 1) * (interval_min | int) %}
+                {% set fdt = base + timedelta(minutes=offset) %}
+                {% if ns.n == 0 and fdt > now() %}
+                  {% set ns.n = n %}
+                  {% set ns.dt = fdt %}
+                {% endif %}
+              {% endfor %}
+              {% if ns.n == 0 %}
+                {{ {'n': 1, 'dt': (base + timedelta(days=1, minutes=5)).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}
+              {% else %}
+                {{ {'n': ns.n, 'dt': ns.dt.strftime('%Y-%m-%d %H:%M:%S')} | tojson }}
+              {% endif %}
+        - variables:
+            chosen: '{{ chosen_summary | from_json }}'
+            chosen_feed_n: '{{ chosen.n }}'
+            chosen_feed_dt: '{{ chosen.dt }}'
+            chosen_pre_start_dt: >-
+              {% set f = strptime(chosen_feed_dt, '%Y-%m-%d %H:%M:%S') %}
+              {{ (f - timedelta(minutes=lead_min)).strftime('%Y-%m-%d %H:%M:%S') }}
+            chosen_pre_stop_dt: >-
+              {% set f = strptime(chosen_feed_dt, '%Y-%m-%d %H:%M:%S') %}
+              {{ (f - timedelta(minutes=5)).strftime('%Y-%m-%d %H:%M:%S') }}
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.current_feed_number
+          data:
+            value: '{{ (chosen_feed_n | int) - 1 }}'
         - action: input_datetime.set_datetime
           target:
             entity_id: input_datetime.next_feed_time
           data:
-            datetime: '{{ first_feed_dt }}'
+            datetime: '{{ chosen_feed_dt }}'
         - action: input_datetime.set_datetime
           target:
             entity_id: input_datetime.next_pre_feed_start
           data:
-            datetime: '{{ pre_start_dt }}'
+            datetime: '{{ chosen_pre_start_dt }}'
         - action: input_datetime.set_datetime
           target:
             entity_id: input_datetime.next_pre_feed_stop
           data:
-            datetime: '{{ pre_stop_dt }}'
+            datetime: '{{ chosen_pre_stop_dt }}'
         - variables:
             current_day: '{{ states(''input_number.irrigation_day_counter'') | int }}'
             interval: '{{ states(''input_number.flush_day_interval'') | int }}'
