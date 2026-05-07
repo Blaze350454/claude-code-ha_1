@@ -93,6 +93,26 @@ grow_tent_irrigation:
       icon: mdi:rotate-3d-variant
       initial: 5
 
+    feed_fill_timeout_seconds:
+      name: Feed Fill Timeout
+      min: 60
+      max: 600
+      step: 10
+      unit_of_measurement: s
+      mode: box
+      icon: mdi:timer-sand
+      initial: 230
+
+    flush_fill_timeout_seconds:
+      name: Flush Fill Timeout
+      min: 60
+      max: 600
+      step: 10
+      unit_of_measurement: s
+      mode: box
+      icon: mdi:timer-sand
+      initial: 170
+
     maintenance_interval_minutes:
       name: Maintenance Interval
       min: 30
