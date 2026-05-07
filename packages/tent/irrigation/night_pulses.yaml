@@ -13,9 +13,6 @@ tent_irrigation_night_pulses:
         - platform: time
           at: input_datetime.night_pulse_veg_2
       conditions:
-        - condition: state
-          entity_id: input_boolean.irrigation_enabled
-          state: 'on'
         - condition: template
           value_template: >
             {{ states('input_select.grow_tent_growth_stage')
@@ -43,9 +40,6 @@ tent_irrigation_night_pulses:
         - platform: time
           at: input_datetime.night_pulse_flower_5
       conditions:
-        - condition: state
-          entity_id: input_boolean.irrigation_enabled
-          state: 'on'
         - condition: template
           value_template: >
             {{ states('input_select.grow_tent_growth_stage')
