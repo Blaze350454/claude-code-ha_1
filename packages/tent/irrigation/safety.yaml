@@ -275,11 +275,16 @@ tent_irrigation_safety:
     - id: automation.irrigation_enabled_resync
       alias: Irrigation — Re-enable Maintenance on Enable
       description: >
-        When input_boolean.irrigation_enabled flips off→on, immediately
-        re-enable automation.irrigation_maintenance_cycle. Otherwise maintenance
-        stays disabled (from prior lights_off_cleanup) until the next
-        daily_setup_time fires — up to ~24h gap if user re-enables irrigation
-        right after lights_off. Closes that gap.
+        When input_boolean.irrigation_enabled flips off→on:
+          1. Re-enable automation.irrigation_maintenance_cycle (covers the gap
+             where lights_off_cleanup disabled it during the off period).
+          2. If daily_setup hasn't run yet today, fire it now so today's
+             feed/pre-feed schedule is recomputed instead of waiting until
+             next daily_setup_time.
+        Caveat: if user re-enables AFTER today's first-feed time
+        (lights_on + 5min), that feed is in the past and the time trigger
+        won't fire today — use script.run_feed_cycle manually for an
+        immediate feed, or just wait for tomorrow's normal cycle.
       triggers:
         - platform: state
           entity_id: input_boolean.irrigation_enabled
@@ -289,6 +294,15 @@ tent_irrigation_safety:
         - action: automation.turn_on
           target:
             entity_id: automation.irrigation_maintenance_cycle
+        - if:
+            - condition: template
+              value_template: >
+                {% set last = state_attr('automation.irrigation_daily_setup_at_lights_on', 'last_triggered') %}
+                {{ last is none or as_local(last).date() != now().date() }}
+          then:
+            - action: automation.trigger
+              target:
+                entity_id: automation.irrigation_daily_setup_at_lights_on
       mode: single
 
     - alias: Toggle — Kill Irrigation Automations
