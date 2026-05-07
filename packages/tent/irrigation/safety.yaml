@@ -316,7 +316,7 @@ tent_irrigation_safety:
                       - automation.irrigation_lights_off_cleanup
                       - automation.irrigation_night_pulses_veg
                       - automation.irrigation_night_pulses_flower
-                      - automation.irrigation_enabled_resync
+                      - automation.irrigation_re_enable_maintenance_on_enable
                       - automation.irrigation_pre_feed_air_stir_start
                       - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
@@ -344,7 +344,7 @@ tent_irrigation_safety:
                       - automation.irrigation_lights_off_cleanup
                       - automation.irrigation_night_pulses_veg
                       - automation.irrigation_night_pulses_flower
-                      - automation.irrigation_enabled_resync
+                      - automation.irrigation_re_enable_maintenance_on_enable
                       - automation.irrigation_pre_feed_air_stir_start
                       - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
@@ -378,7 +378,7 @@ tent_irrigation_safety:
                       - automation.irrigation_lights_off_cleanup
                       - automation.irrigation_night_pulses_veg
                       - automation.irrigation_night_pulses_flower
-                      - automation.irrigation_enabled_resync
+                      - automation.irrigation_re_enable_maintenance_on_enable
                       - automation.irrigation_pre_feed_air_stir_start
                       - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
@@ -428,7 +428,7 @@ tent_irrigation_safety:
                       - automation.irrigation_lights_off_cleanup
                       - automation.irrigation_night_pulses_veg
                       - automation.irrigation_night_pulses_flower
-                      - automation.irrigation_enabled_resync
+                      - automation.irrigation_re_enable_maintenance_on_enable
                       - automation.irrigation_pre_feed_air_stir_start
                       - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
