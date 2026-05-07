@@ -295,8 +295,8 @@ tent_irrigation_safety:
                       - automation.irrigation_daily_setup_at_lights_on
                       - automation.irrigation_feed_trigger
                       - automation.irrigation_lights_off_cleanup
-                      - automation.irrigation_night_cycle_start
-                      - automation.irrigation_night_cycle_stop
+                      - automation.irrigation_night_pulses_veg
+                      - automation.irrigation_night_pulses_flower
                       - automation.irrigation_pre_feed_air_stir_start
                       - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
@@ -322,8 +322,8 @@ tent_irrigation_safety:
                       - automation.irrigation_daily_setup_at_lights_on
                       - automation.irrigation_feed_trigger
                       - automation.irrigation_lights_off_cleanup
-                      - automation.irrigation_night_cycle_start
-                      - automation.irrigation_night_cycle_stop
+                      - automation.irrigation_night_pulses_veg
+                      - automation.irrigation_night_pulses_flower
                       - automation.irrigation_pre_feed_air_stir_start
                       - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
@@ -355,8 +355,8 @@ tent_irrigation_safety:
                       - automation.irrigation_daily_setup_at_lights_on
                       - automation.irrigation_feed_trigger
                       - automation.irrigation_lights_off_cleanup
-                      - automation.irrigation_night_cycle_start
-                      - automation.irrigation_night_cycle_stop
+                      - automation.irrigation_night_pulses_veg
+                      - automation.irrigation_night_pulses_flower
                       - automation.irrigation_pre_feed_air_stir_start
                       - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
@@ -404,8 +404,8 @@ tent_irrigation_safety:
                       - automation.irrigation_daily_setup_at_lights_on
                       - automation.irrigation_feed_trigger
                       - automation.irrigation_lights_off_cleanup
-                      - automation.irrigation_night_cycle_start
-                      - automation.irrigation_night_cycle_stop
+                      - automation.irrigation_night_pulses_veg
+                      - automation.irrigation_night_pulses_flower
                       - automation.irrigation_pre_feed_air_stir_start
                       - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
@@ -488,7 +488,7 @@ tent_irrigation_safety:
             minutes: 2
       conditions:
         - condition: numeric_state
-          entity_id: sensor.flow_rate_tent
+          entity_id: sensor.flow_rate_irrigation_tent
           below: 0.5
       actions:
         - action: script.stop_alternating
@@ -518,7 +518,7 @@ tent_irrigation_safety:
           data:
             title: Irrigation Low Flow Alert
             message: >
-              Pump running but flow rate is {{ states('sensor.flow_rate_tent') }} L/min
+              Pump running but flow rate is {{ states('sensor.flow_rate_irrigation_tent') }} L/min
               after 2 min. Possible clogged emitter, dry pump, kinked line, or
               sensor failure. All pumps and valves forced off — investigate.
       mode: single

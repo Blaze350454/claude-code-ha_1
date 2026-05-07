@@ -40,16 +40,6 @@ tent_irrigation_schedule:
             pre_stop_h: '{{ (pre_stop_total // 60) % 24 }}'
             pre_stop_m: '{{ pre_stop_total % 60 }}'
             pre_stop_dt: '{{ today_str ~ '' '' ~ (''0'' ~ (pre_stop_h | string))[-2:] ~ '':'' ~ (''0'' ~ (pre_stop_m | string))[-2:] ~ '':00'' }}'
-            night_delay: '{{ states(''input_number.night_delay_minutes'') | int }}'
-            off_plus_delay: '{{ off_total_min + night_delay }}'
-            night_start_h: '{{ (off_plus_delay // 60) % 24 }}'
-            night_start_m: '{{ off_plus_delay % 60 }}'
-            next_day_str: '{{ (now().date() + timedelta(days=1)) | string }}'
-            night_start_dt: '{{ (next_day_str if off_plus_delay < on_total_min else today_str) ~ '' '' ~ (''0'' ~ (night_start_h | string))[-2:] ~ '':'' ~ (''0'' ~ (night_start_m | string))[-2:] ~ '':00'' }}'
-            night_stop_total: '{{ lights_on_h * 60 + lights_on_m - 5 }}'
-            night_stop_h: '{{ (night_stop_total // 60) % 24 }}'
-            night_stop_m: '{{ night_stop_total % 60 }}'
-            night_stop_dt: '{{ next_day_str ~ '' '' ~ (''0'' ~ (night_stop_h | string))[-2:] ~ '':'' ~ (''0'' ~ (night_stop_m | string))[-2:] ~ '':00'' }}'
         - action: input_datetime.set_datetime
           target:
             entity_id: input_datetime.next_feed_time
@@ -65,16 +55,6 @@ tent_irrigation_schedule:
             entity_id: input_datetime.next_pre_feed_stop
           data:
             datetime: '{{ pre_stop_dt }}'
-        - action: input_datetime.set_datetime
-          target:
-            entity_id: input_datetime.night_cycle_start
-          data:
-            datetime: '{{ night_start_dt }}'
-        - action: input_datetime.set_datetime
-          target:
-            entity_id: input_datetime.night_cycle_stop
-          data:
-            datetime: '{{ night_stop_dt }}'
         - variables:
             current_day: '{{ states(''input_number.irrigation_day_counter'') | int }}'
             interval: '{{ states(''input_number.flush_day_interval'') | int }}'

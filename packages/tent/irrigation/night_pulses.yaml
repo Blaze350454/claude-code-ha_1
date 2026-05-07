@@ -1,0 +1,55 @@
+tent_irrigation_night_pulses:
+  automation:
+    - id: automation.irrigation_night_pulses_veg
+      alias: Irrigation — Night Pulses (Veg)
+      description: >
+        Runs script.run_night_pulse at each night_pulse_veg_* time. Active only
+        during veg-side growth stages (Seedling, Early Veg, Veg, Transition).
+        Replaces the indefinite night cycle that ran continuously between
+        lights-off and lights-on.
+      triggers:
+        - platform: time
+          at: input_datetime.night_pulse_veg_1
+        - platform: time
+          at: input_datetime.night_pulse_veg_2
+      conditions:
+        - condition: state
+          entity_id: input_boolean.irrigation_enabled
+          state: 'on'
+        - condition: template
+          value_template: >
+            {{ states('input_select.grow_tent_growth_stage')
+               in ['Seedling', 'Early Veg', 'Veg', 'Transition'] }}
+      actions:
+        - action: script.run_night_pulse
+      mode: single
+
+    - id: automation.irrigation_night_pulses_flower
+      alias: Irrigation — Night Pulses (Flower)
+      description: >
+        Runs script.run_night_pulse at each night_pulse_flower_* time. Active only
+        during flower-side growth stages (Early Flower, Flower, Late Flower).
+        Replaces the indefinite night cycle that ran continuously between
+        lights-off and lights-on.
+      triggers:
+        - platform: time
+          at: input_datetime.night_pulse_flower_1
+        - platform: time
+          at: input_datetime.night_pulse_flower_2
+        - platform: time
+          at: input_datetime.night_pulse_flower_3
+        - platform: time
+          at: input_datetime.night_pulse_flower_4
+        - platform: time
+          at: input_datetime.night_pulse_flower_5
+      conditions:
+        - condition: state
+          entity_id: input_boolean.irrigation_enabled
+          state: 'on'
+        - condition: template
+          value_template: >
+            {{ states('input_select.grow_tent_growth_stage')
+               in ['Early Flower', 'Flower', 'Late Flower'] }}
+      actions:
+        - action: script.run_night_pulse
+      mode: single

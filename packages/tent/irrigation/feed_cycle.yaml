@@ -47,25 +47,3 @@ tent_irrigation_feed_cycle:
       actions:
         - action: script.stop_alternating
       mode: single
-    - id: automation.irrigation_night_cycle_start
-      alias: Irrigation — Night Cycle Start
-      description: Starts overnight air/stir alternating after lights-off delay
-      triggers:
-        - platform: time
-          at: input_datetime.night_cycle_start
-      conditions:
-        - condition: state
-          entity_id: input_boolean.irrigation_enabled
-          state: 'on'
-      actions:
-        - action: script.run_alternating
-      mode: single
-    - id: automation.irrigation_night_cycle_stop
-      alias: Irrigation — Night Cycle Stop
-      description: Stops overnight air/stir alternating 5 minutes before lights-on
-      triggers:
-        - platform: time
-          at: input_datetime.night_cycle_stop
-      actions:
-        - action: script.stop_alternating
-      mode: single

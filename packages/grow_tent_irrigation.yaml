@@ -6,12 +6,86 @@ grow_tent_irrigation:
 # --- HELPERS ---
 
   input_datetime:
-    night_cycle_stop:
-      name: Night Cycle Stop
-      has_date: true
+    night_pulse_veg_1:
+      name: Night Pulse Veg 1
+      has_date: false
       has_time: true
+      initial: "14:00:00"
+      icon: mdi:weather-night
+
+    night_pulse_veg_2:
+      name: Night Pulse Veg 2
+      has_date: false
+      has_time: true
+      initial: "16:00:00"
+      icon: mdi:weather-night
+
+    night_pulse_flower_1:
+      name: Night Pulse Flower 1
+      has_date: false
+      has_time: true
+      initial: "08:00:00"
+      icon: mdi:weather-night
+
+    night_pulse_flower_2:
+      name: Night Pulse Flower 2
+      has_date: false
+      has_time: true
+      initial: "10:00:00"
+      icon: mdi:weather-night
+
+    night_pulse_flower_3:
+      name: Night Pulse Flower 3
+      has_date: false
+      has_time: true
+      initial: "12:00:00"
+      icon: mdi:weather-night
+
+    night_pulse_flower_4:
+      name: Night Pulse Flower 4
+      has_date: false
+      has_time: true
+      initial: "14:00:00"
+      icon: mdi:weather-night
+
+    night_pulse_flower_5:
+      name: Night Pulse Flower 5
+      has_date: false
+      has_time: true
+      initial: "16:00:00"
+      icon: mdi:weather-night
 
   input_number:
+    night_pulse_stir_pre_minutes:
+      name: Night Pulse Stir Pre Duration
+      min: 1
+      max: 30
+      step: 1
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:rotate-3d-variant
+      initial: 7
+
+    night_pulse_air_minutes:
+      name: Night Pulse Air Duration
+      min: 5
+      max: 55
+      step: 1
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:air-purifier
+      initial: 45
+
+    night_pulse_stir_post_minutes:
+      name: Night Pulse Stir Post Duration
+      min: 1
+      max: 30
+      step: 1
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:rotate-3d-variant
+      initial: 5
+
     maintenance_interval_minutes:
       name: Maintenance Interval
       min: 30

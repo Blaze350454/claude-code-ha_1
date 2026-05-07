@@ -69,6 +69,54 @@ run_alternating:
   mode: restart
   icon: mdi:sync
 
+run_night_pulse:
+  alias: Run Night Pulse Sequence
+  sequence:
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.alternating_active
+  - action: switch.turn_on
+    target:
+      entity_id:
+      - switch.feed_stir_pump_irrigation_tent
+      - switch.flush_stir_pump_irrigation_tent
+  - delay:
+      minutes: "{{ states('input_number.night_pulse_stir_pre_minutes') | int }}"
+  - action: switch.turn_off
+    target:
+      entity_id:
+      - switch.feed_stir_pump_irrigation_tent
+      - switch.flush_stir_pump_irrigation_tent
+  - delay:
+      milliseconds: 500
+  - action: switch.turn_on
+    target:
+      entity_id: switch.air_pump_irrigation_tent
+  - delay:
+      minutes: "{{ states('input_number.night_pulse_air_minutes') | int }}"
+  - action: switch.turn_off
+    target:
+      entity_id: switch.air_pump_irrigation_tent
+  - delay:
+      milliseconds: 500
+  - action: switch.turn_on
+    target:
+      entity_id:
+      - switch.feed_stir_pump_irrigation_tent
+      - switch.flush_stir_pump_irrigation_tent
+  - delay:
+      minutes: "{{ states('input_number.night_pulse_stir_post_minutes') | int }}"
+  - action: switch.turn_off
+    target:
+      entity_id:
+      - switch.feed_stir_pump_irrigation_tent
+      - switch.flush_stir_pump_irrigation_tent
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.alternating_active
+  mode: single
+  icon: mdi:weather-night
+
 run_feed_cycle:
   alias: Run Feed Cycle
   sequence:
