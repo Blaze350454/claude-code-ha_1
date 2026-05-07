@@ -38,9 +38,9 @@ tent_irrigation_schedule:
             interval_min: >-
               {% set dur = lights_on_duration_min | int - 35 %}
               {% if feeds_per_day > 1 %}{{ (dur / (feeds_per_day - 1)) | round(0) | int }}{% else %}{{ dur | int }}{% endif %}
-            base_lights_on: '{{ today_str ~ '' '' ~ ''%02d:%02d:00'' | format(lights_on_h, lights_on_m) }}'
             chosen_summary: >-
-              {% set base = strptime(base_lights_on, '%Y-%m-%d %H:%M:%S') %}
+              {# today_at() returns a tz-aware datetime, so compare with now() works #}
+              {% set base = today_at('%02d:%02d:00' | format(lights_on_h, lights_on_m)) %}
               {% set ns = namespace(n=0, dt=none) %}
               {% for n in range(1, feeds_per_day + 1) %}
                 {% set offset = 5 + (n - 1) * (interval_min | int) %}
