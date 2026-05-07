@@ -208,7 +208,7 @@ run_feed_cycle:
       - action: notify.mobile_app_sm_a166w
         data:
           title: Flush Blocked — Reservoir Dry
-          message: Line clear skipped — flush reservoir is dry. Running feed-only; will retry next day.
+          message: Line clear skipped — flush reservoir is dry. Running feed-only; will retry tomorrow once refilled.
       - action: input_text.set_value
         target:
           entity_id: input_text.irrigation_status
@@ -228,6 +228,16 @@ run_feed_cycle:
       - action: valve.close_valve
         target:
           entity_id: valve.feed_valve_irrigation_tent
+      # Hold counter at (interval - 1) so tomorrow's daily_setup increment
+      # makes tomorrow another flush-day attempt. Without this the counter
+      # would drift higher each day until the daily_setup safety net at
+      # interval*2 catches it (would delay the actual flush by ~interval*2
+      # days from when reservoir gets refilled).
+      - action: input_number.set_value
+        target:
+          entity_id: input_number.irrigation_day_counter
+        data:
+          value: "{{ (states('input_number.flush_day_interval') | int) - 1 }}"
     default:
     - action: input_text.set_value
       target:
