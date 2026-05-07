@@ -272,6 +272,25 @@ tent_irrigation_safety:
             title: Table Drain Blocked — Dry
             message: Table drain pump turned off. Table drain is empty.
       mode: single
+    - id: automation.irrigation_enabled_resync
+      alias: Irrigation — Re-enable Maintenance on Enable
+      description: >
+        When input_boolean.irrigation_enabled flips off→on, immediately
+        re-enable automation.irrigation_maintenance_cycle. Otherwise maintenance
+        stays disabled (from prior lights_off_cleanup) until the next
+        daily_setup_time fires — up to ~24h gap if user re-enables irrigation
+        right after lights_off. Closes that gap.
+      triggers:
+        - platform: state
+          entity_id: input_boolean.irrigation_enabled
+          from: 'off'
+          to: 'on'
+      actions:
+        - action: automation.turn_on
+          target:
+            entity_id: automation.irrigation_maintenance_cycle
+      mode: single
+
     - alias: Toggle — Kill Irrigation Automations
       id: toggle_irrigation_kill_automations
       trigger:
@@ -297,6 +316,7 @@ tent_irrigation_safety:
                       - automation.irrigation_lights_off_cleanup
                       - automation.irrigation_night_pulses_veg
                       - automation.irrigation_night_pulses_flower
+                      - automation.irrigation_enabled_resync
                       - automation.irrigation_pre_feed_air_stir_start
                       - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
@@ -324,6 +344,7 @@ tent_irrigation_safety:
                       - automation.irrigation_lights_off_cleanup
                       - automation.irrigation_night_pulses_veg
                       - automation.irrigation_night_pulses_flower
+                      - automation.irrigation_enabled_resync
                       - automation.irrigation_pre_feed_air_stir_start
                       - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
@@ -357,6 +378,7 @@ tent_irrigation_safety:
                       - automation.irrigation_lights_off_cleanup
                       - automation.irrigation_night_pulses_veg
                       - automation.irrigation_night_pulses_flower
+                      - automation.irrigation_enabled_resync
                       - automation.irrigation_pre_feed_air_stir_start
                       - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
@@ -406,6 +428,7 @@ tent_irrigation_safety:
                       - automation.irrigation_lights_off_cleanup
                       - automation.irrigation_night_pulses_veg
                       - automation.irrigation_night_pulses_flower
+                      - automation.irrigation_enabled_resync
                       - automation.irrigation_pre_feed_air_stir_start
                       - automation.irrigation_pre_feed_air_stir_stop
                       - automation.irrigation_startup_recovery
