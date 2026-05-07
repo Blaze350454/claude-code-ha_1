@@ -38,8 +38,21 @@ tent_irrigation_schedule:
             interval_min: >-
               {% set dur = lights_on_duration_min | int - 35 %}
               {% if feeds_per_day > 1 %}{{ (dur / (feeds_per_day - 1)) | round(0) | int }}{% else %}{{ dur | int }}{% endif %}
-            chosen_summary: >-
-              {# today_at() returns a tz-aware datetime, so compare with now() works #}
+            # Two parallel loop templates instead of one + JSON pack/unpack — HA's
+            # from_json filter rejected our JSON output for an opaque reason
+            # (input was valid JSON per error display). Cheaper to just iterate twice.
+            chosen_feed_n: >-
+              {% set base = today_at('%02d:%02d:00' | format(lights_on_h, lights_on_m)) %}
+              {% set ns = namespace(n=0) %}
+              {% for n in range(1, feeds_per_day + 1) %}
+                {% set offset = 5 + (n - 1) * (interval_min | int) %}
+                {% set fdt = base + timedelta(minutes=offset) %}
+                {% if ns.n == 0 and fdt > now() %}
+                  {% set ns.n = n %}
+                {% endif %}
+              {% endfor %}
+              {{ ns.n if ns.n > 0 else 1 }}
+            chosen_feed_dt: >-
               {% set base = today_at('%02d:%02d:00' | format(lights_on_h, lights_on_m)) %}
               {% set ns = namespace(n=0, dt=none) %}
               {% for n in range(1, feeds_per_day + 1) %}
@@ -51,14 +64,10 @@ tent_irrigation_schedule:
                 {% endif %}
               {% endfor %}
               {% if ns.n == 0 %}
-                {{ {'n': 1, 'dt': (base + timedelta(days=1, minutes=5)).strftime('%Y-%m-%d %H:%M:%S')} | tojson }}
+                {{ (base + timedelta(days=1, minutes=5)).strftime('%Y-%m-%d %H:%M:%S') }}
               {% else %}
-                {{ {'n': ns.n, 'dt': ns.dt.strftime('%Y-%m-%d %H:%M:%S')} | tojson }}
+                {{ ns.dt.strftime('%Y-%m-%d %H:%M:%S') }}
               {% endif %}
-        - variables:
-            chosen: '{{ chosen_summary | from_json }}'
-            chosen_feed_n: '{{ chosen.n }}'
-            chosen_feed_dt: '{{ chosen.dt }}'
             chosen_pre_start_dt: >-
               {% set f = strptime(chosen_feed_dt, '%Y-%m-%d %H:%M:%S') %}
               {{ (f - timedelta(minutes=lead_min)).strftime('%Y-%m-%d %H:%M:%S') }}
