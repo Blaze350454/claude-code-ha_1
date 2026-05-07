@@ -4,10 +4,20 @@ tent_irrigation_safety:
       alias: Irrigation — Watchdog
       description: >
         Forces all pumps and valves off if any pump runs longer than its
-        expected max. Tiered thresholds: feed/flush 10 min, stir 30 min
-        (covers full alternating cycles + buffer), air 60 min (covers night
-        cycle ramp + buffer), drain 35 min (drainage automation has 30 min
-        internal timeout).
+        expected max. Tiered thresholds:
+          - feed/flush 10 min (covers feed_duration_minutes typical ≤8 min;
+            tighter values intentional — flow_rate_irrigation_tent low-flow
+            safety also catches abnormal feed/flush at 2 min mark)
+          - stir 65 min (5 min buffer over stir_on_duration_minutes max of 60,
+            also covers maintenance_stir_minutes max 30 and night_pulse_stir_*
+            max 30 each with comfortable margin)
+          - air 65 min (5 min buffer over air_on_duration_minutes max of 60,
+            also covers night_pulse_air_minutes capped at 55)
+          - drain 35 min (drainage automation has 30 min internal timeout)
+        Buffers chosen so a user setting any helper at its UI max won't false-
+        trip the watchdog mid-cycle. A real stuck pump still gets caught,
+        just 35 min later than the previous tighter thresholds — acceptable
+        trade-off (no plant death in either window).
       triggers:
         - trigger: state
           entity_id:
@@ -22,12 +32,12 @@ tent_irrigation_safety:
             - switch.flush_stir_pump_irrigation_tent
           to: 'on'
           for:
-            minutes: 30
+            minutes: 65
         - trigger: state
           entity_id: switch.air_pump_irrigation_tent
           to: 'on'
           for:
-            minutes: 60
+            minutes: 65
         - trigger: state
           entity_id: switch.table_drain_pump_irrigation_tent
           to: 'on'
