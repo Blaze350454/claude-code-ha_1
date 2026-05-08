@@ -19,17 +19,11 @@ jobs:
   ha-config-check:
     name: Home Assistant Config Check
     runs-on: ubuntu-latest
-    # Non-blocking while HA 2026.4.x has a check_config bug:
-    # KeyError at helpers/trigger.py:205 (_register_trigger_platform)
-    # when validating automations with dynamic trigger lookups.
-    # HA runs fine at runtime; only the check_config script is affected.
-    # Revisit once HA releases a fix and re-enable as a blocking check.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Home Assistant Core Configuration Check
         uses: frenck/action-home-assistant@v1
         with:
           path: "."
-          version: "2026.4.0"
+          version: "2026.5.0"
           secrets: "ci/fake_secrets.yaml"
