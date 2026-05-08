@@ -149,7 +149,7 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:water-sync
-      initial: 3
+      initial: 6
 
     flush_day_interval:
       name: Flush Day Interval
