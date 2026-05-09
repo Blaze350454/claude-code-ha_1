@@ -264,15 +264,27 @@ tent_irrigation_safety:
       mode: single
     - id: automation.irrigation_table_drain_empty_block
       alias: Tent Irrigation — Block Table Drain Pump When Dry
-      description: Turns off table drain pump immediately if activated while table drain is empty
+      description: >
+        Turns off the table-drain pump when the drain reservoir reports empty —
+        either at pump turn-on, or if it stays empty for 20 minutes while the
+        pump is running (catches the case where drain becomes empty mid-cycle).
+        Independent of feed/flush — table drain is its own loop.
       triggers:
         - trigger: state
           entity_id: switch.table_drain_pump_irrigation_tent
           to: 'on'
+        - trigger: state
+          entity_id: binary_sensor.table_drain_empty
+          to: 'off'
+          for:
+            minutes: 20
       conditions:
         - condition: state
           entity_id: binary_sensor.table_drain_empty
           state: 'off'
+        - condition: state
+          entity_id: switch.table_drain_pump_irrigation_tent
+          state: 'on'
       actions:
         - action: switch.turn_off
           target:
