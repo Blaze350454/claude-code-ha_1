@@ -152,7 +152,7 @@ run_feed_cycle:
         then:
         - action: input_text.set_value
           target:
-            entity_id: input_text.irrigation_status
+            entity_id: input_text.tent_irrigation_status
           data:
             value: Feeding
         - action: valve.open_valve
@@ -174,7 +174,7 @@ run_feed_cycle:
           entity_id: valve.flush_valve_irrigation_tent
       - action: input_text.set_value
         target:
-          entity_id: input_text.irrigation_status
+          entity_id: input_text.tent_irrigation_status
         data:
           value: Clearing Lines
       - action: switch.turn_on
@@ -211,7 +211,7 @@ run_feed_cycle:
           message: Line clear skipped — flush reservoir is dry. Running feed-only; will retry tomorrow once refilled.
       - action: input_text.set_value
         target:
-          entity_id: input_text.irrigation_status
+          entity_id: input_text.tent_irrigation_status
         data:
           value: Feeding
       - action: valve.open_valve
@@ -241,7 +241,7 @@ run_feed_cycle:
     default:
     - action: input_text.set_value
       target:
-        entity_id: input_text.irrigation_status
+        entity_id: input_text.tent_irrigation_status
       data:
         value: Feeding
     - action: valve.open_valve
@@ -260,7 +260,7 @@ run_feed_cycle:
         entity_id: valve.feed_valve_irrigation_tent
   - action: input_text.set_value
     target:
-      entity_id: input_text.irrigation_status
+      entity_id: input_text.tent_irrigation_status
     data:
       value: Idle
   mode: single

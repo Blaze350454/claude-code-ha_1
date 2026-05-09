@@ -1,7 +1,7 @@
 tent_irrigation_safety:
   automation:
     - id: automation.irrigation_watchdog
-      alias: Irrigation — Watchdog
+      alias: Tent Irrigation — Watchdog
       description: >
         Forces all pumps and valves off if any pump runs longer than its
         expected max. Tiered thresholds:
@@ -68,7 +68,7 @@ tent_irrigation_safety:
               - valve.flush_drain_valve_irrigation_tent
         - action: input_text.set_value
           target:
-            entity_id: input_text.irrigation_status
+            entity_id: input_text.tent_irrigation_status
           data:
             value: FAULT — Watchdog triggered
         - action: notify.mobile_app_sm_a166w
@@ -77,7 +77,7 @@ tent_irrigation_safety:
             message: A pump has been running for over 10 minutes. All pumps and valves forced off — check system.
       mode: single
     - id: automation.irrigation_startup_recovery
-      alias: Irrigation — Startup Recovery
+      alias: Tent Irrigation — Startup Recovery
       description: Forces all pumps and valves off immediately on HA start or restart
       triggers:
         - trigger: homeassistant
@@ -112,12 +112,12 @@ tent_irrigation_safety:
               - valve.flush_fill_valve_irrigation_tent
         - action: input_text.set_value
           target:
-            entity_id: input_text.irrigation_status
+            entity_id: input_text.tent_irrigation_status
           data:
             value: Idle
       mode: single
     - id: automation.irrigation_feed_empty_block
-      alias: Irrigation — Block Feed When Reservoir Dry
+      alias: Tent Irrigation — Block Feed When Reservoir Dry
       description: >
         Turns off feed pump, stir pump, and valve when feed reservoir is dry —
         either because they were activated while already dry, or because the
@@ -164,7 +164,7 @@ tent_irrigation_safety:
             message: Feed pump, stir pump, or valve turned off. Feed reservoir is dry.
       mode: single
     - id: automation.irrigation_flush_empty_block
-      alias: Irrigation — Block Flush When Reservoir Dry
+      alias: Tent Irrigation — Block Flush When Reservoir Dry
       description: >
         Turns off flush pump, stir pump, and valve when flush reservoir is dry —
         either because they were activated while already dry, or because the
@@ -211,7 +211,7 @@ tent_irrigation_safety:
             message: Flush pump, stir pump, or valve turned off. Flush reservoir is dry.
       mode: single
     - id: automation.irrigation_block_feed_fill_when_reservoir_full
-      alias: Irrigation — Block Feed Fill When Reservoir Full
+      alias: Tent Irrigation — Block Feed Fill When Reservoir Full
       description: Closes feed fill valve immediately if open while feed reservoir is full
       triggers:
         - trigger: state
@@ -237,7 +237,7 @@ tent_irrigation_safety:
             message: Feed fill valve closed. Feed reservoir is full.
       mode: single
     - id: automation.irrigation_block_flush_fill_when_reservoir_full
-      alias: Irrigation — Block Flush Fill When Reservoir Full
+      alias: Tent Irrigation — Block Flush Fill When Reservoir Full
       description: Closes flush fill valve immediately if open while flush reservoir is full
       triggers:
         - trigger: state
@@ -263,7 +263,7 @@ tent_irrigation_safety:
             message: Flush fill valve closed. Flush reservoir is full.
       mode: single
     - id: automation.irrigation_table_drain_empty_block
-      alias: Irrigation — Block Table Drain Pump When Dry
+      alias: Tent Irrigation — Block Table Drain Pump When Dry
       description: Turns off table drain pump immediately if activated while table drain is empty
       triggers:
         - trigger: state
@@ -283,10 +283,10 @@ tent_irrigation_safety:
             message: Table drain pump turned off. Table drain is empty.
       mode: single
     - id: automation.irrigation_enabled_resync
-      alias: Irrigation — Re-enable Maintenance on Enable
+      alias: Tent Irrigation — Re-enable Maintenance on Enable
       description: >
-        When input_boolean.irrigation_enabled flips off→on:
-          1. Re-enable automation.irrigation_maintenance_cycle (covers the gap
+        When input_boolean.tent_irrigation_enabled flips off→on:
+          1. Re-enable automation.tent_irrigation_maintenance_cycle (covers the gap
              where lights_off_cleanup disabled it during the off period).
           2. If daily_setup hasn't run yet today, fire it now so today's
              feed/pre-feed schedule is recomputed instead of waiting until
@@ -297,84 +297,84 @@ tent_irrigation_safety:
         immediate feed, or just wait for tomorrow's normal cycle.
       triggers:
         - platform: state
-          entity_id: input_boolean.irrigation_enabled
+          entity_id: input_boolean.tent_irrigation_enabled
           from: 'off'
           to: 'on'
       actions:
         - action: automation.turn_on
           target:
-            entity_id: automation.irrigation_maintenance_cycle
+            entity_id: automation.tent_irrigation_maintenance_cycle
         - if:
             - condition: template
               value_template: >
-                {% set last = state_attr('automation.irrigation_daily_setup_at_lights_on', 'last_triggered') %}
+                {% set last = state_attr('automation.tent_irrigation_daily_setup_at_lights_on', 'last_triggered') %}
                 {{ last is none or as_local(last).date() != now().date() }}
           then:
             - action: automation.trigger
               target:
-                entity_id: automation.irrigation_daily_setup_at_lights_on
+                entity_id: automation.tent_irrigation_daily_setup_at_lights_on
       mode: single
 
-    - alias: Toggle — Kill Irrigation Automations
+    - alias: Toggle — Kill Tent Irrigation Automations
       id: toggle_irrigation_kill_automations
       trigger:
         - platform: state
-          entity_id: input_boolean.irrigation_kill_automations
+          entity_id: input_boolean.tent_irrigation_kill_automations
       action:
         - choose:
             - conditions:
                 - condition: state
-                  entity_id: input_boolean.irrigation_kill_automations
+                  entity_id: input_boolean.tent_irrigation_kill_automations
                   state: 'on'
               sequence:
                 - action: automation.turn_off
                   target:
                     entity_id:
-                      - automation.irrigation_block_feed_when_reservoir_dry
-                      - automation.irrigation_block_flush_when_reservoir_dry
-                      - automation.irrigation_block_feed_fill_when_reservoir_full
-                      - automation.irrigation_block_flush_fill_when_reservoir_full
-                      - automation.irrigation_block_table_drain_pump_when_dry
-                      - automation.irrigation_daily_setup_at_lights_on
-                      - automation.irrigation_feed_trigger
-                      - automation.irrigation_lights_off_cleanup
-                      - automation.irrigation_night_pulses_veg
-                      - automation.irrigation_night_pulses_flower
-                      - automation.irrigation_re_enable_maintenance_on_enable
-                      - automation.irrigation_pre_feed_air_stir_start
-                      - automation.irrigation_pre_feed_air_stir_stop
-                      - automation.irrigation_startup_recovery
-                      - automation.irrigation_table_drain_pump
-                      - automation.irrigation_watchdog
-                      - automation.irrigation_maintenance_cycle
+                      - automation.tent_irrigation_block_feed_when_reservoir_dry
+                      - automation.tent_irrigation_block_flush_when_reservoir_dry
+                      - automation.tent_irrigation_block_feed_fill_when_reservoir_full
+                      - automation.tent_irrigation_block_flush_fill_when_reservoir_full
+                      - automation.tent_irrigation_block_table_drain_pump_when_dry
+                      - automation.tent_irrigation_daily_setup_at_lights_on
+                      - automation.tent_irrigation_feed_trigger
+                      - automation.tent_irrigation_lights_off_cleanup
+                      - automation.tent_irrigation_night_pulses_veg
+                      - automation.tent_irrigation_night_pulses_flower
+                      - automation.tent_irrigation_re_enable_maintenance_on_enable
+                      - automation.tent_irrigation_pre_feed_air_stir_start
+                      - automation.tent_irrigation_pre_feed_air_stir_stop
+                      - automation.tent_irrigation_startup_recovery
+                      - automation.tent_irrigation_table_drain_pump
+                      - automation.tent_irrigation_watchdog
+                      - automation.tent_irrigation_maintenance_cycle
                 - action: script.turn_off
                   target:
-                    entity_id: script.irrigation_advance_to_next_feed
+                    entity_id: script.tent_irrigation_advance_to_next_feed
             - conditions:
                 - condition: state
-                  entity_id: input_boolean.irrigation_kill_automations
+                  entity_id: input_boolean.tent_irrigation_kill_automations
                   state: 'off'
               sequence:
                 - action: automation.turn_on
                   target:
                     entity_id:
-                      - automation.irrigation_block_feed_when_reservoir_dry
-                      - automation.irrigation_block_flush_when_reservoir_dry
-                      - automation.irrigation_block_feed_fill_when_reservoir_full
-                      - automation.irrigation_block_flush_fill_when_reservoir_full
-                      - automation.irrigation_block_table_drain_pump_when_dry
-                      - automation.irrigation_daily_setup_at_lights_on
-                      - automation.irrigation_feed_trigger
-                      - automation.irrigation_lights_off_cleanup
-                      - automation.irrigation_night_pulses_veg
-                      - automation.irrigation_night_pulses_flower
-                      - automation.irrigation_re_enable_maintenance_on_enable
-                      - automation.irrigation_pre_feed_air_stir_start
-                      - automation.irrigation_pre_feed_air_stir_stop
-                      - automation.irrigation_startup_recovery
-                      - automation.irrigation_table_drain_pump
-                      - automation.irrigation_maintenance_cycle
-                      - automation.irrigation_watchdog
+                      - automation.tent_irrigation_block_feed_when_reservoir_dry
+                      - automation.tent_irrigation_block_flush_when_reservoir_dry
+                      - automation.tent_irrigation_block_feed_fill_when_reservoir_full
+                      - automation.tent_irrigation_block_flush_fill_when_reservoir_full
+                      - automation.tent_irrigation_block_table_drain_pump_when_dry
+                      - automation.tent_irrigation_daily_setup_at_lights_on
+                      - automation.tent_irrigation_feed_trigger
+                      - automation.tent_irrigation_lights_off_cleanup
+                      - automation.tent_irrigation_night_pulses_veg
+                      - automation.tent_irrigation_night_pulses_flower
+                      - automation.tent_irrigation_re_enable_maintenance_on_enable
+                      - automation.tent_irrigation_pre_feed_air_stir_start
+                      - automation.tent_irrigation_pre_feed_air_stir_stop
+                      - automation.tent_irrigation_startup_recovery
+                      - automation.tent_irrigation_table_drain_pump
+                      - automation.tent_irrigation_maintenance_cycle
+                      - automation.tent_irrigation_watchdog
     - alias: Toggle — Irrigation Tent All Off
       id: toggle_irrigation_tent_kill
       trigger:
@@ -392,27 +392,27 @@ tent_irrigation_safety:
                     entity_id:
                       - automation.fill_feed_reservoir
                       - automation.fill_flush_reservoir
-                      - automation.irrigation_block_feed_when_reservoir_dry
-                      - automation.irrigation_block_flush_when_reservoir_dry
-                      - automation.irrigation_block_feed_fill_when_reservoir_full
-                      - automation.irrigation_block_flush_fill_when_reservoir_full
-                      - automation.irrigation_block_table_drain_pump_when_dry
-                      - automation.irrigation_daily_setup_at_lights_on
-                      - automation.irrigation_feed_trigger
-                      - automation.irrigation_lights_off_cleanup
-                      - automation.irrigation_night_pulses_veg
-                      - automation.irrigation_night_pulses_flower
-                      - automation.irrigation_re_enable_maintenance_on_enable
-                      - automation.irrigation_pre_feed_air_stir_start
-                      - automation.irrigation_pre_feed_air_stir_stop
-                      - automation.irrigation_startup_recovery
-                      - automation.irrigation_table_drain_pump
-                      - automation.irrigation_watchdog
-                      - automation.irrigation_maintenance_cycle
+                      - automation.tent_irrigation_block_feed_when_reservoir_dry
+                      - automation.tent_irrigation_block_flush_when_reservoir_dry
+                      - automation.tent_irrigation_block_feed_fill_when_reservoir_full
+                      - automation.tent_irrigation_block_flush_fill_when_reservoir_full
+                      - automation.tent_irrigation_block_table_drain_pump_when_dry
+                      - automation.tent_irrigation_daily_setup_at_lights_on
+                      - automation.tent_irrigation_feed_trigger
+                      - automation.tent_irrigation_lights_off_cleanup
+                      - automation.tent_irrigation_night_pulses_veg
+                      - automation.tent_irrigation_night_pulses_flower
+                      - automation.tent_irrigation_re_enable_maintenance_on_enable
+                      - automation.tent_irrigation_pre_feed_air_stir_start
+                      - automation.tent_irrigation_pre_feed_air_stir_stop
+                      - automation.tent_irrigation_startup_recovery
+                      - automation.tent_irrigation_table_drain_pump
+                      - automation.tent_irrigation_watchdog
+                      - automation.tent_irrigation_maintenance_cycle
                 - action: script.turn_off
                   target:
                     entity_id:
-                      - script.irrigation_advance_to_next_feed
+                      - script.tent_irrigation_advance_to_next_feed
                       - script.run_alternating
                       - script.run_feed_cycle
                       - script.stop_alternating
@@ -442,33 +442,33 @@ tent_irrigation_safety:
                     entity_id:
                       - automation.fill_feed_reservoir
                       - automation.fill_flush_reservoir
-                      - automation.irrigation_block_feed_when_reservoir_dry
-                      - automation.irrigation_block_flush_when_reservoir_dry
-                      - automation.irrigation_block_feed_fill_when_reservoir_full
-                      - automation.irrigation_block_flush_fill_when_reservoir_full
-                      - automation.irrigation_block_table_drain_pump_when_dry
-                      - automation.irrigation_daily_setup_at_lights_on
-                      - automation.irrigation_feed_trigger
-                      - automation.irrigation_lights_off_cleanup
-                      - automation.irrigation_night_pulses_veg
-                      - automation.irrigation_night_pulses_flower
-                      - automation.irrigation_re_enable_maintenance_on_enable
-                      - automation.irrigation_pre_feed_air_stir_start
-                      - automation.irrigation_pre_feed_air_stir_stop
-                      - automation.irrigation_startup_recovery
-                      - automation.irrigation_table_drain_pump
-                      - automation.irrigation_maintenance_cycle
-                      - automation.irrigation_watchdog
+                      - automation.tent_irrigation_block_feed_when_reservoir_dry
+                      - automation.tent_irrigation_block_flush_when_reservoir_dry
+                      - automation.tent_irrigation_block_feed_fill_when_reservoir_full
+                      - automation.tent_irrigation_block_flush_fill_when_reservoir_full
+                      - automation.tent_irrigation_block_table_drain_pump_when_dry
+                      - automation.tent_irrigation_daily_setup_at_lights_on
+                      - automation.tent_irrigation_feed_trigger
+                      - automation.tent_irrigation_lights_off_cleanup
+                      - automation.tent_irrigation_night_pulses_veg
+                      - automation.tent_irrigation_night_pulses_flower
+                      - automation.tent_irrigation_re_enable_maintenance_on_enable
+                      - automation.tent_irrigation_pre_feed_air_stir_start
+                      - automation.tent_irrigation_pre_feed_air_stir_stop
+                      - automation.tent_irrigation_startup_recovery
+                      - automation.tent_irrigation_table_drain_pump
+                      - automation.tent_irrigation_maintenance_cycle
+                      - automation.tent_irrigation_watchdog
 
     - id: automation.irrigation_maintenance_cycle
-      alias: Irrigation — Maintenance Cycle
+      alias: Tent Irrigation — Maintenance Cycle
       description: Runs stir then air every maintenance_interval_minutes. Skips if feed is within 60 min or a feed/pre-feed is running.
       triggers:
         - trigger: time_pattern
           minutes: /5
       conditions:
         - condition: state
-          entity_id: input_boolean.irrigation_enabled
+          entity_id: input_boolean.tent_irrigation_enabled
           state: "on"
         - condition: state
           entity_id: input_boolean.alternating_active
@@ -487,7 +487,7 @@ tent_irrigation_safety:
             {% endif %}
         - condition: template
           value_template: >
-            {% set last = state_attr("automation.irrigation_maintenance_cycle", "last_triggered") %}
+            {% set last = state_attr("automation.tent_irrigation_maintenance_cycle", "last_triggered") %}
             {% if last is none %}true
             {% else %}
               {{ (as_timestamp(now()) - as_timestamp(last)) >= (states("input_number.maintenance_interval_minutes") | int * 60) }}
@@ -518,7 +518,7 @@ tent_irrigation_safety:
       mode: single
 
     - id: automation.irrigation_low_flow_safety
-      alias: Irrigation — Low Flow Safety
+      alias: Tent Irrigation — Low Flow Safety
       description: >
         If a feed/flush pump has been running for 2 minutes but flow rate is
         still below 0.5 L/min, assume clogged emitter, dry pump head, kinked
@@ -558,7 +558,7 @@ tent_irrigation_safety:
               - valve.flush_valve_irrigation_tent
         - action: input_text.set_value
           target:
-            entity_id: input_text.irrigation_status
+            entity_id: input_text.tent_irrigation_status
           data:
             value: FAULT — Low flow with pump on
         - action: notify.mobile_app_sm_a166w

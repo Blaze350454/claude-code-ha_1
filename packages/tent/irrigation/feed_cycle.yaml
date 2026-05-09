@@ -1,14 +1,14 @@
 tent_irrigation_feed_cycle:
   automation:
     - id: automation.irrigation_feed_trigger
-      alias: Irrigation — Feed Trigger
+      alias: Tent Irrigation — Feed Trigger
       description: Triggers a feed cycle when next_feed_time is reached
       triggers:
         - platform: time
           at: input_datetime.next_feed_time
       conditions:
         - condition: state
-          entity_id: input_boolean.irrigation_enabled
+          entity_id: input_boolean.tent_irrigation_enabled
           state: 'on'
       actions:
         - action: input_number.increment
@@ -17,17 +17,17 @@ tent_irrigation_feed_cycle:
         - action: script.run_feed_cycle
         - wait_template: '{{ not is_state(''script.run_feed_cycle'', ''on'') }}'
           timeout: 00:60:00
-        - action: script.irrigation_advance_to_next_feed
+        - action: script.tent_irrigation_advance_to_next_feed
       mode: single
     - id: automation.irrigation_pre_feed_start
-      alias: Irrigation — Pre-Feed Air/Stir Start
+      alias: Tent Irrigation — Pre-Feed Air/Stir Start
       description: Starts air/stir alternating at lead time before next feed
       triggers:
         - platform: time
           at: input_datetime.next_pre_feed_start
       conditions:
         - condition: state
-          entity_id: input_boolean.irrigation_enabled
+          entity_id: input_boolean.tent_irrigation_enabled
           state: 'on'
         - condition: template
           value_template: '{{ states(''input_number.current_feed_number'') | int < states(''input_number.feeds_per_day_2'') | int }}'
@@ -35,14 +35,14 @@ tent_irrigation_feed_cycle:
         - action: script.run_alternating
       mode: single
     - id: automation.irrigation_pre_feed_stop
-      alias: Irrigation — Pre-Feed Air/Stir Stop
+      alias: Tent Irrigation — Pre-Feed Air/Stir Stop
       description: Stops air/stir alternating 5 minutes before next feed
       triggers:
         - platform: time
           at: input_datetime.next_pre_feed_stop
       conditions:
         - condition: state
-          entity_id: input_boolean.irrigation_enabled
+          entity_id: input_boolean.tent_irrigation_enabled
           state: 'on'
       actions:
         - action: script.stop_alternating

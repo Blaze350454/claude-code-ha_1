@@ -1,7 +1,7 @@
 tent_irrigation_night_pulses:
   automation:
     - id: automation.irrigation_night_pulses_veg
-      alias: Irrigation — Night Pulses (Veg)
+      alias: Tent Irrigation — Night Pulses (Veg)
       description: >
         Runs script.run_night_pulse at each night_pulse_veg_* time. Active only
         during veg-side growth stages (Seedling, Early Veg, Veg, Transition).
@@ -22,7 +22,7 @@ tent_irrigation_night_pulses:
       mode: single
 
     - id: automation.irrigation_night_pulses_flower
-      alias: Irrigation — Night Pulses (Flower)
+      alias: Tent Irrigation — Night Pulses (Flower)
       description: >
         Runs script.run_night_pulse at each night_pulse_flower_* time. Active only
         during flower-side growth stages (Early Flower, Flower, Late Flower).

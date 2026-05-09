@@ -1,13 +1,13 @@
 tent_irrigation_schedule:
   automation:
     - id: automation.irrigation_daily_setup
-      alias: Irrigation — Daily Setup at Lights On
+      alias: Tent Irrigation — Daily Setup at Lights On
       description: >
         Resets daily counters, calculates feed schedule, sets next_feed_time to
         the **next future feed in today's window** (not just the first one).
         Normally fires at input_datetime.daily_setup_time (~17:00) when all of
         today's feeds are in the future, so the chosen feed = feed 1.
-        When fired mid-day via automation.irrigation_re_enable_maintenance_on_enable
+        When fired mid-day via automation.tent_irrigation_re_enable_maintenance_on_enable
         (user re-enabled irrigation after some of today's feeds already passed),
         iterates today's planned feeds, picks the first one still in the future,
         and sets current_feed_number = (chosen_n - 1) so feed_trigger increments
@@ -17,12 +17,12 @@ tent_irrigation_schedule:
           at: input_datetime.daily_setup_time
       conditions:
         - condition: state
-          entity_id: input_boolean.irrigation_enabled
+          entity_id: input_boolean.tent_irrigation_enabled
           state: 'on'
       actions:
         - action: automation.turn_on
           target:
-            entity_id: automation.irrigation_maintenance_cycle
+            entity_id: automation.tent_irrigation_maintenance_cycle
         - variables:
             feeds_per_day: '{{ states(''input_number.feeds_per_day_2'') | int }}'
             lead_min: '{{ states(''input_number.air_stir_lead_minutes'') | int }}'
@@ -122,12 +122,12 @@ tent_irrigation_schedule:
                     entity_id: input_number.irrigation_day_counter
         - action: input_text.set_value
           target:
-            entity_id: input_text.irrigation_status
+            entity_id: input_text.tent_irrigation_status
           data:
             value: Idle
       mode: single
     - id: automation.irrigation_lights_off_stop
-      alias: Irrigation — Lights Off Cleanup
+      alias: Tent Irrigation — Lights Off Cleanup
       description: Stops all irrigation activity at lights-off
       triggers:
         - at: input_datetime.veg_lights_off_time
@@ -156,12 +156,12 @@ tent_irrigation_schedule:
               - valve.flush_drain_valve_irrigation_tent
         - action: automation.turn_off
           target:
-            entity_id: automation.irrigation_maintenance_cycle
+            entity_id: automation.tent_irrigation_maintenance_cycle
           data:
             stop_actions: true
         - action: input_text.set_value
           target:
-            entity_id: input_text.irrigation_status
+            entity_id: input_text.tent_irrigation_status
           data:
             value: Idle
       mode: single

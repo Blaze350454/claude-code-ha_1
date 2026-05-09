@@ -1,7 +1,7 @@
 tent_irrigation_drainage:
   automation:
     - id: automation.table_drain_pump_control
-      alias: Irrigation — Table Drain Pump
+      alias: Tent Irrigation — Table Drain Pump
       description: Turns on drain pump when table is full, off when empty sensor goes dry
       triggers:
         - trigger: state
