@@ -3,21 +3,26 @@ tent_irrigation_safety:
     - id: automation.irrigation_watchdog
       alias: Tent Irrigation — Watchdog
       description: >
-        Forces all pumps and valves off if any pump runs longer than its
-        expected max. Tiered thresholds:
+        Forces all pumps and valves off if any pump or valve stays active longer
+        than its expected max. State-based triggers — fires regardless of how
+        the pump/valve was activated. Tiered thresholds:
+          PUMPS:
           - feed/flush 10 min (covers feed_duration_minutes typical ≤8 min;
-            tighter values intentional — flow_rate_irrigation_tent low-flow
-            safety also catches abnormal feed/flush at 2 min mark)
-          - stir 65 min (5 min buffer over stir_on_duration_minutes max of 60,
-            also covers maintenance_stir_minutes max 30 and night_pulse_stir_*
-            max 30 each with comfortable margin)
-          - air 65 min (5 min buffer over air_on_duration_minutes max of 60,
-            also covers night_pulse_air_minutes capped at 55)
-          - drain 35 min (drainage automation has 30 min internal timeout)
-        Buffers chosen so a user setting any helper at its UI max won't false-
-        trip the watchdog mid-cycle. A real stuck pump still gets caught,
-        just 35 min later than the previous tighter thresholds — acceptable
-        trade-off (no plant death in either window).
+            low-flow safety also catches abnormal feed/flush at 2 min mark)
+          - stir 65 min (5 min buffer over stir_on_duration_minutes max 60,
+            also covers maintenance_stir/night_pulse_stir maxes)
+          - air 65 min (5 min buffer over air_on_duration_minutes max 60)
+          - table drain pump 35 min (drainage automation has 30 min internal
+            timeout)
+          VALVES (added 2026-05-09 after a feed_valve was found stuck open
+          for 7+ hours with the feed pump off — pump-only watchdog had no
+          coverage for that case):
+          - feed/flush valve 25 min (longer than max feed cycle; catches stuck-
+            open from missed close-command after a network blip)
+          - feed/flush fill valves 7 min (fills are short — anything longer is
+            either a sensor failure or a real overfill risk)
+          - flush drain valve 10 min (drain pulses are seconds during line
+            clear; 10 min is generous slack)
       triggers:
         - trigger: state
           entity_id:
@@ -43,6 +48,26 @@ tent_irrigation_safety:
           to: 'on'
           for:
             minutes: 35
+        # --- Valve watchdog triggers ---
+        - trigger: state
+          entity_id:
+            - valve.feed_valve_irrigation_tent
+            - valve.flush_valve_irrigation_tent
+          to: open
+          for:
+            minutes: 25
+        - trigger: state
+          entity_id:
+            - valve.feed_fill_valve_irrigation_tent
+            - valve.flush_fill_valve_irrigation_tent
+          to: open
+          for:
+            minutes: 7
+        - trigger: state
+          entity_id: valve.flush_drain_valve_irrigation_tent
+          to: open
+          for:
+            minutes: 10
       actions:
         - action: script.stop_alternating
         - action: script.turn_off
@@ -65,6 +90,8 @@ tent_irrigation_safety:
             entity_id:
               - valve.feed_valve_irrigation_tent
               - valve.flush_valve_irrigation_tent
+              - valve.feed_fill_valve_irrigation_tent
+              - valve.flush_fill_valve_irrigation_tent
               - valve.flush_drain_valve_irrigation_tent
         - action: input_text.set_value
           target:
@@ -74,7 +101,10 @@ tent_irrigation_safety:
         - action: notify.mobile_app_sm_a166w
           data:
             title: Irrigation Watchdog Alert
-            message: A pump has been running for over 10 minutes. All pumps and valves forced off — check system.
+            message: >
+              {{ trigger.entity_id }} stayed active longer than its safety
+              threshold ({{ trigger.for }}). All pumps and valves forced off
+              — check system.
       mode: single
     - id: automation.irrigation_startup_recovery
       alias: Tent Irrigation — Startup Recovery
