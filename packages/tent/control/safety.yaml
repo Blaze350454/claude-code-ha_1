@@ -16,15 +16,15 @@ tent_control_safety:
             {{ states('input_select.grow_tent_growth_stage')
                in ['Early Flower', 'Flower', 'Late Flower'] }}
         - condition: state
-          entity_id: input_boolean.flower_night_humidifier_block
+          entity_id: input_boolean.tent_flower_night_humidifier_block
           state: "on"
       actions:
         - action: switch.turn_off
           target:
-            entity_id: switch.humidifier
+            entity_id: switch.tent_humidifier
         - action: fan.turn_off
           target:
-            entity_id: fan.grow_tent_one_humidifier_fan_pwm
+            entity_id: fan.tent_humidifier_fan_pwm
         - action: persistent_notification.create
           data:
             title: "Humidifier Blocked — Flower Night"

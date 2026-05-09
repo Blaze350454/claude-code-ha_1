@@ -274,7 +274,7 @@ tent_control_day_night:
       actions:
         - action: input_number.set_value
           target:
-            entity_id: input_number.humidifier_target_rh
+            entity_id: input_number.tent_humidifier_target_rh
           data:
             value: "{{ states('input_number.humidity_day_target') | float }}"
       mode: single
@@ -294,7 +294,7 @@ tent_control_day_night:
       actions:
         - action: input_number.set_value
           target:
-            entity_id: input_number.humidifier_target_rh
+            entity_id: input_number.tent_humidifier_target_rh
           data:
             value: "{{ states('input_number.humidity_night_target') | float }}"
       mode: single

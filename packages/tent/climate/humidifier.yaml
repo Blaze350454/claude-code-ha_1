@@ -1,13 +1,13 @@
 tent_climate_humidifier:
   automation:
     - id: humidifier_on
-      alias: "Humidifier - Turn On"
+      alias: "Tent Humidifier - Turn On"
       trigger:
         - platform: template
           value_template: >
             {{ states('sensor.tent_average_humidity') | float(0) <
-               (states('input_number.humidifier_target_rh') | float(65) -
-                states('input_number.humidifier_hysteresis') | float(5)) }}
+               (states('input_number.tent_humidifier_target_rh') | float(65) -
+                states('input_number.tent_humidifier_hysteresis') | float(5)) }}
       condition:
         - condition: state
           entity_id: input_select.tent_humidity_mode
@@ -26,59 +26,59 @@ tent_climate_humidifier:
             {% set stage = states('input_select.grow_tent_growth_stage') %}
             {% set is_flower = stage in ['Early Flower', 'Flower', 'Late Flower'] %}
             {% set lights_off = is_state('light.hlg', 'off') %}
-            {% set block_on = is_state('input_boolean.flower_night_humidifier_block', 'on') %}
+            {% set block_on = is_state('input_boolean.tent_flower_night_humidifier_block', 'on') %}
             {{ not (is_flower and lights_off and block_on) }}
       action:
         - service: switch.turn_on
           target:
-            entity_id: switch.humidifier
+            entity_id: switch.tent_humidifier
         - service: fan.turn_on
           target:
-            entity_id: fan.grow_tent_one_humidifier_fan_pwm
+            entity_id: fan.tent_humidifier_fan_pwm
           data:
             percentage: 80
 
 # Turn OFF fogger when RH reaches target, fan runs 1 min extra to push remaining mist
     - id: humidifier_off
-      alias: "Humidifier - Turn Off"
+      alias: "Tent Humidifier - Turn Off"
       trigger:
         - platform: template
           value_template: >
             {{ states('sensor.tent_average_humidity') | float(0) >=
-               states('input_number.humidifier_target_rh') | float(65) }}
+               states('input_number.tent_humidifier_target_rh') | float(65) }}
       condition:
         - condition: state
-          entity_id: switch.humidifier
+          entity_id: switch.tent_humidifier
           state: "on"
       action:
         - service: switch.turn_off
           target:
-            entity_id: switch.humidifier
+            entity_id: switch.tent_humidifier
         - delay: "00:01:00"
         - service: fan.turn_off
           target:
-            entity_id: fan.grow_tent_one_humidifier_fan_pwm
+            entity_id: fan.tent_humidifier_fan_pwm
 
 # Safety: shut off fogger if reservoir temp exceeds 38°C
     - id: humidifier_overheat_shutoff
-      alias: "Humidifier - Overheat Shutoff"
+      alias: "Tent Humidifier - Overheat Shutoff"
       trigger:
         - platform: numeric_state
-          entity_id: sensor.grow_tent_one_humidifier_reservoir_temperature
+          entity_id: sensor.tent_humidifier_reservoir_temperature
           above: 38
       action:
         - service: switch.turn_off
           target:
-            entity_id: switch.humidifier
+            entity_id: switch.tent_humidifier
         - service: fan.turn_off
           target:
-            entity_id: fan.grow_tent_one_humidifier_fan_pwm
+            entity_id: fan.tent_humidifier_fan_pwm
         - service: notify.persistent_notification
           data:
             title: "Humidifier Overheat"
             message: >
               Fogger shut off — reservoir temperature exceeded 38°C
-              ({{ states('sensor.grow_tent_one_humidifier_reservoir_temperature') }}°C).
+              ({{ states('sensor.tent_humidifier_reservoir_temperature') }}°C).
               Check water level and float valve.
 
 ########## DEHUMIDIFY MODE ##########

@@ -210,7 +210,7 @@ Post-1b snapshot: `Container Home/migration_snapshots/20260423-050316Z_post-phas
 
 - ~~**Camera Tent** device — deferred after 1b.~~ Resolved in phase 2 (2026-04-23) with `sys_camera` + `sub_camera_indoor` + `blink` + `grow`.
 - **Grow Tent Two ESP32 plant/flood moisture sensors** (22 entities: `sensor.grow_tent_two_plant_{1..9}_{volts,moisture}`, `sensor.grow_tent_two_flood_{1..4}_{volts,moisture}`) → reserved for future irrigation hardware; tag when wired to `sys_irrigation` with `fn_sensor_level`.
-- **Not currently in use** (user confirmed 2026-04-23 — leave untagged until they come into use): `switch.blank_2` (Kasa reservoir prime pump 2-outlet, second outlet), `switch.humidifier_2` (second entity on Humidifier device), `switch.grow_tent_one_extra_relay` (spare relay on grow-tent-one ESP32).
+- **Not currently in use** (user confirmed 2026-04-23 — leave untagged until they come into use): `switch.blank_2` (Kasa reservoir prime pump 2-outlet, second outlet), `switch.grow_tent_one_extra_relay` (spare relay on grow-tent-one ESP32). (Note: `switch.humidifier_2` was on this list but brought into the climate/humidifier scope on 2026-05-09 — now `switch.tent_humidifier_2`, tagged `sys_climate/sub_climate_humidifier/fn_controller/sev_warning/grow`.)
 - **Kasa outdoor plug outlets** (`switch.kasa_smart_outdoor_plug_switch_1/2`) — not in use. Phase 1b tagged them `sys_irrigation` + `fn_controller` + `sev_warning` based on the device name ("Irrigation Multi - Plug"); re-evaluate labels/severity when they come into use.
 - **Whole-home legacy labels** — many superseded during phases 2 / 3d:
   - `3d_printer` → deleted in phase 3d (replaced by `sys_printer`).

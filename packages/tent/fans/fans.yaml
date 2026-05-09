@@ -9,7 +9,7 @@ tent_fans:
         - trigger: state
           entity_id:
             - climate.air_conditioner_tent
-            - switch.humidifier
+            - switch.tent_humidifier
             - humidifier.dehumidifier_tent
       conditions:
         - condition: state
@@ -24,7 +24,7 @@ tent_fans:
                       value_template: >
                         {{ states('climate.air_conditioner_tent') not in ['off', 'unavailable', 'unknown'] }}
                     - condition: state
-                      entity_id: switch.humidifier
+                      entity_id: switch.tent_humidifier
                       state: "on"
                     - condition: state
                       entity_id: humidifier.dehumidifier_tent

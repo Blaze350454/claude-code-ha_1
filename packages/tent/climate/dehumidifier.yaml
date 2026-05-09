@@ -6,8 +6,8 @@ tent_climate_dehumidifier:
         - platform: template
           value_template: >
             {{ states('sensor.tent_average_humidity') | float(0) >
-               (states('input_number.humidifier_target_rh') | float(65) +
-                states('input_number.humidifier_hysteresis') | float(5)) }}
+               (states('input_number.tent_humidifier_target_rh') | float(65) +
+                states('input_number.tent_humidifier_hysteresis') | float(5)) }}
       condition:
         - condition: state
           entity_id: input_select.tent_humidity_mode
@@ -32,7 +32,7 @@ tent_climate_dehumidifier:
         - platform: template
           value_template: >
             {{ states('sensor.tent_average_humidity') | float(0) <=
-               states('input_number.humidifier_target_rh') | float(65) }}
+               states('input_number.tent_humidifier_target_rh') | float(65) }}
       condition:
         - condition: state
           entity_id: humidifier.dehumidifier_tent

@@ -25,10 +25,10 @@ tent_control_stage_changes:
               sequence:
                 - service: switch.turn_off
                   target:
-                    entity_id: switch.humidifier
+                    entity_id: switch.tent_humidifier
                 - service: fan.turn_off
                   target:
-                    entity_id: fan.grow_tent_one_humidifier_fan_pwm
+                    entity_id: fan.tent_humidifier_fan_pwm
 
         # Switched to Off — shut off everything
             - conditions:
@@ -38,10 +38,10 @@ tent_control_stage_changes:
               sequence:
                 - service: switch.turn_off
                   target:
-                    entity_id: switch.humidifier
+                    entity_id: switch.tent_humidifier
                 - service: fan.turn_off
                   target:
-                    entity_id: fan.grow_tent_one_humidifier_fan_pwm
+                    entity_id: fan.tent_humidifier_fan_pwm
                 - service: humidifier.turn_off
                   target:
                     entity_id: humidifier.dehumidifier_tent
@@ -175,12 +175,12 @@ tent_control_stage_changes:
                 value: "{{ defaults.vpd_night }}"
             - action: input_number.set_value
               target:
-                entity_id: input_number.humidifier_min_rh
+                entity_id: input_number.tent_humidifier_min_rh
               data:
                 value: "{{ defaults.rh_min }}"
             - action: input_number.set_value
               target:
-                entity_id: input_number.humidifier_max_rh
+                entity_id: input_number.tent_humidifier_max_rh
               data:
                 value: "{{ defaults.rh_max }}"
             # Only set light_hours when the stage table provides one

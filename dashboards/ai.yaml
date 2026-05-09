@@ -158,7 +158,7 @@ views:
               showarrow: false
               font: { size: 14, color: '#ffd60a' }
               text: |
-                $ex parseFloat(hass.states['input_number.humidifier_target_rh'].state).toFixed(0) + ' %'
+                $ex parseFloat(hass.states['input_number.tent_humidifier_target_rh'].state).toFixed(0) + ' %'
             - xref: paper
               yref: paper
               x: 0.64
