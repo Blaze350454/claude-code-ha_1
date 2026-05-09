@@ -55,12 +55,6 @@
         "name": "Pre-Feed Air/Stir Stop",
         "has_date": true,
         "has_time": true
-      },
-      {
-        "id": "night_cycle_start",
-        "name": "Night Cycle Start Time",
-        "has_date": true,
-        "has_time": true
       }
     ]
   }
