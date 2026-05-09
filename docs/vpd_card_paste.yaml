@@ -1,0 +1,313 @@
+type: custom:plotly-graph
+refresh_interval: 30
+hours_to_show: 0
+ha_theme: false
+card_mod:
+  style: |
+    ha-card {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+layout:
+  height: 750
+  paper_bgcolor: 'rgba(0,0,0,0)'
+  plot_bgcolor: 'rgba(0,0,0,0)'
+  font:
+    color: '#e6e6e6'
+  margin:
+    t: 215
+    r: 70
+    b: 80
+    l: 70
+  xaxis:
+    type: linear
+    title: Temperature (°C)
+    range: [15, 35]
+    dtick: 2
+    gridcolor: '#3a3a3a'
+    zeroline: false
+    showspikes: false
+    fixedrange: true
+  yaxis:
+    type: linear
+    title: Relative Humidity (%)
+    range: [30, 90]
+    dtick: 10
+    gridcolor: '#3a3a3a'
+    zeroline: false
+    showspikes: false
+    fixedrange: true
+  showlegend: false
+  hovermode: closest
+  annotations:
+    - xref: paper
+      yref: paper
+      x: 0.5
+      y: 1.40
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { color: '#e6e6e6', size: 20 }
+      text: |
+        $ex 'VPD — ' + hass.states['input_select.grow_tent_growth_stage'].state + ' — ' + hass.states['input_select.tent_humidity_mode'].state
+    - xref: paper
+      yref: paper
+      x: 0.08
+      y: 1.30
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { size: 32, color: '#ff9500' }
+      text: '🌡'
+    - xref: paper
+      yref: paper
+      x: 0.36
+      y: 1.30
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { size: 24, color: '#0a84ff' }
+      text: '💧'
+    - xref: paper
+      yref: paper
+      x: 0.64
+      y: 1.30
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { size: 18, color: '#ff6b6b' }
+      text: '<b>VPD</b>'
+    - xref: paper
+      yref: paper
+      x: 0.92
+      y: 1.30
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { size: 28, color: '#4ade80' }
+      text: '±'
+    - xref: paper
+      yref: paper
+      x: -0.02
+      y: 1.20
+      xanchor: right
+      yanchor: middle
+      showarrow: false
+      font: { size: 13, color: '#ffd60a' }
+      text: 'Set'
+    - xref: paper
+      yref: paper
+      x: 0.08
+      y: 1.20
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { size: 14, color: '#ffd60a' }
+      text: |
+        $ex (hass.states['light.hlg'].state === 'on' ? parseFloat(hass.states['input_number.tent_day_temp_target'].state) : parseFloat(hass.states['input_number.tent_night_temp_target'].state)).toFixed(1) + ' °C'
+    - xref: paper
+      yref: paper
+      x: 0.36
+      y: 1.20
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { size: 14, color: '#ffd60a' }
+      text: |
+        $ex parseFloat(hass.states['input_number.tent_humidifier_target_rh'].state).toFixed(0) + ' %'
+    - xref: paper
+      yref: paper
+      x: 0.64
+      y: 1.20
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { size: 14, color: '#ffd60a' }
+      text: |
+        $ex parseFloat(hass.states['sensor.active_vpd_target'].state).toFixed(2) + ' kPa'
+    - xref: paper
+      yref: paper
+      x: 0.92
+      y: 1.20
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { size: 14, color: '#ffd60a' }
+      text: |
+        $ex '± ' + parseFloat(hass.states['input_number.vpd_tolerance'].state).toFixed(2) + ' kPa'
+    - xref: paper
+      yref: paper
+      x: -0.02
+      y: 1.10
+      xanchor: right
+      yanchor: middle
+      showarrow: false
+      font: { size: 13, color: '#32cd32' }
+      text: 'Now'
+    - xref: paper
+      yref: paper
+      x: 0.08
+      y: 1.10
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { size: 14, color: '#32cd32' }
+      text: |
+        $ex parseFloat(hass.states['sensor.tent_average_temperature'].state).toFixed(1) + ' °C'
+    - xref: paper
+      yref: paper
+      x: 0.36
+      y: 1.10
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { size: 14, color: '#32cd32' }
+      text: |
+        $ex parseFloat(hass.states['sensor.tent_average_humidity'].state).toFixed(1) + ' %'
+    - xref: paper
+      yref: paper
+      x: 0.64
+      y: 1.10
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { size: 14, color: '#32cd32' }
+      text: |
+        $ex parseFloat(hass.states['sensor.grow_tent_vpd'].state).toFixed(2) + ' kPa'
+    - xref: paper
+      yref: paper
+      x: 0.92
+      y: 1.10
+      xanchor: center
+      yanchor: middle
+      showarrow: false
+      font: { size: 14, color: '#32cd32' }
+      text: '—'
+entities:
+  - entity: ''
+    name: Target VPD
+    mode: lines
+    line:
+      color: '#30d158'
+      width: 3
+    x: |
+      $fn ({hass}) => {
+        const xs = [];
+        for (let t = 15; t <= 35.01; t += 0.25) xs.push(t);
+        return xs;
+      }
+    "y": |
+      $fn ({hass}) => {
+        const target = parseFloat(hass.states['sensor.active_vpd_target']?.state);
+        if (isNaN(target)) return [];
+        const ys = [];
+        for (let t = 15; t <= 35.01; t += 0.25) {
+          const svp = 0.61078 * Math.exp((17.27 * t) / (t + 237.3));
+          ys.push(100 * (1 - target / svp));
+        }
+        return ys;
+      }
+  - entity: ''
+    name: '+ tol'
+    mode: lines
+    line:
+      color: '#ff9500'
+      width: 1
+      dash: dash
+    x: |
+      $fn ({hass}) => {
+        const xs = [];
+        for (let t = 15; t <= 35.01; t += 0.25) xs.push(t);
+        return xs;
+      }
+    "y": |
+      $fn ({hass}) => {
+        const tgt = parseFloat(hass.states['sensor.active_vpd_target']?.state);
+        const tol = parseFloat(hass.states['input_number.vpd_tolerance']?.state);
+        if (isNaN(tgt) || isNaN(tol)) return [];
+        const v = tgt + tol;
+        const ys = [];
+        for (let t = 15; t <= 35.01; t += 0.25) {
+          const svp = 0.61078 * Math.exp((17.27 * t) / (t + 237.3));
+          ys.push(100 * (1 - v / svp));
+        }
+        return ys;
+      }
+  - entity: ''
+    name: '− tol'
+    mode: lines
+    line:
+      color: '#ff9500'
+      width: 1
+      dash: dash
+    fill: tonexty
+    fillcolor: 'rgba(48,209,88,0.10)'
+    x: |
+      $fn ({hass}) => {
+        const xs = [];
+        for (let t = 15; t <= 35.01; t += 0.25) xs.push(t);
+        return xs;
+      }
+    "y": |
+      $fn ({hass}) => {
+        const tgt = parseFloat(hass.states['sensor.active_vpd_target']?.state);
+        const tol = parseFloat(hass.states['input_number.vpd_tolerance']?.state);
+        if (isNaN(tgt) || isNaN(tol)) return [];
+        const v = Math.max(0.05, tgt - tol);
+        const ys = [];
+        for (let t = 15; t <= 35.01; t += 0.25) {
+          const svp = 0.61078 * Math.exp((17.27 * t) / (t + 237.3));
+          ys.push(100 * (1 - v / svp));
+        }
+        return ys;
+      }
+  - entity: ''
+    name: T
+    mode: lines
+    showlegend: false
+    line:
+      color: '#888'
+      width: 1
+      dash: dot
+    x: |
+      $fn ({hass}) => {
+        const t = parseFloat(hass.states['sensor.tent_average_temperature']?.state);
+        return isNaN(t) ? [] : [t, t];
+      }
+    "y": |
+      $fn ({hass}) => [30, 90]
+  - entity: ''
+    name: RH
+    mode: lines
+    showlegend: false
+    line:
+      color: '#888'
+      width: 1
+      dash: dot
+    x: |
+      $fn ({hass}) => [15, 35]
+    "y": |
+      $fn ({hass}) => {
+        const r = parseFloat(hass.states['sensor.tent_average_humidity']?.state);
+        return isNaN(r) ? [] : [r, r];
+      }
+  - entity: ''
+    name: Now
+    mode: markers
+    marker:
+      color: '#ff3b30'
+      size: 18
+      line:
+        color: '#ffffff'
+        width: 2
+    x: |
+      $fn ({hass}) => {
+        const t = parseFloat(hass.states['sensor.tent_average_temperature']?.state);
+        return isNaN(t) ? [] : [t];
+      }
+    "y": |
+      $fn ({hass}) => {
+        const r = parseFloat(hass.states['sensor.tent_average_humidity']?.state);
+        return isNaN(r) ? [] : [r];
+      }
