@@ -161,8 +161,8 @@ grow_tent_irrigation:
       icon: mdi:calendar-sync
       initial: 3
 
-    irrigation_day_counter:
-      name: Irrigation Day Counter
+    tent_irrigation_day_counter:
+      name: Tent Irrigation Day Counter
       min: 0
       max: 30
       step: 1
@@ -172,8 +172,8 @@ grow_tent_irrigation:
 
 
   input_boolean:
-    irrigation_kill_automations:
-      name: "Kill Irrigation Automations"
+    tent_irrigation_kill_automations:
+      name: "Kill Tent Irrigation Automations"
       icon: mdi:robot-off
 
     irrigation_tent_kill:

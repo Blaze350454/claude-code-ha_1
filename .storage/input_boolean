@@ -10,8 +10,8 @@
         "icon": "mdi:cup-water"
       },
       {
-        "id": "irrigation_enabled",
-        "name": "Irrigation Enabled",
+        "id": "tent_irrigation_enabled",
+        "name": "Tent Irrigation Enabled",
         "icon": "mdi:sprinkler-variant"
       },
       {

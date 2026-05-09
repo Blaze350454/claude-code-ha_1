@@ -136,7 +136,7 @@ run_feed_cycle:
         {{ states('input_number.current_feed_number') | int
            >= states('input_number.feeds_per_day_2') | int }}
       is_flush_day: >
-        {{ states('input_number.irrigation_day_counter') | int
+        {{ states('input_number.tent_irrigation_day_counter') | int
            >= states('input_number.flush_day_interval') | int }}
       flush_dry: "{{ is_state('binary_sensor.flush_empty_irrigation_tent', 'off') }}"
       feed_minutes: "{{ states('input_number.feed_duration_minutes') | float }}"
@@ -198,7 +198,7 @@ run_feed_cycle:
           entity_id: valve.flush_valve_irrigation_tent
       - action: input_number.set_value
         target:
-          entity_id: input_number.irrigation_day_counter
+          entity_id: input_number.tent_irrigation_day_counter
         data:
           value: 0
     - conditions:
@@ -235,7 +235,7 @@ run_feed_cycle:
       # days from when reservoir gets refilled).
       - action: input_number.set_value
         target:
-          entity_id: input_number.irrigation_day_counter
+          entity_id: input_number.tent_irrigation_day_counter
         data:
           value: "{{ (states('input_number.flush_day_interval') | int) - 1 }}"
     default:

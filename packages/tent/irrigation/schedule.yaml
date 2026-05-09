@@ -95,7 +95,7 @@ tent_irrigation_schedule:
           data:
             datetime: '{{ chosen_pre_stop_dt }}'
         - variables:
-            current_day: '{{ states(''input_number.irrigation_day_counter'') | int }}'
+            current_day: '{{ states(''input_number.tent_irrigation_day_counter'') | int }}'
             interval: '{{ states(''input_number.flush_day_interval'') | int }}'
         - choose:
             - conditions:
@@ -104,7 +104,7 @@ tent_irrigation_schedule:
               sequence:
                 - action: input_number.set_value
                   target:
-                    entity_id: input_number.irrigation_day_counter
+                    entity_id: input_number.tent_irrigation_day_counter
                   data:
                     value: 0
                 - action: notify.mobile_app_sm_a166w
@@ -119,7 +119,7 @@ tent_irrigation_schedule:
               sequence:
                 - action: input_number.increment
                   target:
-                    entity_id: input_number.irrigation_day_counter
+                    entity_id: input_number.tent_irrigation_day_counter
         - action: input_text.set_value
           target:
             entity_id: input_text.tent_irrigation_status

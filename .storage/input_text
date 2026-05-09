@@ -5,8 +5,8 @@
   "data": {
     "items": [
       {
-        "id": "irrigation_status",
-        "name": "Irrigation Status",
+        "id": "tent_irrigation_status",
+        "name": "Tent Irrigation Status",
         "initial": "Idle",
         "icon": "mdi:information-outline",
         "mode": "text",
