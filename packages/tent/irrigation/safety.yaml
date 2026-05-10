@@ -380,6 +380,7 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_daily_setup_at_lights_on
                       - automation.tent_irrigation_feed_trigger
                       - automation.tent_irrigation_lights_off_cleanup
+                      - automation.tent_irrigation_low_flow_safety
                       - automation.tent_irrigation_night_pulses_veg
                       - automation.tent_irrigation_night_pulses_flower
                       - automation.tent_irrigation_re_enable_maintenance_on_enable
@@ -408,6 +409,7 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_daily_setup_at_lights_on
                       - automation.tent_irrigation_feed_trigger
                       - automation.tent_irrigation_lights_off_cleanup
+                      - automation.tent_irrigation_low_flow_safety
                       - automation.tent_irrigation_night_pulses_veg
                       - automation.tent_irrigation_night_pulses_flower
                       - automation.tent_irrigation_re_enable_maintenance_on_enable
@@ -442,6 +444,7 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_daily_setup_at_lights_on
                       - automation.tent_irrigation_feed_trigger
                       - automation.tent_irrigation_lights_off_cleanup
+                      - automation.tent_irrigation_low_flow_safety
                       - automation.tent_irrigation_night_pulses_veg
                       - automation.tent_irrigation_night_pulses_flower
                       - automation.tent_irrigation_re_enable_maintenance_on_enable
@@ -492,6 +495,7 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_daily_setup_at_lights_on
                       - automation.tent_irrigation_feed_trigger
                       - automation.tent_irrigation_lights_off_cleanup
+                      - automation.tent_irrigation_low_flow_safety
                       - automation.tent_irrigation_night_pulses_veg
                       - automation.tent_irrigation_night_pulses_flower
                       - automation.tent_irrigation_re_enable_maintenance_on_enable
@@ -611,15 +615,3 @@ tent_irrigation_safety:
               after 2 min. Possible clogged emitter, dry pump, kinked line, or
               sensor failure. All pumps and valves forced off — investigate.
       mode: single
-
-# Humidity Control — mode-based switching between humidify / dehumidify
-# Mode selector: input_select.tent_humidity_mode (Humidify / Dehumidify / Off)
-# Fogger smart plug: switch.tent_humidifier
-# Fan PWM: fan.tent_humidifier_fan_pwm (grow-tent-one ESP32-C3)
-# Dehumidifier: humidifier.dehumidifier_tent (Midea, standalone)
-# AC dry mode: climate.air_conditioner_tent (Midea, set to 'dry')
-# Humidity sensor: sensor.tent_average_humidity (averaged template)
-
-########## MODE SWITCHING ##########
-
-# When mode changes, shut off the opposing equipment
