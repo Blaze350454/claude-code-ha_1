@@ -1,0 +1,67 @@
+tent_control_watchdogs:
+  automation:
+    # ----------------------------------------------------------------------
+    # Critical Irrigation Offline Watchdog
+    # Pages immediately when any pillar of the irrigation stack is offline >5 min.
+    # Catches: ESP32 controller drop (wifi/power), HS300 (c074) cloud-API crash
+    # or network drop.
+    #
+    # Not watched: KP303 [53db] "Power Strip Tent" — currently unplugged spare
+    # with no active outlets. When that strip comes back into use, add a third
+    # trigger block for `binary_sensor.tp_link_power_strip_53db_cloud_connection`
+    # and matching device_label/hint entries.
+    #
+    # Tagging applied via Container Home/tag_watchdog_critical_offline.py:
+    #   area_id: tent
+    #   labels:  sys_irrigation, sev_critical, grow
+    # ----------------------------------------------------------------------
+    - id: watchdog_irrigation_critical_offline
+      alias: "Watchdog — Irrigation Critical Device Offline"
+      description: >
+        Fires when the ESP32 controller, or the HS300 power strip (c074) cloud
+        connection, has been offline for 5+ min. Pushes to phone and posts a
+        persistent notification in HA.
+      mode: parallel
+      max: 5
+      triggers:
+        # ESP32 tent-irrigation-controller — float switches/valves/sensors all
+        # go unavailable together when the device drops, so one entity is a
+        # sufficient proxy.
+        - trigger: state
+          entity_id: binary_sensor.feed_empty_irrigation_tent
+          to: unavailable
+          for: "00:05:00"
+          id: esp32_controller
+        - trigger: state
+          entity_id: binary_sensor.tp_link_power_strip_c074_cloud_connection
+          to:
+            - "off"
+            - "unavailable"
+          for: "00:05:00"
+          id: power_strip_c074
+      variables:
+        device_label:
+          esp32_controller: "ESP32 tent-irrigation-controller (float switches, valves, pressure/flow/temp sensors)"
+          power_strip_c074: "HS300 power strip [c074 — Tent Irrigation Power Strip] cloud connection lost"
+        hint:
+          esp32_controller: "Check device power + wifi. ESPHome dashboard: http://192.168.2.14:6052"
+          power_strip_c074: "Check HS300 cloud-API service on HA VM (:8765) and the strip itself."
+      actions:
+        - action: notify.send_message
+          target:
+            entity_id: notify.brenton_s_phone
+          data:
+            title: "Grow tent: critical device offline"
+            message: >-
+              {{ device_label[trigger.id] }} — offline 5+ min. {{ hint[trigger.id] }}
+        - action: persistent_notification.create
+          data:
+            notification_id: "watchdog_irrigation_offline_{{ trigger.id }}"
+            title: "Critical irrigation device offline"
+            message: >-
+              **{{ device_label[trigger.id] }}**
+
+              Entity `{{ trigger.entity_id }}` is `{{ trigger.to_state.state }}`
+              (since {{ trigger.from_state.last_changed }}).
+
+              {{ hint[trigger.id] }}
