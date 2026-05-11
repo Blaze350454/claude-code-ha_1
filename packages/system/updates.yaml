@@ -1,0 +1,55 @@
+system_updates:
+  automation:
+    # ----------------------------------------------------------------------
+    # HA Updates Daily Digest
+    # Single push at 09:00 local time listing available updates across all
+    # `update.*` entities (HACS, custom integrations, device firmware,
+    # custom cards). Only fires if at least one update is pending.
+    #
+    # Not covered: HA Core itself. The Container deployment doesn't expose
+    # a core-update entity — check Settings → System → Update or watch the
+    # HA release blog. A future `command_line` sensor polling Docker Hub
+    # for the latest `homeassistant/home-assistant` tag could fill this.
+    #
+    # Tagging applied via tag_ha_server_watchdog.py:
+    #   area_id: ha_server
+    #   labels:  sys_infrastructure, sev_warning
+    # ----------------------------------------------------------------------
+    - id: watchdog_ha_updates_daily_digest
+      alias: "Watchdog — HA Updates Daily Digest"
+      description: >
+        Fires once daily at 09:00 local time with a list of available
+        updates across HACS, custom integrations, custom cards, and
+        device firmware. Only sends a push if at least one update is
+        pending; otherwise silent.
+      mode: single
+      triggers:
+        - trigger: time
+          at: "09:00:00"
+      conditions:
+        - condition: template
+          value_template: >-
+            {{ states.update | selectattr('state','eq','on') | list | count > 0 }}
+      variables:
+        pending: >-
+          {{ states.update
+             | selectattr('state','eq','on')
+             | map(attribute='attributes.friendly_name')
+             | list }}
+        pending_count: "{{ pending | count }}"
+      actions:
+        - action: notify.send_message
+          target:
+            entity_id: notify.brenton_s_phone
+          data:
+            title: "HA updates available ({{ pending_count }})"
+            message: >-
+              {{ pending | join(' • ') }}
+        - action: persistent_notification.create
+          data:
+            notification_id: "watchdog_ha_updates_digest"
+            title: "HA updates available ({{ pending_count }})"
+            message: >-
+              {% for name in pending %}
+              - {{ name }}
+              {% endfor %}
