@@ -1,0 +1,116 @@
+system_host_health:
+  automation:
+    # ----------------------------------------------------------------------
+    # HA Host Resource Pressure Watchdog
+    # Fires when CPU / memory / swap / disk / 15-min load cross thresholds
+    # on the HA VM (192.168.2.151), sustained for the per-resource window.
+    #
+    # Trigger philosophy: each condition is a single-cross event (HA's
+    # numeric_state trigger only fires when value crosses the threshold).
+    # If a value increases from 75 → 95, both the warn and crit triggers
+    # fire in sequence. If it stays high, neither fires again — no spam.
+    #
+    # Sensors are systemmonitor integration (enabled via the bootstrap
+    # script Container Home/setup_ha_server_monitoring.py).
+    #
+    # Tagging applied via Container Home/tag_ha_server_watchdog.py:
+    #   area_id: ha_server
+    #   labels:  sys_infrastructure, sev_critical
+    # ----------------------------------------------------------------------
+    - id: watchdog_ha_host_resource_pressure
+      alias: "Watchdog — HA Host Resource Pressure"
+      description: >
+        Fires on threshold crossings for HA VM disk / memory / swap / CPU /
+        15-min load. Pushes to phone and posts a persistent notification.
+        Critical thresholds use the same channel — severity is in the title.
+      mode: parallel
+      max: 10
+      triggers:
+        - trigger: numeric_state
+          entity_id: sensor.system_monitor_disk_usage_config
+          above: 80
+          for: "00:05:00"
+          id: disk_warn
+        - trigger: numeric_state
+          entity_id: sensor.system_monitor_disk_usage_config
+          above: 90
+          for: "00:05:00"
+          id: disk_crit
+        - trigger: numeric_state
+          entity_id: sensor.system_monitor_memory_usage
+          above: 90
+          for: "00:10:00"
+          id: memory_warn
+        - trigger: numeric_state
+          entity_id: sensor.system_monitor_memory_usage
+          above: 95
+          for: "00:10:00"
+          id: memory_crit
+        - trigger: numeric_state
+          entity_id: sensor.system_monitor_swap_usage
+          above: 50
+          for: "00:10:00"
+          id: swap_warn
+        - trigger: numeric_state
+          entity_id: sensor.system_monitor_swap_usage
+          above: 80
+          for: "00:10:00"
+          id: swap_crit
+        - trigger: numeric_state
+          entity_id: sensor.system_monitor_processor_use
+          above: 95
+          for: "00:15:00"
+          id: cpu_warn
+        # load_15_min is already a 15-min smoothed average — `for: 5m` is plenty
+        - trigger: numeric_state
+          entity_id: sensor.system_monitor_load_15_min
+          above: 8
+          for: "00:05:00"
+          id: load_warn
+      variables:
+        severity:
+          disk_warn: "warning"
+          disk_crit: "CRITICAL"
+          memory_warn: "warning"
+          memory_crit: "CRITICAL"
+          swap_warn: "warning"
+          swap_crit: "warning"
+          cpu_warn: "warning"
+          load_warn: "warning"
+        resource_label:
+          disk_warn: "Disk /config usage above 80%"
+          disk_crit: "Disk /config usage above 90% — HA at risk of write failures"
+          memory_warn: "Memory usage above 90%"
+          memory_crit: "Memory usage above 95% — OOM risk"
+          swap_warn: "Swap usage above 50% — system under memory pressure"
+          swap_crit: "Swap usage above 80% — severe memory pressure"
+          cpu_warn: "CPU usage above 95% sustained 15 min"
+          load_warn: "15-min load average above 8"
+        hint:
+          disk_warn: "Free space on /config. Check `docker image prune`, snapshot retention, recorder DB size."
+          disk_crit: "Free space on /config immediately. `sdb` (57.7G) is unused — can extend the LV."
+          memory_warn: "Restart noisy integrations or HA. Check top consumers via `docker stats`."
+          memory_crit: "OOM imminent. Restart HA: `sudo docker restart homeassistant`."
+          swap_warn: "Memory pressure. Investigate integration leaks."
+          swap_crit: "Severe pressure — restart HA soon."
+          cpu_warn: "Likely a stuck integration. Check HA logs for tight loops."
+          load_warn: "VM is under sustained load. May need more vCPUs."
+      actions:
+        - action: notify.send_message
+          target:
+            entity_id: notify.brenton_s_phone
+          data:
+            title: "HA host {{ severity[trigger.id] }}: {{ trigger.id }}"
+            message: >-
+              {{ resource_label[trigger.id] }} ({{ trigger.to_state.state }}{{ trigger.to_state.attributes.unit_of_measurement }}).
+              {{ hint[trigger.id] }}
+        - action: persistent_notification.create
+          data:
+            notification_id: "watchdog_ha_host_{{ trigger.id }}"
+            title: "HA host {{ severity[trigger.id] }} — {{ trigger.id }}"
+            message: >-
+              **{{ resource_label[trigger.id] }}**
+
+              Entity: `{{ trigger.entity_id }}` = `{{ trigger.to_state.state }} {{ trigger.to_state.attributes.unit_of_measurement }}` (threshold `{{ trigger.above }}`).
+
+              {{ hint[trigger.id] }}
