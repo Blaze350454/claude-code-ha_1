@@ -1,14 +1,26 @@
 system_updates:
-  # Two `version` sensors (running + latest stable container release) feed a
-  # template binary_sensor that flips when they differ. The digest below
-  # treats this binary_sensor the same as any `update.*` entity.
-  sensor:
-    - platform: version
-      name: "HA Core Running"
-      source: local
-    - platform: version
-      name: "HA Core Latest"
-      source: container
+  # REST poll of version.home-assistant.io for the latest stable Core release
+  # (Container's `homeassistant.default` path). 6 h interval is plenty —
+  # HA releases monthly. Note: the `version` integration is config-flow only
+  # in HA 2024.6+, so we can't declare it inline; this REST sensor is the
+  # fully-YAML equivalent.
+  rest:
+    - resource: "https://version.home-assistant.io/stable.json"
+      scan_interval: 21600
+      sensor:
+        - name: "HA Core Latest"
+          unique_id: ha_core_latest
+          value_template: "{{ value_json.homeassistant.default }}"
+
+  # Running HA Core version, read straight from the installed package inside
+  # the container. Refreshes on container restart anyway, but poll every 6 h
+  # as a safety net.
+  command_line:
+    - sensor:
+        name: "HA Core Running"
+        unique_id: ha_core_running
+        command: 'python3 -c "from homeassistant.const import __version__; print(__version__)"'
+        scan_interval: 21600
 
   template:
     - binary_sensor:
