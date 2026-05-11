@@ -1,15 +1,36 @@
 system_updates:
+  # Two `version` sensors (running + latest stable container release) feed a
+  # template binary_sensor that flips when they differ. The digest below
+  # treats this binary_sensor the same as any `update.*` entity.
+  sensor:
+    - platform: version
+      name: "HA Core Running"
+      source: local
+    - platform: version
+      name: "HA Core Latest"
+      source: container
+
+  template:
+    - binary_sensor:
+        - name: "HA Core Update Available"
+          unique_id: ha_core_update_available
+          state: >-
+            {% set latest = states('sensor.ha_core_latest') %}
+            {% set running = states('sensor.ha_core_running') %}
+            {{ latest not in ('unknown','unavailable','')
+               and running not in ('unknown','unavailable','')
+               and latest != running }}
+          attributes:
+            running_version: "{{ states('sensor.ha_core_running') }}"
+            latest_version: "{{ states('sensor.ha_core_latest') }}"
+
   automation:
     # ----------------------------------------------------------------------
     # HA Updates Daily Digest
     # Single push at 09:00 local time listing available updates across all
     # `update.*` entities (HACS, custom integrations, device firmware,
-    # custom cards). Only fires if at least one update is pending.
-    #
-    # Not covered: HA Core itself. The Container deployment doesn't expose
-    # a core-update entity — check Settings → System → Update or watch the
-    # HA release blog. A future `command_line` sensor polling Docker Hub
-    # for the latest `homeassistant/home-assistant` tag could fill this.
+    # custom cards) AND HA Core itself (via the version sensors above).
+    # Only fires if at least one update is pending.
     #
     # Tagging applied via tag_ha_server_watchdog.py:
     #   area_id: ha_server
@@ -29,14 +50,21 @@ system_updates:
       conditions:
         - condition: template
           value_template: >-
-            {{ states.update | selectattr('state','eq','on') | list | count > 0 }}
+            {{ (states.update | selectattr('state','eq','on') | list | count > 0)
+               or is_state('binary_sensor.ha_core_update_available','on') }}
       variables:
-        pending: >-
+        pending_updates: >-
           {{ states.update
              | selectattr('state','eq','on')
              | map(attribute='attributes.friendly_name')
              | list }}
-        pending_count: "{{ pending | count }}"
+        core_line: >-
+          {% if is_state('binary_sensor.ha_core_update_available','on') %}
+          HA Core: {{ states('sensor.ha_core_running') }} → {{ states('sensor.ha_core_latest') }}
+          {% endif %}
+        all_items: >-
+          {{ ([core_line | trim] if core_line | trim else []) + pending_updates }}
+        pending_count: "{{ all_items | count }}"
       actions:
         - action: notify.send_message
           target:
@@ -44,12 +72,12 @@ system_updates:
           data:
             title: "HA updates available ({{ pending_count }})"
             message: >-
-              {{ pending | join(' • ') }}
+              {{ all_items | join(' • ') }}
         - action: persistent_notification.create
           data:
             notification_id: "watchdog_ha_updates_digest"
             title: "HA updates available ({{ pending_count }})"
             message: >-
-              {% for name in pending %}
+              {% for name in all_items %}
               - {{ name }}
               {% endfor %}
