@@ -14,6 +14,42 @@ system_host_health:
 
   automation:
     # ----------------------------------------------------------------------
+    # HA Started Notifier
+    # Fires when HA finishes booting (all integrations loaded). If you did
+    # NOT trigger the restart yourself, the message itself is the alert —
+    # investigate logs, host-pressure watchdog, OOM, etc. Will also fire on
+    # every planned restart (config push, upgrade) — that's fine, it's a
+    # heartbeat.
+    # ----------------------------------------------------------------------
+    - id: watchdog_ha_started
+      alias: "Watchdog — HA Started"
+      description: >
+        Fires once when HA finishes booting (homeassistant event=start, after
+        all integrations are loaded). Pushes to phone so unplanned restarts
+        don't go unnoticed.
+      mode: single
+      triggers:
+        - trigger: homeassistant
+          event: start
+      actions:
+        - action: notify.send_message
+          target:
+            entity_id: notify.brenton_s_phone
+          data:
+            title: "HA started"
+            message: >-
+              HA Core {{ states('sensor.ha_core_running') }} came back up at
+              {{ now().strftime('%H:%M %Z') }}. If you didn't expect this,
+              check container logs and the host-pressure watchdog.
+        - action: persistent_notification.create
+          data:
+            notification_id: "watchdog_ha_started_{{ now().strftime('%Y%m%d_%H%M%S') }}"
+            title: "HA started"
+            message: >-
+              HA Core {{ states('sensor.ha_core_running') }} started at
+              {{ now().strftime('%Y-%m-%d %H:%M:%S %Z') }}.
+
+    # ----------------------------------------------------------------------
     # HA Host Resource Pressure Watchdog
     # Fires when CPU / memory / swap / disk / 15-min load cross thresholds
     # on the HA VM (192.168.2.151), sustained for the per-resource window.
