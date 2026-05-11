@@ -1,4 +1,17 @@
 system_host_health:
+  command_line:
+    # Recorder DB size in MB. `stat -c%s` runs inside the HA container and
+    # returns bytes — converted via value_template. Polled every 10 min.
+    - sensor:
+        name: "HA Database Size"
+        unique_id: ha_database_size
+        command: "stat -c%s /config/home-assistant_v2.db"
+        scan_interval: 600
+        unit_of_measurement: MB
+        device_class: data_size
+        state_class: measurement
+        value_template: "{{ (value | float / 1048576) | round(1) }}"
+
   automation:
     # ----------------------------------------------------------------------
     # HA Host Resource Pressure Watchdog
@@ -112,5 +125,83 @@ system_host_health:
               **{{ resource_label[trigger.id] }}**
 
               Entity: `{{ trigger.entity_id }}` = `{{ trigger.to_state.state }} {{ trigger.to_state.attributes.unit_of_measurement }}` (threshold `{{ trigger.above }}`).
+
+              {{ hint[trigger.id] }}
+
+    # ----------------------------------------------------------------------
+    # HA Backup + Database Health Watchdog
+    # Fires when automatic backups go stale or the recorder DB grows too big.
+    #
+    # Backup signal: time since `last_successful_automatic_backup`. If a
+    # scheduled backup fails (or didn't run), that timestamp gets stale.
+    # 36h = ~one missed day; 72h = sustained problem.
+    #
+    # DB signal: `sensor.ha_database_size` (command_line above) in MB.
+    # Current size as of 2026-05-11 is ~660 MB — thresholds give 3x and 8x
+    # headroom before alerting.
+    # ----------------------------------------------------------------------
+    - id: watchdog_ha_backup_and_database
+      alias: "Watchdog — HA Backup & Database Health"
+      description: >
+        Pages when automatic backups stop succeeding or the recorder DB
+        grows past safe thresholds. Single-cross triggers, so no spam if
+        a value sits above a threshold.
+      mode: parallel
+      max: 5
+      triggers:
+        - trigger: template
+          value_template: >-
+            {% set s = states('sensor.backup_last_successful_automatic_backup') %}
+            {{ s not in ('unknown','unavailable','') and
+               (now() - (s | as_datetime)).total_seconds() > 36 * 3600 }}
+          for: "00:10:00"
+          id: backup_stale_warn
+        - trigger: template
+          value_template: >-
+            {% set s = states('sensor.backup_last_successful_automatic_backup') %}
+            {{ s not in ('unknown','unavailable','') and
+               (now() - (s | as_datetime)).total_seconds() > 72 * 3600 }}
+          for: "00:10:00"
+          id: backup_stale_crit
+        - trigger: numeric_state
+          entity_id: sensor.ha_database_size
+          above: 2000
+          for: "00:05:00"
+          id: db_size_warn
+        - trigger: numeric_state
+          entity_id: sensor.ha_database_size
+          above: 5000
+          for: "00:05:00"
+          id: db_size_crit
+      variables:
+        severity:
+          backup_stale_warn: "warning"
+          backup_stale_crit: "CRITICAL"
+          db_size_warn: "warning"
+          db_size_crit: "CRITICAL"
+        resource_label:
+          backup_stale_warn: "Backup last succeeded >36h ago"
+          backup_stale_crit: "Backup last succeeded >72h ago — backups are broken"
+          db_size_warn: "Recorder DB above 2 GB"
+          db_size_crit: "Recorder DB above 5 GB — UI slowdown likely"
+        hint:
+          backup_stale_warn: "Check Settings → Backups for failed runs and destination disk space."
+          backup_stale_crit: "Backups have been failing for 3+ days. Restore-from-backup is your insurance policy — fix this now."
+          db_size_warn: "Consider lowering recorder `purge_keep_days` or excluding noisy entities (power-meter telemetry, etc.)."
+          db_size_crit: "DB performance will degrade. Lower `purge_keep_days` and run `recorder.purge` service."
+      actions:
+        - action: notify.send_message
+          target:
+            entity_id: notify.brenton_s_phone
+          data:
+            title: "HA {{ severity[trigger.id] }}: {{ trigger.id }}"
+            message: >-
+              {{ resource_label[trigger.id] }}. {{ hint[trigger.id] }}
+        - action: persistent_notification.create
+          data:
+            notification_id: "watchdog_backup_db_{{ trigger.id }}"
+            title: "HA {{ severity[trigger.id] }} — {{ trigger.id }}"
+            message: >-
+              **{{ resource_label[trigger.id] }}**
 
               {{ hint[trigger.id] }}
