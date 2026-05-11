@@ -1,4 +1,14 @@
 system_host_health:
+  # External dead-man heartbeat to healthchecks.io. If HA dies (so it can't
+  # ping out), healthchecks alerts via the channel configured on the check
+  # page. This is the only watchdog that can catch "HA itself is gone" —
+  # everything else in this file runs inside HA.
+  rest_command:
+    hc_ping_ha_alive:
+      url: !secret hc_ha_alive_url
+      method: get
+      timeout: 10
+
   command_line:
     # Recorder DB size in MB. `stat -c%s` runs inside the HA container and
     # returns bytes — converted via value_template. Polled every 10 min.
@@ -13,6 +23,26 @@ system_host_health:
         value_template: "{{ (value | float / 1048576) | round(1) }}"
 
   automation:
+    # ----------------------------------------------------------------------
+    # External Heartbeat (healthchecks.io)
+    # Pings the configured healthchecks.io check every 10 min. The check is
+    # set to 15-min period + 5-min grace, so missing 2 consecutive pings
+    # triggers an alert from healthchecks.io via the channel set there.
+    # This is the only watchdog in the system that can catch HA itself
+    # being dead — all the others run inside HA.
+    # ----------------------------------------------------------------------
+    - id: watchdog_ha_external_heartbeat
+      alias: "Watchdog — External Heartbeat (healthchecks.io)"
+      description: >
+        Every 10 min, ping healthchecks.io. No notification on success;
+        healthchecks.io alerts you if pings stop coming.
+      mode: single
+      triggers:
+        - trigger: time_pattern
+          minutes: "/10"
+      actions:
+        - action: rest_command.hc_ping_ha_alive
+
     # ----------------------------------------------------------------------
     # HA Started Notifier
     # Fires when HA finishes booting (all integrations loaded). If you did
