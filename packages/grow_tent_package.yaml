@@ -176,6 +176,29 @@ grow_tent:
     # Climate day mode flips this many minutes before lights actually toggle,
     # so AC + VPD target pre-shift and the tent isn't slammed at the transition.
 
+  # --- Sensor Divergence Thresholds ---
+    tent_temp_divergence_threshold:
+      name: "Tent Temp Sensor Divergence Threshold"
+      min: 1
+      max: 10
+      step: 0.5
+      initial: 3
+      unit_of_measurement: "°C"
+      icon: mdi:thermometer-alert
+    # Alert when max - min of canopy / flower / AC / camera temp sensors
+    # exceeds this. Median average can mask a stuck or failing sensor.
+
+    tent_humidity_divergence_threshold:
+      name: "Tent Humidity Sensor Divergence Threshold"
+      min: 5
+      max: 30
+      step: 1
+      initial: 15
+      unit_of_measurement: "%"
+      icon: mdi:water-alert
+    # Alert when max - min of canopy / flower / AC / dehumidifier RH sensors
+    # exceeds this.
+
   input_boolean:
     grow_tent_automation_enabled:
       name: "Enable Grow Tent Automation"
@@ -575,6 +598,50 @@ grow_tent:
           icon: mdi:lightbulb-on
           state: >
             {{ is_state('light.hlg', 'on') or is_state('light.chilled', 'on') }}
+
+    # Detects when individual temp sensors disagree by more than the threshold.
+    # Median average masks a stuck/failing sensor — this surfaces it.
+        - name: "Tent Temperature Divergence"
+          unique_id: tent_temperature_divergence
+          device_class: problem
+          icon: mdi:thermometer-alert
+          state: >
+            {% set raw = [
+              states('sensor.canopy_temperature_tent'),
+              states('sensor.flower_temperature_tent'),
+              states('sensor.indoor_temperature_air_conditioner_tent'),
+              states('sensor.temperature_camera_tent')
+            ] %}
+            {% set readings = raw
+              | reject('in', ['unavailable', 'unknown', 'none', 'None', ''])
+              | map('float') | list %}
+            {% if readings | length >= 2 %}
+              {{ (readings | max - readings | min) >
+                 (states('input_number.tent_temp_divergence_threshold') | float(3)) }}
+            {% else %}
+              false
+            {% endif %}
+
+        - name: "Tent Humidity Divergence"
+          unique_id: tent_humidity_divergence
+          device_class: problem
+          icon: mdi:water-alert
+          state: >
+            {% set raw = [
+              states('sensor.canopy_humidity_tent'),
+              states('sensor.flower_humidity_tent'),
+              states('sensor.indoor_humidity_air_conditioner_tent'),
+              states('sensor.current_humidity_dehumidifier')
+            ] %}
+            {% set readings = raw
+              | reject('in', ['unavailable', 'unknown', 'none', 'None', ''])
+              | map('float') | list %}
+            {% if readings | length >= 2 %}
+              {{ (readings | max - readings | min) >
+                 (states('input_number.tent_humidity_divergence_threshold') | float(15)) }}
+            {% else %}
+              false
+            {% endif %}
 
     # Climate day mode — flips ON `lights_transition_offset_minutes` BEFORE the
     # scheduled lights-on (and OFF that many minutes before lights-off). Stage-

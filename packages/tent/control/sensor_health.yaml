@@ -1,0 +1,100 @@
+tent_control_sensor_health:
+  automation:
+    - id: tent_temp_divergence_alert
+      alias: "Sensors — Tent Temp Divergence Alert"
+      description: >
+        Fires when individual temperature sensors (canopy, flower, AC, camera)
+        disagree by more than input_number.tent_temp_divergence_threshold for
+        15 minutes. The median average can mask a stuck or failing sensor —
+        this surfaces it.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.tent_temperature_divergence
+          to: "on"
+          for:
+            minutes: 15
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+      actions:
+        - action: persistent_notification.create
+          data:
+            notification_id: tent_temp_divergence
+            title: "Tent Temp Sensors Disagree"
+            message: >
+              {{ now().strftime('%Y-%m-%d %H:%M:%S') }} — tent temp sensors
+              disagree by more than
+              {{ states('input_number.tent_temp_divergence_threshold') }}°C.
+              Canopy: {{ states('sensor.canopy_temperature_tent') }}°C,
+              Flower: {{ states('sensor.flower_temperature_tent') }}°C,
+              AC: {{ states('sensor.indoor_temperature_air_conditioner_tent') }}°C,
+              Camera: {{ states('sensor.temperature_camera_tent') }}°C.
+              Average: {{ states('sensor.tent_average_temperature') }}°C.
+              One sensor may be stuck or failing.
+      mode: single
+
+    - id: tent_temp_divergence_recovered
+      alias: "Sensors — Tent Temp Divergence Cleared"
+      description: >
+        Dismiss the divergence notification when sensors agree again for 5 min.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.tent_temperature_divergence
+          to: "off"
+          for:
+            minutes: 5
+      actions:
+        - action: persistent_notification.dismiss
+          data:
+            notification_id: tent_temp_divergence
+      mode: single
+
+    - id: tent_humidity_divergence_alert
+      alias: "Sensors — Tent Humidity Divergence Alert"
+      description: >
+        Fires when individual humidity sensors (canopy, flower, AC, dehumidifier)
+        disagree by more than input_number.tent_humidity_divergence_threshold
+        for 15 minutes.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.tent_humidity_divergence
+          to: "on"
+          for:
+            minutes: 15
+      conditions:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+      actions:
+        - action: persistent_notification.create
+          data:
+            notification_id: tent_humidity_divergence
+            title: "Tent Humidity Sensors Disagree"
+            message: >
+              {{ now().strftime('%Y-%m-%d %H:%M:%S') }} — tent humidity sensors
+              disagree by more than
+              {{ states('input_number.tent_humidity_divergence_threshold') }}%.
+              Canopy: {{ states('sensor.canopy_humidity_tent') }}%,
+              Flower: {{ states('sensor.flower_humidity_tent') }}%,
+              AC: {{ states('sensor.indoor_humidity_air_conditioner_tent') }}%,
+              Dehumidifier: {{ states('sensor.current_humidity_dehumidifier') }}%.
+              Average: {{ states('sensor.tent_average_humidity') }}%.
+              One sensor may be stuck or failing.
+      mode: single
+
+    - id: tent_humidity_divergence_recovered
+      alias: "Sensors — Tent Humidity Divergence Cleared"
+      description: >
+        Dismiss the divergence notification when sensors agree again for 5 min.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.tent_humidity_divergence
+          to: "off"
+          for:
+            minutes: 5
+      actions:
+        - action: persistent_notification.dismiss
+          data:
+            notification_id: tent_humidity_divergence
+      mode: single
