@@ -128,25 +128,6 @@ grow_tent:
       unit_of_measurement: "%"
       icon: mdi:fan
 
-  # --- Humidity Day/Night Targets ---
-    humidity_day_target:
-      name: "Humidity Day Target"
-      min: 30
-      max: 90
-      step: 1
-      initial: 65
-      unit_of_measurement: "%"
-      icon: mdi:water-percent
-
-    humidity_night_target:
-      name: "Humidity Night Target"
-      min: 30
-      max: 90
-      step: 1
-      initial: 60
-      unit_of_measurement: "%"
-      icon: mdi:water-percent
-
   # --- VPD Targets & Tolerance ---
     vpd_day_target:
       name: "VPD Day Target"
@@ -183,6 +164,18 @@ grow_tent:
       initial: 0
       icon: mdi:counter
 
+  # --- Lights Transition Pre-Shift ---
+    lights_transition_offset_minutes:
+      name: "Lights Transition Offset (minutes)"
+      min: 0
+      max: 30
+      step: 1
+      initial: 5
+      unit_of_measurement: "min"
+      icon: mdi:timer-cog-outline
+    # Climate day mode flips this many minutes before lights actually toggle,
+    # so AC + VPD target pre-shift and the tent isn't slammed at the transition.
+
   input_boolean:
     grow_tent_automation_enabled:
       name: "Enable Grow Tent Automation"
@@ -213,12 +206,12 @@ grow_tent:
     ac_circ_fan_day:
       name: "AC Circulation Fan During Day"
       icon: mdi:fan-auto
-    # ON = AC circulation fan runs during lights on
+    # ON = AC-side internal circulation fan runs during climate day mode
 
     ac_circ_fan_night:
       name: "AC Circulation Fan During Night"
       icon: mdi:fan-auto
-    # ON = AC circulation fan runs during lights off
+    # ON = AC-side internal circulation fan runs during climate night mode
 
   # humidifier_enabled replaced by input_select.tent_humidity_mode
 
@@ -363,7 +356,7 @@ grow_tent:
           unit_of_measurement: "kPa"
           icon: mdi:cloud-outline
           state: >
-            {% if is_state('light.hlg', 'on') %}
+            {% if is_state('binary_sensor.tent_climate_day_mode', 'on') %}
               {{ states('input_number.vpd_day_target') | float(1.0) }}
             {% else %}
               {{ states('input_number.vpd_night_target') | float(0.8) }}
@@ -404,7 +397,7 @@ grow_tent:
               Temperature Alert
             {% elif (humidity - target_humidity) | abs > 10 %}
               Humidity Alert
-            {% elif is_state('light.hlg', 'on') %}
+            {% elif is_state('binary_sensor.tent_lights_on', 'on') %}
               Growing
             {% else %}
               Resting
@@ -576,6 +569,49 @@ grow_tent:
             {% set humidity = states('sensor.tent_average_humidity') | float(0) %}
             {% set target_humidity = states('input_number.grow_tent_target_humidity') | float(0) %}
             {{ (temp - target_temp) | abs <= 3 and (humidity - target_humidity) | abs <= 10 }}
+
+        - name: "Tent Lights On"
+          unique_id: tent_lights_on
+          icon: mdi:lightbulb-on
+          state: >
+            {{ is_state('light.hlg', 'on') or is_state('light.chilled', 'on') }}
+
+    # Climate day mode — flips ON `lights_transition_offset_minutes` BEFORE the
+    # scheduled lights-on (and OFF that many minutes before lights-off). Stage-
+    # aware: uses veg schedule for Seedling/Veg/Transition, flower schedule for
+    # Early Flower/Flower/Late Flower. AC + VPD target read this instead of
+    # actual light state so the tent pre-shifts before the lights toggle.
+    - trigger:
+        - trigger: time_pattern
+          minutes: /1
+        - trigger: state
+          entity_id:
+            - input_select.grow_tent_growth_stage
+            - input_datetime.veg_lights_on_time
+            - input_datetime.veg_lights_off_time
+            - input_datetime.flower_lights_on_time
+            - input_datetime.flower_lights_off_time
+            - input_number.lights_transition_offset_minutes
+      binary_sensor:
+        - name: "Tent Climate Day Mode"
+          unique_id: tent_climate_day_mode
+          icon: mdi:weather-sunny
+          state: >
+            {%- set stage = states('input_select.grow_tent_growth_stage') -%}
+            {%- if stage in ['Seedling', 'Early Veg', 'Veg', 'Transition'] -%}
+              {%- set on_t = states('input_datetime.veg_lights_on_time') -%}
+              {%- set off_t = states('input_datetime.veg_lights_off_time') -%}
+            {%- else -%}
+              {%- set on_t = states('input_datetime.flower_lights_on_time') -%}
+              {%- set off_t = states('input_datetime.flower_lights_off_time') -%}
+            {%- endif -%}
+            {%- set offset = states('input_number.lights_transition_offset_minutes') | int(5) -%}
+            {%- set on_m = ((on_t.split(':')[0]|int * 60) + on_t.split(':')[1]|int - offset + 1440) % 1440 -%}
+            {%- set off_m = ((off_t.split(':')[0]|int * 60) + off_t.split(':')[1]|int - offset + 1440) % 1440 -%}
+            {%- set now_m = now().hour * 60 + now().minute -%}
+            {%- if on_m < off_m -%}{{ now_m >= on_m and now_m < off_m }}
+            {%- else -%}{{ now_m >= on_m or now_m < off_m }}
+            {%- endif -%}
 
 # Automations are included from separate files
   automation: !include_dir_merge_list automations/

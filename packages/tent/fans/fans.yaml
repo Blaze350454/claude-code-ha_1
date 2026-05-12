@@ -34,11 +34,12 @@ tent_fans:
                   target:
                     entity_id: fan.circulation_fans_tent
           default:
-    # All climate equipment off — revert to day/night toggle setting
+    # All climate equipment off — revert to day/night toggle setting.
+    # Day/night here means the climate-mode pre-shifted window, not actual lights.
             - choose:
                 - conditions:
                     - condition: state
-                      entity_id: light.hlg
+                      entity_id: binary_sensor.tent_climate_day_mode
                       state: "on"
                     - condition: state
                       entity_id: input_boolean.circulation_fans_day
@@ -49,7 +50,7 @@ tent_fans:
                         entity_id: fan.circulation_fans_tent
                 - conditions:
                     - condition: state
-                      entity_id: light.hlg
+                      entity_id: binary_sensor.tent_climate_day_mode
                       state: "off"
                     - condition: state
                       entity_id: input_boolean.circulation_fans_night

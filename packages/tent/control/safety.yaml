@@ -3,12 +3,12 @@ tent_control_safety:
     - id: safety_flower_night_humidifier_shutoff
       alias: "Safety — Flower Night Humidifier Shutoff"
       description: >
-        When lights turn off during any flower stage (Early Flower / Flower /
+        When BOTH lights are off during any flower stage (Early Flower / Flower /
         Late Flower), immediately shut off the humidifier fogger and fan to
         prevent bud rot. Only fires if the safety block toggle is enabled.
       triggers:
         - trigger: state
-          entity_id: light.hlg
+          entity_id: binary_sensor.tent_lights_on
           to: "off"
       conditions:
         - condition: template
@@ -171,7 +171,7 @@ tent_control_safety:
             {{ states('input_select.grow_tent_growth_stage')
                in ['Early Flower', 'Flower', 'Late Flower'] }}
         - condition: state
-          entity_id: light.hlg
+          entity_id: binary_sensor.tent_lights_on
           state: "off"
         - condition: state
           entity_id: input_boolean.grow_tent_automation_enabled

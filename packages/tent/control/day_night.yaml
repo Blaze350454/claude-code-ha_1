@@ -3,11 +3,12 @@ tent_control_day_night:
     - id: ac_lights_on_day_mode
       alias: "AC — Lights On (Day Mode)"
       description: >
-        When tent lights turn on, set AC to cool mode with day settings
-        (temp target, fan speed, direction, wind mode, power mode) from dashboard selectors.
+        When climate day mode flips on (offset minutes before scheduled lights-on),
+        set AC to cool mode with day settings (temp target, fan speed, direction,
+        wind mode, power mode) from dashboard selectors.
       triggers:
         - trigger: state
-          entity_id: light.hlg
+          entity_id: binary_sensor.tent_climate_day_mode
           to: "on"
       conditions:
         - condition: state
@@ -135,11 +136,12 @@ tent_control_day_night:
     - id: ac_lights_off_night_mode
       alias: "AC — Lights Off (Night Mode)"
       description: >
-        When tent lights turn off, switch AC to night settings
-        (lower temp, lower fan speed, eco mode, breezeless) from dashboard selectors.
+        When climate day mode flips off (offset minutes before scheduled lights-off),
+        switch AC to night settings (lower temp, lower fan speed, eco mode, breezeless)
+        from dashboard selectors.
       triggers:
         - trigger: state
-          entity_id: light.hlg
+          entity_id: binary_sensor.tent_climate_day_mode
           to: "off"
       conditions:
         - condition: state
@@ -259,52 +261,22 @@ tent_control_day_night:
                   target:
                     entity_id: switch.boost_mode_air_conditioner_tent
       mode: single
-    - id: humidity_lights_on_day
-      alias: "Humidity — Lights On (Day Target)"
-      description: >
-        When tent lights turn on, set humidifier_target_rh to the day humidity target.
-      triggers:
-        - trigger: state
-          entity_id: light.hlg
-          to: "on"
-      conditions:
-        - condition: state
-          entity_id: input_boolean.grow_tent_automation_enabled
-          state: "on"
-      actions:
-        - action: input_number.set_value
-          target:
-            entity_id: input_number.tent_humidifier_target_rh
-          data:
-            value: "{{ states('input_number.humidity_day_target') | float }}"
-      mode: single
-    - id: humidity_lights_off_night
-      alias: "Humidity — Lights Off (Night Target)"
-      description: >
-        When tent lights turn off, set humidifier_target_rh to the night humidity target.
-        Lower night RH helps prevent mold and bud rot.
-      triggers:
-        - trigger: state
-          entity_id: light.hlg
-          to: "off"
-      conditions:
-        - condition: state
-          entity_id: input_boolean.grow_tent_automation_enabled
-          state: "on"
-      actions:
-        - action: input_number.set_value
-          target:
-            entity_id: input_number.tent_humidifier_target_rh
-          data:
-            value: "{{ states('input_number.humidity_night_target') | float }}"
-      mode: single
+    # humidity_lights_on_day / _off_night removed — VPD-sync owns RH.
+    # sensor.vpd_ideal_rh (back-solved from active VPD target + current temp)
+    # is continuously copied into input_number.tent_humidifier_target_rh by
+    # vpd_sync_humidifier_target_rh in packages/tent/climate/vpd.yaml,
+    # clamped by stage min/max. Day vs night RH still differs because the
+    # active VPD target itself flips with binary_sensor.tent_climate_day_mode.
+
     - id: fans_lights_on_day
-      alias: "Fans — Lights On (Day Mode)"
+      alias: "Fans — Climate Day Mode On"
       description: >
-        When lights turn on, set fans according to day toggles.
+        When climate day mode flips on, set both internal circulation fans
+        (canopy + AC-side) per their day toggles. AC Infinity Cloudline duct
+        exhaust is separate and controlled manually outside HA.
       triggers:
         - trigger: state
-          entity_id: light.hlg
+          entity_id: binary_sensor.tent_climate_day_mode
           to: "on"
       conditions:
         - condition: state
@@ -339,12 +311,13 @@ tent_control_day_night:
                 entity_id: fan.ac_circulation_fan
       mode: single
     - id: fans_lights_off_night
-      alias: "Fans — Lights Off (Night Mode)"
+      alias: "Fans — Climate Day Mode Off"
       description: >
-        When lights turn off, set fans according to night toggles.
+        When climate day mode flips off, set both internal circulation fans
+        (canopy + AC-side) per their night toggles. Duct exhaust is manual.
       triggers:
         - trigger: state
-          entity_id: light.hlg
+          entity_id: binary_sensor.tent_climate_day_mode
           to: "off"
       conditions:
         - condition: state

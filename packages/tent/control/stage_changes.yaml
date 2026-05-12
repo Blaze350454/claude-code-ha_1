@@ -153,16 +153,10 @@ tent_control_stage_changes:
                 entity_id: input_number.tent_night_temp_target
               data:
                 value: "{{ defaults.temp_night }}"
-            - action: input_number.set_value
-              target:
-                entity_id: input_number.humidity_day_target
-              data:
-                value: "{{ defaults.rh_day }}"
-            - action: input_number.set_value
-              target:
-                entity_id: input_number.humidity_night_target
-              data:
-                value: "{{ defaults.rh_night }}"
+            # humidity_day_target / humidity_night_target removed —
+            # RH is VPD-driven via vpd_sync_humidifier_target_rh.
+            # Stage defaults for rh_day / rh_night still consumed by the
+            # tent_humidifier_min_rh / max_rh clamps below.
             - action: input_number.set_value
               target:
                 entity_id: input_number.vpd_day_target

@@ -25,7 +25,7 @@ tent_climate_humidifier:
           value_template: >
             {% set stage = states('input_select.grow_tent_growth_stage') %}
             {% set is_flower = stage in ['Early Flower', 'Flower', 'Late Flower'] %}
-            {% set lights_off = is_state('light.hlg', 'off') %}
+            {% set lights_off = is_state('binary_sensor.tent_lights_on', 'off') %}
             {% set block_on = is_state('input_boolean.tent_flower_night_humidifier_block', 'on') %}
             {{ not (is_flower and lights_off and block_on) }}
       action:
