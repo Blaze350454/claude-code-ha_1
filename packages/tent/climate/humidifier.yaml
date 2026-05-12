@@ -10,16 +10,18 @@ tent_climate_humidifier:
                 states('input_number.tent_humidifier_hysteresis') | float(5)) }}
       condition:
         - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+        - condition: state
           entity_id: input_select.tent_humidity_mode
           state: "Humidify"
-        - condition: not
-          conditions:
-            - condition: state
-              entity_id: sensor.tent_average_humidity
-              state: "unavailable"
-            - condition: state
-              entity_id: sensor.tent_average_humidity
-              state: "unknown"
+    # Sensor must be reporting a real value. Previously this used
+    # `condition: not` with a list of two state checks, which HA evaluates as
+    # NOT(unavailable AND unknown) — always true. Bug: humidifier would fire
+    # on an `unavailable` sensor because `float(0) < target` is true.
+        - condition: template
+          value_template: >
+            {{ states('sensor.tent_average_humidity') not in ['unavailable', 'unknown'] }}
     # Safety: block humidifier during flower nights (bud rot prevention)
         - condition: template
           value_template: >
@@ -47,6 +49,9 @@ tent_climate_humidifier:
             {{ states('sensor.tent_average_humidity') | float(0) >=
                states('input_number.tent_humidifier_target_rh') | float(65) }}
       condition:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
         - condition: state
           entity_id: switch.tent_humidifier
           state: "on"

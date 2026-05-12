@@ -10,16 +10,16 @@ tent_climate_dehumidifier:
                 states('input_number.tent_humidifier_hysteresis') | float(5)) }}
       condition:
         - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+        - condition: state
           entity_id: input_select.tent_humidity_mode
           state: "Dehumidify"
-        - condition: not
-          conditions:
-            - condition: state
-              entity_id: sensor.tent_average_humidity
-              state: "unavailable"
-            - condition: state
-              entity_id: sensor.tent_average_humidity
-              state: "unknown"
+    # Sensor must be reporting a real value — see humidifier.yaml for why the
+    # old `condition: not` with a list of state checks was always-true.
+        - condition: template
+          value_template: >
+            {{ states('sensor.tent_average_humidity') not in ['unavailable', 'unknown'] }}
       action:
         - service: humidifier.turn_on
           target:
@@ -34,6 +34,9 @@ tent_climate_dehumidifier:
             {{ states('sensor.tent_average_humidity') | float(0) <=
                states('input_number.tent_humidifier_target_rh') | float(65) }}
       condition:
+        - condition: state
+          entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
         - condition: state
           entity_id: humidifier.dehumidifier_tent
           state: "on"
