@@ -1,18 +1,25 @@
 tent_control_day_night:
   automation:
     - id: ac_lights_on_day_mode
-      alias: "AC — Lights On (Day Mode)"
+      alias: "AC — Day Mode (state-enforced)"
       description: >
         When climate day mode flips on (offset minutes before scheduled lights-on),
         set AC to cool mode with day settings (temp target, fan speed, direction,
-        wind mode, power mode) from dashboard selectors.
+        wind mode, power mode) from dashboard selectors. Re-applies every 15 min
+        so a missed transition or manual override doesn't leave the AC in the
+        wrong mode indefinitely.
       triggers:
         - trigger: state
           entity_id: binary_sensor.tent_climate_day_mode
           to: "on"
+        - trigger: time_pattern
+          minutes: "/15"
       conditions:
         - condition: state
           entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+        - condition: state
+          entity_id: binary_sensor.tent_climate_day_mode
           state: "on"
       actions:
         - action: climate.set_hvac_mode
@@ -134,19 +141,25 @@ tent_control_day_night:
                     entity_id: switch.boost_mode_air_conditioner_tent
       mode: single
     - id: ac_lights_off_night_mode
-      alias: "AC — Lights Off (Night Mode)"
+      alias: "AC — Night Mode (state-enforced)"
       description: >
         When climate day mode flips off (offset minutes before scheduled lights-off),
         switch AC to night settings (lower temp, lower fan speed, eco mode, breezeless)
-        from dashboard selectors.
+        from dashboard selectors. Re-applies every 15 min so a missed transition or
+        manual override doesn't leave the AC in the wrong mode indefinitely.
       triggers:
         - trigger: state
           entity_id: binary_sensor.tent_climate_day_mode
           to: "off"
+        - trigger: time_pattern
+          minutes: "/15"
       conditions:
         - condition: state
           entity_id: input_boolean.grow_tent_automation_enabled
           state: "on"
+        - condition: state
+          entity_id: binary_sensor.tent_climate_day_mode
+          state: "off"
       actions:
         - action: climate.set_temperature
           target:
@@ -269,18 +282,25 @@ tent_control_day_night:
     # active VPD target itself flips with binary_sensor.tent_climate_day_mode.
 
     - id: fans_lights_on_day
-      alias: "Fans — Climate Day Mode On"
+      alias: "Fans — Climate Day Mode On (state-enforced)"
       description: >
         When climate day mode flips on, set both internal circulation fans
         (canopy + AC-side) per their day toggles. AC Infinity Cloudline duct
-        exhaust is separate and controlled manually outside HA.
+        exhaust is separate and controlled manually outside HA. Re-applies
+        every 15 min so a missed transition can't leave fans in the wrong
+        state indefinitely.
       triggers:
         - trigger: state
           entity_id: binary_sensor.tent_climate_day_mode
           to: "on"
+        - trigger: time_pattern
+          minutes: "/15"
       conditions:
         - condition: state
           entity_id: input_boolean.grow_tent_automation_enabled
+          state: "on"
+        - condition: state
+          entity_id: binary_sensor.tent_climate_day_mode
           state: "on"
       actions:
         - choose:
@@ -311,18 +331,25 @@ tent_control_day_night:
                 entity_id: fan.ac_circulation_fan
       mode: single
     - id: fans_lights_off_night
-      alias: "Fans — Climate Day Mode Off"
+      alias: "Fans — Climate Day Mode Off (state-enforced)"
       description: >
         When climate day mode flips off, set both internal circulation fans
         (canopy + AC-side) per their night toggles. Duct exhaust is manual.
+        Re-applies every 15 min so a missed transition can't leave fans in
+        the wrong state indefinitely.
       triggers:
         - trigger: state
           entity_id: binary_sensor.tent_climate_day_mode
           to: "off"
+        - trigger: time_pattern
+          minutes: "/15"
       conditions:
         - condition: state
           entity_id: input_boolean.grow_tent_automation_enabled
           state: "on"
+        - condition: state
+          entity_id: binary_sensor.tent_climate_day_mode
+          state: "off"
       actions:
         - choose:
             - conditions:
