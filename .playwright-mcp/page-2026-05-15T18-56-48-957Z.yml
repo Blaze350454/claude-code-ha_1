@@ -1,0 +1,476 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - link "Skip to main content" [ref=e4]
+      - link "Skip to footer" [ref=e5]
+      - link "Skip to accessibility" [ref=e6]: Accessibility Commitment
+      - generic [ref=e8]:
+        - link "Save $30 or more on custom print" [ref=e11] [cursor=pointer]:
+          - /url: https://www.staples.com/services/printing/offers/print-coupons/?utm_source=staples.com&utm_medium=referral&utm_campaign=tophat&utm_content=default-tiered-offer
+          - generic [ref=e12]:
+            - img [ref=e14]
+            - generic [ref=e17]: Save $30 or more on custom print
+        - link "Chair savings event, extra 20% off" [ref=e21] [cursor=pointer]:
+          - /url: /lp/furniture-savings-event
+          - generic [ref=e22]:
+            - img [ref=e24]
+            - generic [ref=e27]: Chair savings event, extra 20% off
+        - link "2 for $40 K-Cup pods, 40-48/pk" [ref=e31] [cursor=pointer]:
+          - /url: /Single-Serve-Coffee-Deals/cat_CL164886/00792
+          - generic [ref=e32]:
+            - img [ref=e34]
+            - generic [ref=e37]: 2 for $40 K-Cup pods, 40-48/pk
+      - generic [ref=e38]:
+        - generic [ref=e42]:
+          - link "Staples Homepage" [ref=e45] [cursor=pointer]:
+            - /url: /
+            - img [ref=e48]
+          - navigation "main" [ref=e52]:
+            - link "Pickup in store" [ref=e55]:
+              - generic [ref=e57] [cursor=pointer]:
+                - img [ref=e60]
+                - generic [ref=e71]:
+                  - generic [ref=e72]: Pickup in store
+                  - generic [ref=e73]: Find a store near you
+          - search [ref=e75]:
+            - combobox "Type to Search." [ref=e76]
+            - button "search" [ref=e77] [cursor=pointer]:
+              - img [ref=e78]
+          - navigation "secondary" [ref=e81]:
+            - generic [ref=e82]:
+              - link "Sign In Menu for Desktop" [ref=e84]:
+                - generic [ref=e86] [cursor=pointer]:
+                  - img [ref=e88]
+                  - generic [ref=e92]: Sign In
+                  - img [ref=e94]
+              - link "Orders" [ref=e98]:
+                - generic [ref=e100] [cursor=pointer]:
+                  - img [ref=e102]
+                  - generic [ref=e106]: Orders
+                  - img [ref=e108]
+              - button "Cart Menu, Items in cart 0" [ref=e112]:
+                - generic [ref=e114]:
+                  - img [ref=e116]
+                  - generic [ref=e119]: "0"
+        - generic [ref=e122]:
+          - generic [ref=e123]:
+            - link "Shop Menu" [ref=e126] [cursor=pointer]:
+              - generic [ref=e128]:
+                - img [ref=e130]
+                - generic [ref=e134]: Shop
+                - img [ref=e136]
+            - link "Deals" [ref=e141] [cursor=pointer]:
+              - generic [ref=e143]:
+                - img [ref=e145]
+                - generic [ref=e151]: Deals
+                - img [ref=e153]
+            - link "Print & Marketing Menu" [ref=e158] [cursor=pointer]:
+              - generic [ref=e160]:
+                - img [ref=e162]
+                - generic [ref=e166]: Print & Marketing
+                - img [ref=e168]
+            - separator [ref=e171]
+          - generic [ref=e173]:
+            - generic [ref=e174]: Page 1 of 4
+            - region "carousel" [ref=e175]:
+              - group "carousel" [ref=e176]:
+                - list "carousel - 12 items total" [ref=e177]:
+                  - listitem "Item 1 of 12" [ref=e178]:
+                    - link "Easy Rewards" [ref=e182] [cursor=pointer]:
+                      - /url: /lp/easyrewardsoverview?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT2%3BCmp%3AESYRWDSLO
+                  - listitem "Item 2 of 12" [ref=e184]:
+                    - link "Party City" [ref=e188] [cursor=pointer]:
+                      - /url: /deals/party-city-stores/BI3001689
+                  - listitem "Item 3 of 12" [ref=e190]:
+                    - link "Balloons" [ref=e194] [cursor=pointer]:
+                      - /url: /balloons-accessories/cat_DP367070
+                      - generic [ref=e195]: Balloons
+                  - listitem "Item 4 of 12" [ref=e196]:
+                    - link "Staples Business" [ref=e200] [cursor=pointer]:
+                      - /url: /deals/staples-is-built-for-business/BI3000762?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT4%3BCmp%3ASTPLSBIZ
+                      - img [ref=e202]
+                  - listitem [ref=e206]:
+                    - link [ref=e210] [cursor=pointer]:
+                      - /url: /deals/all-services/BI3001123
+                      - generic [ref=e211]: Services
+                  - listitem [ref=e212]:
+                    - link [ref=e216] [cursor=pointer]:
+                      - /url: /printer-ink-cartridges-toner-finder/cat_SC43
+                      - generic [ref=e217]: Ink & Toner
+                  - listitem [ref=e218]:
+                    - link [ref=e222] [cursor=pointer]:
+                      - /url: https://www.staples.com/services/printing/copies-documents-printing/?utm_source=staples.com&utm_medium=referral&utm_campaign=headernav_bottom_right&utm_content=document-printing
+                      - generic [ref=e223]: Document Printing
+                  - listitem [ref=e224]:
+                    - link [ref=e228] [cursor=pointer]:
+                      - /url: /lp/new-and-trending?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT6%3BCmp%3ANWTRND
+                      - generic [ref=e229]: New & Trending
+                  - listitem [ref=e230]:
+                    - link [ref=e234] [cursor=pointer]:
+                      - /url: /deals/30-minute-store-pick-up-deals/BI1146948?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT7%3BCmp%3AGTTDY
+                      - generic [ref=e235]: Get it Today
+                  - listitem [ref=e236]:
+                    - link [ref=e240] [cursor=pointer]:
+                      - /url: /deals/business-center/BI3001255?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT16%3BCmp%3ABIZCTR
+                      - generic [ref=e241]: Business Center
+                  - listitem [ref=e242]:
+                    - link [ref=e246] [cursor=pointer]:
+                      - /url: /lp/staples-travel-hub?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT9%3BCmp%3ATRVLHB
+                      - generic [ref=e247]: Travel Hub
+                  - listitem [ref=e248]:
+                    - link [ref=e252] [cursor=pointer]:
+                      - /url: /deals/Auto-Restock/BI1498644?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT11%3BCmp%3AARS
+                      - generic [ref=e253]:
+                        - generic [ref=e255]:
+                          - img [ref=e256]
+                          - img [ref=e259]
+                        - generic [ref=e262]: AutoRestock
+              - button "Next page of carousel" [ref=e263]:
+                - img [ref=e265] [cursor=pointer]
+      - generic: • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • •
+    - main [ref=e268]:
+      - generic [ref=e273]:
+        - generic [ref=e274]:
+          - navigation "Breadcrumb" [ref=e275]:
+            - list [ref=e276]:
+              - listitem [ref=e277]:
+                - link "Home" [ref=e279] [cursor=pointer]:
+                  - /url: /
+              - generic [ref=e280]: /
+              - listitem [ref=e281]:
+                - link "Arts & Crafts" [ref=e283] [cursor=pointer]:
+                  - /url: /arts-crafts/cat_SC5787
+              - generic [ref=e284]: /
+              - listitem [ref=e285]: Paint
+          - generic [ref=e286]:
+            - heading "Painting Supplies" [level=1] [ref=e289]
+            - generic [ref=e290]:
+              - generic [ref=e291] [cursor=pointer]:
+                - generic [ref=e292]: Sort by
+                - button "Best Match" [ref=e293]:
+                  - generic [ref=e294]: Best Match
+                  - img [ref=e295]
+              - button "grid view" [ref=e299] [cursor=pointer]:
+                - img [ref=e301]
+                - generic [ref=e304]: Grid view
+                - img [ref=e305]
+          - generic [ref=e310]:
+            - generic [ref=e311]: Page 1 of 1
+            - region "carousel" [ref=e312]:
+              - button "Previous page of carousel" [disabled] [ref=e313]
+              - group "carousel" [ref=e314]:
+                - list "carousel - 6 items total" [ref=e315]:
+                  - listitem "Item 1 of 6" [ref=e316]:
+                    - link "Acrylic Paint" [ref=e317] [cursor=pointer]:
+                      - link "Acrylic Paint Acrylic Paint" [ref=e319]:
+                        - /url: /acrylic-paint/cat_CL140420/vjxcb?isVF=true
+                        - generic [ref=e320]:
+                          - img "Acrylic Paint" [ref=e322]
+                          - generic [ref=e323]: Acrylic Paint
+                  - listitem "Item 2 of 6" [ref=e324]:
+                    - link "Watercolor paint" [ref=e325] [cursor=pointer]:
+                      - link "Watercolor paint Watercolor paint" [ref=e327]:
+                        - /url: /watercolor-paint/cat_CL140420/5w2yc?isVF=true
+                        - generic [ref=e328]:
+                          - img "Watercolor paint" [ref=e330]
+                          - generic [ref=e331]: Watercolor paint
+                  - listitem "Item 3 of 6" [ref=e332]:
+                    - link "Kid's Paint" [ref=e333] [cursor=pointer]:
+                      - link "Kid's Paint Kid's Paint" [ref=e335]:
+                        - /url: /kids-paint/cat_CL140420/4qktf?isVF=true
+                        - generic [ref=e336]:
+                          - img "Kid's Paint" [ref=e338]
+                          - generic [ref=e339]: Kid's Paint
+                  - listitem "Item 4 of 6" [ref=e340]:
+                    - link "Oil Paint" [ref=e341] [cursor=pointer]:
+                      - link "Oil Paint Oil Paint" [ref=e343]:
+                        - /url: /oil-paint/cat_CL140420/xrek5?isVF=true
+                        - generic [ref=e344]:
+                          - img "Oil Paint" [ref=e346]
+                          - generic [ref=e347]: Oil Paint
+                  - listitem "Item 5 of 6" [ref=e348]:
+                    - link "Face & Body Paint" [ref=e349] [cursor=pointer]:
+                      - link "Face & Body Paint Face & Body Paint" [ref=e351]:
+                        - /url: /face-body-paint/cat_CL140420/rj7d9?isVF=true
+                        - generic [ref=e352]:
+                          - img "Face & Body Paint" [ref=e354]
+                          - generic [ref=e355]: Face & Body Paint
+                  - listitem "Item 6 of 6" [ref=e356]:
+                    - link "Dye" [ref=e357] [cursor=pointer]:
+                      - link "Dye Dye" [ref=e359]:
+                        - /url: /fabric-dye/cat_CL140420/ihlms?isVF=true
+                        - generic [ref=e360]:
+                          - img "Dye" [ref=e362]
+                          - generic [ref=e363]: Dye
+              - button "Next page of carousel" [disabled] [ref=e364]
+        - region "Filters" [ref=e365]:
+          - generic [ref=e367]:
+            - combobox "StoreFilterGroup collapsed" [ref=e369] [cursor=pointer]:
+              - generic [ref=e370]:
+                - generic [ref=e371]: Pick up and Delivery
+                - img [ref=e373]
+            - checkbox "AutoRestock" [ref=e380] [cursor=pointer]:
+              - img [ref=e384]
+              - generic [ref=e387]:
+                - generic [ref=e388]:
+                  - img [ref=e389]
+                  - img [ref=e392]
+                - text: AutoRestock
+            - combobox "Brand collapsed" [ref=e396] [cursor=pointer]:
+              - generic [ref=e397]:
+                - generic [ref=e398]: Brand
+                - img [ref=e400]
+            - combobox "Paint Type collapsed" [ref=e404] [cursor=pointer]:
+              - generic [ref=e405]:
+                - generic [ref=e406]: Paint Type
+                - img [ref=e408]
+            - combobox "Color Family collapsed" [ref=e412] [cursor=pointer]:
+              - generic [ref=e413]:
+                - generic [ref=e414]: Color Family
+                - img [ref=e416]
+            - combobox "Painting Pack Size collapsed" [ref=e420] [cursor=pointer]:
+              - generic [ref=e421]:
+                - generic [ref=e422]: Painting Pack Size
+                - img [ref=e424]
+            - combobox "Washable collapsed" [ref=e428] [cursor=pointer]:
+              - generic [ref=e429]:
+                - generic [ref=e430]: Washable
+                - img [ref=e432]
+            - button "All Filters" [ref=e436] [cursor=pointer]:
+              - generic [ref=e437]:
+                - img [ref=e438]
+                - text: All Filters
+        - region "Search Results" [ref=e441]:
+          - generic [ref=e442]:
+            - generic [ref=e445]:
+              - link "Crayola Classic Washable Watercolors, Assorted Colors, 2 oz., 10 Bottles/Pack (54-1205)" [ref=e447] [cursor=pointer]:
+                - /url: /crayola-classic-washable-watercolors-assorted-colors-2-oz-10-bottles-pack-54-1205/product_582366
+                - img "Crayola Classic Washable Watercolors, Assorted Colors, 2 oz., 10 Bottles/Pack (54-1205)~#|#~sp74866314_sc7" [ref=e448]
+                - img "Crayola Classic Washable Watercolors, Assorted Colors, 2 oz., 10 Bottles/Pack (54-1205)~#|#~sp74866313_sc7" [ref=e449]
+              - heading [level=2] [ref=e450]:
+                - link [ref=e451] [cursor=pointer]:
+                  - /url: /crayola-classic-washable-watercolors-assorted-colors-2-oz-10-bottles-pack-54-1205/product_582366
+                  - text: Crayola Classic Washable Watercolors, Assorted Colors, 2 oz., 10 Bottles/Pack (54-1205)
+              - generic [ref=e452]:
+                - generic [ref=e453]: "Item: 582366"
+                - generic [ref=e454]: "Model: 54-1205"
+              - generic [ref=e456]:
+                - generic [ref=e457]:
+                  - generic [ref=e458]:
+                    - img [ref=e459]
+                    - img [ref=e463]
+                  - generic [ref=e466]:
+                    - img [ref=e467]
+                    - img [ref=e471]
+                  - generic [ref=e474]:
+                    - img [ref=e475]
+                    - img [ref=e479]
+                  - generic [ref=e482]:
+                    - img [ref=e483]
+                    - img [ref=e487]
+                  - generic [ref=e490]:
+                    - img [ref=e491]
+                    - img [ref=e495]
+                - link "Link, 109 Reviews, Navigate to details" [ref=e498] [cursor=pointer]: "109"
+              - generic [ref=e500]:
+                - generic [ref=e501]: Price is
+                - text: $8.99
+              - generic [ref=e504]:
+                - img [ref=e505]
+                - text: Next-Day Delivery
+                - generic [ref=e508]: by Mon, May 18
+              - button "pick up in store" [ref=e510] [cursor=pointer]: 30-min pickup
+              - button "Autorestock subscription" [ref=e512] [cursor=pointer]:
+                - generic [ref=e513]:
+                  - img [ref=e514]
+                  - img [ref=e517]
+                - generic [ref=e520]: AutoRestock
+              - generic [ref=e521]:
+                - button "1, Collapsed undefined collapsed Quantity, quantity selector" [ref=e526] [cursor=pointer]:
+                  - generic [ref=e527]: "1"
+                  - img [ref=e528]
+                - button "Add to cart Crayola Classic Washable Watercolors, Assorted Colors, 2 oz., 10 Bottles/Pack (54-1205)" [ref=e531] [cursor=pointer]:
+                  - generic [ref=e532]: Add
+              - generic [ref=e533]:
+                - button "Compare Crayola Classic Washable Watercolors, Assorted Colors, 2 oz., 10 Bottles/Pack (54-1205)" [ref=e534] [cursor=pointer]:
+                  - generic [ref=e535]:
+                    - img [ref=e536]
+                    - text: Compare
+                - button "Add To List Crayola Classic Washable Watercolors, Assorted Colors, 2 oz., 10 Bottles/Pack (54-1205)" [ref=e544] [cursor=pointer]:
+                  - img [ref=e547]
+            - generic [ref=e552]:
+              - link "Crayola Washable Paints, Black, 16 oz. (54-2016-051)" [ref=e554] [cursor=pointer]:
+                - /url: /crayola-washable-paints-black-16-oz-54-2016-051/product_405783
+                - img "Crayola Washable Paints, Black, 16 oz. (54-2016-051)~#|#~sp86333002_sc7" [ref=e555]
+                - img "Crayola Washable Paints, Black, 16 oz. (54-2016-051)~#|#~sp86333001_sc7" [ref=e556]
+              - heading [level=2] [ref=e557]:
+                - link [ref=e558] [cursor=pointer]:
+                  - /url: /crayola-washable-paints-black-16-oz-54-2016-051/product_405783
+                  - text: Crayola Washable Paints, Black, 16 oz. (54-2016-051)
+              - generic [ref=e559]:
+                - generic [ref=e560]: "Item: 405783"
+                - generic [ref=e561]: "Model: 54-2016-051"
+              - generic [ref=e563]:
+                - generic [ref=e564]:
+                  - generic [ref=e565]:
+                    - img [ref=e566]
+                    - img [ref=e570]
+                  - generic [ref=e573]:
+                    - img [ref=e574]
+                    - img [ref=e578]
+                  - generic [ref=e581]:
+                    - img [ref=e582]
+                    - img [ref=e586]
+                  - generic [ref=e589]:
+                    - img [ref=e590]
+                    - img [ref=e594]
+                  - generic [ref=e597]:
+                    - img [ref=e598]
+                    - img [ref=e602]
+                - link "Link, 10 Reviews, Navigate to details" [ref=e605] [cursor=pointer]: "10"
+              - generic [ref=e607]:
+                - generic [ref=e608]: Price is
+                - text: $9.19
+              - generic [ref=e611]:
+                - img [ref=e612]
+                - text: Next-Day Delivery
+                - generic [ref=e615]: by Mon, May 18
+              - button "Autorestock subscription" [ref=e618] [cursor=pointer]:
+                - generic [ref=e619]:
+                  - img [ref=e620]
+                  - img [ref=e623]
+                - generic [ref=e626]: AutoRestock
+              - generic [ref=e627]:
+                - button "1, Collapsed undefined collapsed Quantity, quantity selector" [ref=e632] [cursor=pointer]:
+                  - generic [ref=e633]: "1"
+                  - img [ref=e634]
+                - button "Add to cart Crayola Washable Paints, Black, 16 oz. (54-2016-051)" [ref=e637] [cursor=pointer]:
+                  - generic [ref=e638]: Add
+              - generic [ref=e639]:
+                - button "Compare Crayola Washable Paints, Black, 16 oz. (54-2016-051)" [ref=e640] [cursor=pointer]:
+                  - generic [ref=e641]:
+                    - img [ref=e642]
+                    - text: Compare
+                - button "Add To List Crayola Washable Paints, Black, 16 oz. (54-2016-051)" [ref=e650] [cursor=pointer]:
+                  - img [ref=e653]
+            - generic [ref=e658]:
+              - link "FolkArt Acrylic Paint Multi-Surface Satin, 8oz., Vintage White, 3/Pack(FLK4646CA-3)" [ref=e660] [cursor=pointer]:
+                - /url: /folkart-acrylic-paint-multi-surface-satin-8oz-vintage-white-pack-of-3-flk4646ca-3/product_24613817
+                - img "FolkArt Acrylic Paint Multi-Surface Satin, 8oz., Vintage White, 3/Pack(FLK4646CA-3)~#|#~98D670F3-CCF6-41CF-8BFE0BE18D156572_sc7" [ref=e661]
+                - img "FolkArt Acrylic Paint Multi-Surface Satin, 8oz., Vintage White, 3/Pack(FLK4646CA-3)~#|#~DEFC96EF-56AD-475C-9124F4E8FD7701B8_sc7" [ref=e662]
+              - heading [level=2] [ref=e663]:
+                - link [ref=e664] [cursor=pointer]:
+                  - /url: /folkart-acrylic-paint-multi-surface-satin-8oz-vintage-white-pack-of-3-flk4646ca-3/product_24613817
+                  - text: FolkArt Acrylic Paint Multi-Surface Satin, 8oz., Vintage White, 3/Pack(FLK4646CA-3)
+              - generic [ref=e665]:
+                - generic [ref=e666]: "Item: 24613817"
+                - generic [ref=e667]: "Model: FLK4646CA-3"
+              - generic [ref=e668]:
+                - generic [ref=e670]: No reviews yet
+                - button "Made in USA" [ref=e673] [cursor=pointer]:
+                  - img [ref=e674]
+              - generic [ref=e680]:
+                - generic [ref=e681]: Price is
+                - text: $19.49
+              - generic [ref=e682]:
+                - generic [ref=e683]: Unit of measure 3/Bundle
+                - text: 3/Bundle
+              - generic [ref=e684]:
+                - text: Delivery
+                - generic [ref=e685]: by Tue, May 26
+              - generic [ref=e688]:
+                - button "1, Collapsed undefined collapsed Quantity, quantity selector" [ref=e693] [cursor=pointer]:
+                  - generic [ref=e694]: "1"
+                  - img [ref=e695]
+                - button "Add to cart FolkArt Acrylic Paint Multi-Surface Satin, 8oz., Vintage White, 3/Pack(FLK4646CA-3)" [ref=e698] [cursor=pointer]:
+                  - generic [ref=e699]: Add
+              - generic [ref=e700]:
+                - button "Compare FolkArt Acrylic Paint Multi-Surface Satin, 8oz., Vintage White, 3/Pack(FLK4646CA-3)" [ref=e701] [cursor=pointer]:
+                  - generic [ref=e702]:
+                    - img [ref=e703]
+                    - text: Compare
+                - button "Add To List FolkArt Acrylic Paint Multi-Surface Satin, 8oz., Vintage White, 3/Pack(FLK4646CA-3)" [ref=e711] [cursor=pointer]:
+                  - img [ref=e714]
+            - generic [ref=e719]:
+              - link "Crayola Washable Paints, Red, 16 oz. (54-2016-038)" [ref=e721] [cursor=pointer]:
+                - /url: /crayola-washable-paints-red-16-oz-54-2016-038/product_405764
+                - img "Crayola Washable Paints, Red, 16 oz. (54-2016-038)~#|#~sp97810701_sc7" [ref=e722]
+                - img "Crayola Washable Paints, Red, 16 oz. (54-2016-038)~#|#~sp97810699_sc7" [ref=e723]
+              - heading [level=2] [ref=e724]:
+                - link [ref=e725] [cursor=pointer]:
+                  - /url: /crayola-washable-paints-red-16-oz-54-2016-038/product_405764
+                  - text: Crayola Washable Paints, Red, 16 oz. (54-2016-038)
+              - generic [ref=e726]:
+                - generic [ref=e727]: "Item: 405764"
+                - generic [ref=e728]: "Model: 54-2016-038"
+              - generic [ref=e730]:
+                - generic [ref=e731]:
+                  - generic [ref=e732]:
+                    - img [ref=e733]
+                    - img [ref=e737]
+                  - generic [ref=e740]:
+                    - img [ref=e741]
+                    - img [ref=e745]
+                  - generic [ref=e748]:
+                    - img [ref=e749]
+                    - img [ref=e753]
+                  - generic [ref=e756]:
+                    - img [ref=e757]
+                    - img [ref=e761]
+                  - generic [ref=e764]:
+                    - img [ref=e765]
+                    - img [ref=e769]
+                - link "Link, 10 Reviews, Navigate to details" [ref=e772] [cursor=pointer]: "10"
+              - generic [ref=e774]:
+                - generic [ref=e775]: Price is
+                - text: $9.19
+              - generic [ref=e778]:
+                - img [ref=e779]
+                - text: Next-Day Delivery
+                - generic [ref=e782]: by Mon, May 18
+              - button "Autorestock subscription" [ref=e785] [cursor=pointer]:
+                - generic [ref=e786]:
+                  - img [ref=e787]
+                  - img [ref=e790]
+                - generic [ref=e793]: AutoRestock
+              - generic [ref=e794]:
+                - button "1, Collapsed undefined collapsed Quantity, quantity selector" [ref=e799] [cursor=pointer]:
+                  - generic [ref=e800]: "1"
+                  - img [ref=e801]
+                - button "Add to cart Crayola Washable Paints, Red, 16 oz. (54-2016-038)" [ref=e804] [cursor=pointer]:
+                  - generic [ref=e805]: Add
+              - generic [ref=e806]:
+                - button "Compare Crayola Washable Paints, Red, 16 oz. (54-2016-038)" [ref=e807] [cursor=pointer]:
+                  - generic [ref=e808]:
+                    - img [ref=e809]
+                    - text: Compare
+                - button "Add To List Crayola Washable Paints, Red, 16 oz. (54-2016-038)" [ref=e817] [cursor=pointer]:
+                  - img [ref=e820]
+    - contentinfo [ref=e896]:
+      - generic [ref=e898]:
+        - generic [ref=e901]: This website is intended for personal use by US residents only.
+        - link "See our delivery policy for full details." [ref=e903] [cursor=pointer]:
+          - /url: /hc?id=56c09a7a-cd63-4a26-b277-29023d9ece2e
+          - generic [ref=e904]: See our delivery policy for full details.
+        - link "Copyright 1998-2026, Staples, Inc., All Rights Reserved" [ref=e906] [cursor=pointer]:
+          - /url: /hc?id=52e40651-0852-4ad7-a532-45017c287d50
+          - generic [ref=e907]: Copyright 1998-2026, Staples, Inc., All Rights Reserved.
+        - navigation "footer" [ref=e908]:
+          - link "Site Map" [ref=e909] [cursor=pointer]:
+            - /url: /htmlsitemap/
+            - generic [ref=e910]: Site Map
+          - button "Feedback" [ref=e912] [cursor=pointer]:
+            - generic [ref=e913]: Feedback
+          - link "Privacy Notice" [ref=e915] [cursor=pointer]:
+            - /url: /hc?id=dbb94c10-973c-478b-a078-00e58f66ba32
+            - generic [ref=e916]: Privacy Notice
+          - link "Terms & Conditions" [ref=e918] [cursor=pointer]:
+            - /url: /hc?id=52e40651-0852-4ad7-a532-45017c287d50
+            - generic [ref=e919]: Terms & Conditions
+          - generic [ref=e922] [cursor=pointer]: Cookie Preferences
+          - generic [ref=e925] [cursor=pointer]: Do Not Sell or Share My Personal Information
+          - link "California Notice" [ref=e927] [cursor=pointer]:
+            - /url: /hc?id=d0641e76-dd9f-4d69-80d3-ff148ddcd188
+            - generic [ref=e928]: California Notice
+        - generic [ref=e931]: "*By clicking Instacart links, you will leave staples.com and enter the Instacart site, which they operate and control. Item prices may vary from in-store prices. Service fees may apply. Available in select zip codes or location."
+  - alert [ref=e932]

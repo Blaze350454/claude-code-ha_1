@@ -1,0 +1,151 @@
+# Irrigation Automations for Home Assistant
+# Copy these to your automations.yaml or use as blueprints
+
+# =============================================================================
+# MORNING IRRIGATION SCHEDULE
+# =============================================================================
+- id: irrigation_morning_schedule
+  alias: "Irrigation - Morning Schedule"
+  description: "Run irrigation zones in sequence each morning"
+  trigger:
+    - platform: time
+      at: "06:00:00"
+  condition:
+    # Only run if reservoir has water
+    - condition: state
+      entity_id: binary_sensor.irrigation_controller_reservoir_low_level
+      state: "on"
+  action:
+    # Zone 1
+    - service: switch.turn_on
+      target:
+        entity_id: switch.irrigation_controller_zone_1_valve
+    - delay:
+        minutes: 10
+    - service: switch.turn_off
+      target:
+        entity_id: switch.irrigation_controller_zone_1_valve
+    - delay:
+        seconds: 30
+    # Zone 2
+    - service: switch.turn_on
+      target:
+        entity_id: switch.irrigation_controller_zone_2_valve
+    - delay:
+        minutes: 10
+    - service: switch.turn_off
+      target:
+        entity_id: switch.irrigation_controller_zone_2_valve
+    - delay:
+        seconds: 30
+    # Zone 3
+    - service: switch.turn_on
+      target:
+        entity_id: switch.irrigation_controller_zone_3_valve
+    - delay:
+        minutes: 10
+    - service: switch.turn_off
+      target:
+        entity_id: switch.irrigation_controller_zone_3_valve
+  mode: single
+
+# =============================================================================
+# SAFETY: LOW RESERVOIR EMERGENCY SHUTOFF
+# =============================================================================
+- id: irrigation_emergency_shutoff
+  alias: "Irrigation - Emergency Shutoff (Low Reservoir)"
+  description: "Turn off all valves when reservoir runs low"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.irrigation_controller_reservoir_low_level
+      to: "off"
+  action:
+    - service: switch.turn_off
+      target:
+        entity_id:
+          - switch.irrigation_controller_zone_1_valve
+          - switch.irrigation_controller_zone_2_valve
+          - switch.irrigation_controller_zone_3_valve
+          - switch.irrigation_controller_rainbird_zone_1
+    - service: notify.persistent_notification
+      data:
+        title: "Irrigation Alert"
+        message: "Emergency shutoff activated - reservoir water level is low!"
+  mode: single
+
+# =============================================================================
+# PUMP CONTROL: AUTO-START PRESSURE PUMP
+# =============================================================================
+- id: irrigation_pump_auto_start
+  alias: "Irrigation - Auto Start Pressure Pump"
+  description: "Turn on pressure pump when any irrigation valve opens"
+  trigger:
+    - platform: state
+      entity_id:
+        - switch.irrigation_controller_zone_1_valve
+        - switch.irrigation_controller_zone_2_valve
+        - switch.irrigation_controller_zone_3_valve
+        - switch.irrigation_controller_rainbird_zone_1
+      to: "on"
+  condition:
+    - condition: state
+      entity_id: switch.pressure_pump  # Your smart plug entity
+      state: "off"
+  action:
+    - service: switch.turn_on
+      target:
+        entity_id: switch.pressure_pump  # Your smart plug entity
+  mode: single
+
+# =============================================================================
+# PUMP CONTROL: AUTO-STOP PRESSURE PUMP
+# =============================================================================
+- id: irrigation_pump_auto_stop
+  alias: "Irrigation - Auto Stop Pressure Pump"
+  description: "Turn off pressure pump when all irrigation valves close"
+  trigger:
+    - platform: state
+      entity_id:
+        - switch.irrigation_controller_zone_1_valve
+        - switch.irrigation_controller_zone_2_valve
+        - switch.irrigation_controller_zone_3_valve
+        - switch.irrigation_controller_rainbird_zone_1
+      to: "off"
+  condition:
+    # All valves must be off
+    - condition: state
+      entity_id: switch.irrigation_controller_zone_1_valve
+      state: "off"
+    - condition: state
+      entity_id: switch.irrigation_controller_zone_2_valve
+      state: "off"
+    - condition: state
+      entity_id: switch.irrigation_controller_zone_3_valve
+      state: "off"
+    - condition: state
+      entity_id: switch.irrigation_controller_rainbird_zone_1
+      state: "off"
+  action:
+    - delay:
+        seconds: 5  # Small delay to allow pressure to equalize
+    - service: switch.turn_off
+      target:
+        entity_id: switch.pressure_pump  # Your smart plug entity
+  mode: single
+
+# =============================================================================
+# TEMPERATURE ALERT
+# =============================================================================
+- id: irrigation_freeze_warning
+  alias: "Irrigation - Freeze Warning"
+  description: "Alert when reservoir temperature drops near freezing"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.irrigation_controller_reservoir_temperature
+      below: 4
+  action:
+    - service: notify.persistent_notification
+      data:
+        title: "Irrigation Freeze Warning"
+        message: "Reservoir temperature is {{ states('sensor.irrigation_controller_reservoir_temperature') }}°C - risk of freezing!"
+  mode: single

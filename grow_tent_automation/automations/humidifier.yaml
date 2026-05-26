@@ -1,0 +1,202 @@
+# Humidity Control — mode-based switching between humidify / dehumidify
+# Mode selector: input_select.tent_humidity_mode (Humidify / Dehumidify / Off)
+# Fogger smart plug: switch.humidifier
+# Fan PWM: fan.grow_tent_one_humidifier_fan_pwm (grow-tent-one ESP32-C3)
+# Dehumidifier: humidifier.dehumidifier_tent (Midea, standalone)
+# AC dry mode: climate.air_conditioner_tent (Midea, set to 'dry')
+# Humidity sensor: sensor.tent_humidity (averaged template)
+
+########## MODE SWITCHING ##########
+
+# When mode changes, shut off the opposing equipment
+- id: humidity_mode_changed
+  alias: "Humidity - Mode Changed"
+  trigger:
+    - platform: state
+      entity_id: input_select.tent_humidity_mode
+  action:
+    - choose:
+        # Switched to Humidify — shut off dehumidifier + AC dry
+        - conditions:
+            - condition: state
+              entity_id: input_select.tent_humidity_mode
+              state: "Humidify"
+          sequence:
+            - service: humidifier.turn_off
+              target:
+                entity_id: humidifier.dehumidifier_tent
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: climate.air_conditioner_tent
+              data:
+                hvac_mode: "off"
+
+        # Switched to Dehumidify — shut off humidifier fogger + fan
+        - conditions:
+            - condition: state
+              entity_id: input_select.tent_humidity_mode
+              state: "Dehumidify"
+          sequence:
+            - service: switch.turn_off
+              target:
+                entity_id: switch.humidifier
+            - service: fan.turn_off
+              target:
+                entity_id: fan.grow_tent_one_humidifier_fan_pwm
+
+        # Switched to Off — shut off everything
+        - conditions:
+            - condition: state
+              entity_id: input_select.tent_humidity_mode
+              state: "Off"
+          sequence:
+            - service: switch.turn_off
+              target:
+                entity_id: switch.humidifier
+            - service: fan.turn_off
+              target:
+                entity_id: fan.grow_tent_one_humidifier_fan_pwm
+            - service: humidifier.turn_off
+              target:
+                entity_id: humidifier.dehumidifier_tent
+            - service: climate.set_hvac_mode
+              target:
+                entity_id: climate.air_conditioner_tent
+              data:
+                hvac_mode: "off"
+
+########## HUMIDIFY MODE ##########
+
+# Turn ON fogger + fan when RH drops below (target - hysteresis)
+- id: humidifier_on
+  alias: "Humidifier - Turn On"
+  trigger:
+    - platform: template
+      value_template: >
+        {{ states('sensor.tent_humidity') | float(0) <
+           (states('input_number.humidifier_target_rh') | float(65) -
+            states('input_number.humidifier_hysteresis') | float(5)) }}
+  condition:
+    - condition: state
+      entity_id: input_select.tent_humidity_mode
+      state: "Humidify"
+    - condition: not
+      conditions:
+        - condition: state
+          entity_id: sensor.tent_humidity
+          state: "unavailable"
+        - condition: state
+          entity_id: sensor.tent_humidity
+          state: "unknown"
+  action:
+    - service: switch.turn_on
+      target:
+        entity_id: switch.humidifier
+    - service: fan.turn_on
+      target:
+        entity_id: fan.grow_tent_one_humidifier_fan_pwm
+      data:
+        percentage: 80
+
+# Turn OFF fogger when RH reaches target, fan runs 1 min extra to push remaining mist
+- id: humidifier_off
+  alias: "Humidifier - Turn Off"
+  trigger:
+    - platform: template
+      value_template: >
+        {{ states('sensor.tent_humidity') | float(0) >=
+           states('input_number.humidifier_target_rh') | float(65) }}
+  condition:
+    - condition: state
+      entity_id: switch.humidifier
+      state: "on"
+  action:
+    - service: switch.turn_off
+      target:
+        entity_id: switch.humidifier
+    - delay: "00:01:00"
+    - service: fan.turn_off
+      target:
+        entity_id: fan.grow_tent_one_humidifier_fan_pwm
+
+# Safety: shut off fogger if reservoir temp exceeds 38°C
+- id: humidifier_overheat_shutoff
+  alias: "Humidifier - Overheat Shutoff"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.grow_tent_one_humidifier_reservoir_temperature
+      above: 38
+  action:
+    - service: switch.turn_off
+      target:
+        entity_id: switch.humidifier
+    - service: fan.turn_off
+      target:
+        entity_id: fan.grow_tent_one_humidifier_fan_pwm
+    - service: notify.persistent_notification
+      data:
+        title: "Humidifier Overheat"
+        message: >
+          Fogger shut off — reservoir temperature exceeded 38°C
+          ({{ states('sensor.grow_tent_one_humidifier_reservoir_temperature') }}°C).
+          Check water level and float valve.
+
+########## DEHUMIDIFY MODE ##########
+
+# Turn ON dehumidifier + AC dry mode when RH rises above target + hysteresis
+- id: dehumidifier_on
+  alias: "Dehumidifier - Turn On"
+  trigger:
+    - platform: template
+      value_template: >
+        {{ states('sensor.tent_humidity') | float(0) >
+           (states('input_number.humidifier_target_rh') | float(65) +
+            states('input_number.humidifier_hysteresis') | float(5)) }}
+  condition:
+    - condition: state
+      entity_id: input_select.tent_humidity_mode
+      state: "Dehumidify"
+    - condition: not
+      conditions:
+        - condition: state
+          entity_id: sensor.tent_humidity
+          state: "unavailable"
+        - condition: state
+          entity_id: sensor.tent_humidity
+          state: "unknown"
+  action:
+    - service: humidifier.turn_on
+      target:
+        entity_id: humidifier.dehumidifier_tent
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: climate.air_conditioner_tent
+      data:
+        hvac_mode: "dry"
+
+# Turn OFF dehumidifier + AC when RH drops to target
+- id: dehumidifier_off
+  alias: "Dehumidifier - Turn Off"
+  trigger:
+    - platform: template
+      value_template: >
+        {{ states('sensor.tent_humidity') | float(0) <=
+           states('input_number.humidifier_target_rh') | float(65) }}
+  condition:
+    - condition: or
+      conditions:
+        - condition: state
+          entity_id: humidifier.dehumidifier_tent
+          state: "on"
+        - condition: state
+          entity_id: climate.air_conditioner_tent
+          state: "dry"
+  action:
+    - service: humidifier.turn_off
+      target:
+        entity_id: humidifier.dehumidifier_tent
+    - service: climate.set_hvac_mode
+      target:
+        entity_id: climate.air_conditioner_tent
+      data:
+        hvac_mode: "off"

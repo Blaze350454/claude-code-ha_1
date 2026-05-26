@@ -1,0 +1,1036 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - link "Skip to main content" [ref=e4]
+      - link "Skip to footer" [ref=e5]
+      - link "Skip to accessibility" [ref=e6]: Accessibility Commitment
+      - generic [ref=e8]:
+        - link "Save $30 or more on custom print" [ref=e11] [cursor=pointer]:
+          - /url: https://www.staples.com/services/printing/offers/print-coupons/?utm_source=staples.com&utm_medium=referral&utm_campaign=tophat&utm_content=default-tiered-offer
+          - generic [ref=e12]:
+            - img [ref=e14]
+            - generic [ref=e17]: Save $30 or more on custom print
+        - link "Chair savings event, extra 20% off" [ref=e21] [cursor=pointer]:
+          - /url: /lp/furniture-savings-event
+          - generic [ref=e22]:
+            - img [ref=e24]
+            - generic [ref=e27]: Chair savings event, extra 20% off
+        - link "2 for $40 K-Cup pods, 40-48/pk" [ref=e31] [cursor=pointer]:
+          - /url: https://www.staples.com/zq9zq9Single-Serve-Coffee/cat_CL164886/00792
+          - generic [ref=e32]:
+            - img [ref=e34]
+            - generic [ref=e37]: 2 for $40 K-Cup pods, 40-48/pk
+      - generic [ref=e38]:
+        - generic [ref=e42]:
+          - link "Staples Homepage" [ref=e45] [cursor=pointer]:
+            - /url: /
+            - img [ref=e48]
+          - navigation "main" [ref=e2522]:
+            - link "Pickup in store" [ref=e2525]:
+              - generic [ref=e2527] [cursor=pointer]:
+                - img [ref=e2530]
+                - generic [ref=e2541]:
+                  - generic [ref=e2542]: Pickup in store
+                  - generic [ref=e2543]: Find a store near you
+          - search [ref=e75]:
+            - combobox "Type to Search. Use the down arrow to hear suggestions." [expanded] [ref=e2544]: pens
+            - button "delete text in search bar" [ref=e2545] [cursor=pointer]:
+              - img [ref=e2546]
+            - button "search" [ref=e77] [cursor=pointer]:
+              - img [ref=e78]
+          - navigation "secondary" [ref=e81]:
+            - generic [ref=e82]:
+              - link "Sign In Menu for Desktop" [ref=e84]:
+                - generic [ref=e86] [cursor=pointer]:
+                  - img [ref=e88]
+                  - generic [ref=e92]: Sign In
+                  - img [ref=e94]
+              - link "Orders" [ref=e98]:
+                - generic [ref=e100] [cursor=pointer]:
+                  - img [ref=e102]
+                  - generic [ref=e106]: Orders
+                  - img [ref=e108]
+              - button "Cart Menu, Items in cart 0" [ref=e112]:
+                - generic [ref=e114]:
+                  - img [ref=e116]
+                  - generic [ref=e119]: "0"
+        - generic [ref=e122]:
+          - generic [ref=e123]:
+            - link "Shop Menu" [ref=e126] [cursor=pointer]:
+              - generic [ref=e128]:
+                - img [ref=e130]
+                - generic [ref=e134]: Shop
+                - img [ref=e136]
+            - link "Deals" [ref=e141] [cursor=pointer]:
+              - generic [ref=e143]:
+                - img [ref=e145]
+                - generic [ref=e151]: Deals
+                - img [ref=e153]
+            - link "Print & Marketing Menu" [ref=e158] [cursor=pointer]:
+              - generic [ref=e160]:
+                - img [ref=e162]
+                - generic [ref=e166]: Print & Marketing
+                - img [ref=e168]
+            - separator [ref=e171]
+          - generic [ref=e173]:
+            - generic [ref=e174]: Page 1 of 4
+            - region "carousel" [ref=e175]:
+              - group "carousel" [ref=e176]:
+                - list "carousel - 12 items total" [ref=e177]:
+                  - listitem "Item 1 of 12" [ref=e178]:
+                    - link "Easy Rewards" [ref=e182] [cursor=pointer]:
+                      - /url: /lp/easyrewardsoverview?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT2%3BCmp%3AESYRWDSLO
+                  - listitem "Item 2 of 12" [ref=e184]:
+                    - link "Party City" [ref=e188] [cursor=pointer]:
+                      - /url: /deals/party-city-stores/BI3001689
+                  - listitem "Item 3 of 12" [ref=e190]:
+                    - link "Balloons" [ref=e194] [cursor=pointer]:
+                      - /url: /balloons-accessories/cat_DP367070
+                      - generic [ref=e195]: Balloons
+                  - listitem "Item 4 of 12" [ref=e196]:
+                    - link "Staples Business" [ref=e200] [cursor=pointer]:
+                      - /url: /deals/staples-is-built-for-business/BI3000762?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT4%3BCmp%3ASTPLSBIZ
+                      - img [ref=e202]
+                  - listitem [ref=e206]:
+                    - link [ref=e210] [cursor=pointer]:
+                      - /url: /deals/all-services/BI3001123
+                      - generic [ref=e211]: Services
+                  - listitem [ref=e212]:
+                    - link [ref=e216] [cursor=pointer]:
+                      - /url: /printer-ink-cartridges-toner-finder/cat_SC43
+                      - generic [ref=e217]: Ink & Toner
+                  - listitem [ref=e218]:
+                    - link [ref=e222] [cursor=pointer]:
+                      - /url: https://www.staples.com/services/printing/copies-documents-printing/?utm_source=staples.com&utm_medium=referral&utm_campaign=headernav_bottom_right&utm_content=document-printing
+                      - generic [ref=e223]: Document Printing
+                  - listitem [ref=e224]:
+                    - link [ref=e228] [cursor=pointer]:
+                      - /url: /lp/new-and-trending?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT6%3BCmp%3ANWTRND
+                      - generic [ref=e229]: New & Trending
+                  - listitem [ref=e230]:
+                    - link [ref=e234] [cursor=pointer]:
+                      - /url: /deals/30-minute-store-pick-up-deals/BI1146948?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT7%3BCmp%3AGTTDY
+                      - generic [ref=e235]: Get it Today
+                  - listitem [ref=e236]:
+                    - link [ref=e240] [cursor=pointer]:
+                      - /url: /deals/business-center/BI3001255?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT16%3BCmp%3ABIZCTR
+                      - generic [ref=e241]: Business Center
+                  - listitem [ref=e242]:
+                    - link [ref=e246] [cursor=pointer]:
+                      - /url: /lp/staples-travel-hub?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT9%3BCmp%3ATRVLHB
+                      - generic [ref=e247]: Travel Hub
+                  - listitem [ref=e248]:
+                    - link [ref=e252] [cursor=pointer]:
+                      - /url: /deals/Auto-Restock/BI1498644?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT11%3BCmp%3AARS
+                      - generic [ref=e253]:
+                        - generic [ref=e255]:
+                          - img [ref=e256]
+                          - img [ref=e259]
+                        - generic [ref=e262]: AutoRestock
+              - button "Next page of carousel" [ref=e263]:
+                - img [ref=e265] [cursor=pointer]
+      - generic: • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • •
+    - main [ref=e2549]:
+      - generic [ref=e2551]:
+        - generic [ref=e3821]:
+          - iframe [ref=e3897]:
+            - generic [active] [ref=f73e1]:
+              - img [ref=f73e5] [cursor=pointer]
+              - button [ref=f73e8] [cursor=pointer]:
+                - img [ref=f73e9]
+              - link "For your breakroom." [ref=f73e17] [cursor=pointer]:
+                - /url: https://adclick.g.doubleclick.net/pcs/click%253Fxai%253DAKAOjsv7VaRI5KF94f7FKo0IrfF5dlt_uk52i14QoZp41g7QmY1jZmjRpi8fMk2M8aEeq1VZ9mHsi257VBqd0t3AdFYNRafqHr_PnKAOyzB2SA9MmcSXafKwpodqwJkj5g4GP5WlOZb-TwuPN9-ee4n3Zu-nQqYLbIws0Hp2u7VVP3YXAJFRSHaemGl-8WVbTFXmaPvzLc31lK_ndOw24dwnoubZQuPj6oTLpSKuUvoAPnqtVFEv6Y8EmZVDXC2v5WpiwHFT9DTlUqb544XatHS5w4_hvN7ZMCKAzRkDjFyD0wIz2NA3vrs98xw0ngoIA9FopiCBtbLuOdWgfnUijkAhKRNOHIPX_Ywu6DtRDU9P-Zn1iRF9P5HzzLLCwSTgGRhlNmvxSPoh3Q%2526sai%253DAMfl-YQLcKkwVdSPQvgAaAIyrvlivCfDxdmPadKtfh2RUZ6fCPA4Qsjd7JNea_ZpY8GgCLuxmKYGgEqUlIsbOUSZtGiSHsIPa6zWW60pMWSVD0h4yXT3zMUiKbH4x6erLfzWGMLWp2zdsNnDSBjN_d-K4KEaWdaPwBzb-DWQuqa4iBy1ijPRv3aJ2uATDahz7StsHiTlpLS2LSkhlljnKC8Bo9g5DGSuWY0AJTvnNKPft_Pu9aSSuNesXEHeq7BmjiXcWafcuecVjKCoXub-Lb48VkJlLULNHmfs2rB-yNLEMyNvfiiqB9Ujxx37XyCn7Vj-L5G8E0amn5hqwp1Tnhbn7j2z-I5HG8kl%2526sig%253DCg0ArKJSzBSUlnvEVdqeEAE%2526fbs_aeid%253D%25255Bgw_fbsaeid%25255D%2526urlfix%253D1%2526adurl%253Dhttps://www.staples.com/deals/pick-me-up-provisions/BI3001137
+                - img "For your breakroom." [ref=f73e18]
+          - paragraph [ref=e3825]: Sponsored
+        - generic [ref=e2559]:
+          - generic "Sponsored Products" [ref=e2565]:
+            - img "Sponsored Products" [ref=e2570]
+          - generic [ref=e2573]:
+            - generic [ref=e2574]: Page 1 of 2
+            - region "carousel" [ref=e2575]:
+              - group "carousel" [ref=e2576]:
+                - list "carousel - 4 items total" [ref=e2577]:
+                  - listitem "Item 1 of 4" [ref=e2578]:
+                    - generic [ref=e2581]:
+                      - link "Zebra Z-Grip Flight Retractable Ballpoint Pen, Bold Point, 1.2mm, Blue Ink, Dozen (21920)" [ref=e2583] [cursor=pointer]:
+                        - /url: /zebra-z-grip-flight-retractable-ballpoint-pen-bold-point-blue-ink-dozen-21920/product_938373
+                        - img "Zebra Z-Grip Flight Retractable Ballpoint Pen, Bold Point, 1.2mm, Blue Ink, Dozen (21920)~#|#~sp40286431_sc7" [ref=e2584]
+                        - img "Zebra Z-Grip Flight Retractable Ballpoint Pen, Bold Point, 1.2mm, Blue Ink, Dozen (21920)~#|#~sp40286432_sc7" [ref=e2585]
+                      - link [ref=e2586] [cursor=pointer]:
+                        - /url: /zebra-z-grip-flight-retractable-ballpoint-pen-bold-point-blue-ink-dozen-21920/product_938373
+                        - text: Zebra Z-Grip Flight Retractable Ballpoint Pen, Bold Point, 1.2mm, Blue Ink, Dozen (21920)
+                      - generic [ref=e2588]:
+                        - generic [ref=e2589]:
+                          - generic [ref=e2590]:
+                            - img [ref=e2591]
+                            - img [ref=e2595]
+                          - generic [ref=e2598]:
+                            - img [ref=e2599]
+                            - img [ref=e2603]
+                          - generic [ref=e2606]:
+                            - img [ref=e2607]
+                            - img [ref=e2611]
+                          - generic [ref=e2614]:
+                            - img [ref=e2615]
+                            - img [ref=e2619]
+                          - generic [ref=e2622]:
+                            - img [ref=e2623]
+                            - img [ref=e2627]
+                        - link "Link, 46 Reviews, Navigate to details" [ref=e3826] [cursor=pointer]: "46"
+                      - generic [ref=e2632]:
+                        - generic [ref=e2633]: Price is
+                        - text: $14.99
+                      - generic [ref=e2634]:
+                        - button "1, Collapsed undefined collapsed Quantity, quantity selector" [ref=e2639] [cursor=pointer]:
+                          - generic [ref=e2640]: "1"
+                          - img [ref=e2641]
+                        - button "Add to cart Zebra Z-Grip Flight Retractable Ballpoint Pen, Bold Point, 1.2mm, Blue Ink, Dozen (21920)" [ref=e2644] [cursor=pointer]:
+                          - generic [ref=e2645]: Add
+                  - listitem "Item 2 of 4" [ref=e2646]:
+                    - generic [ref=e2649]:
+                      - link "BIC Gel-ocity Original Retractable Gel Pens, Medium Point, 0.7mm, Black Ink, Dozen (31563)" [ref=e2651] [cursor=pointer]:
+                        - /url: /bic-gel-ocity-original-retractable-gel-pen-medium-point-0-7-mm-black-ink-12-pack-31563/product_495367
+                        - img "BIC Gel-ocity Original Retractable Gel Pens, Medium Point, 0.7mm, Black Ink, Dozen (31563)~#|#~8CB9D6A4-A446-48CB-937F33A7542CA268_sc7" [ref=e2652]
+                        - img "BIC Gel-ocity Original Retractable Gel Pens, Medium Point, 0.7mm, Black Ink, Dozen (31563)~#|#~2DCC4E56-3789-4961-9DCA5A01A8AC5ABB_sc7" [ref=e2653]
+                      - link [ref=e2654] [cursor=pointer]:
+                        - /url: /bic-gel-ocity-original-retractable-gel-pen-medium-point-0-7-mm-black-ink-12-pack-31563/product_495367
+                        - text: BIC Gel-ocity Original Retractable Gel Pens, Medium Point, 0.7mm, Black Ink, Dozen (31563)
+                      - generic [ref=e2656]:
+                        - generic [ref=e2657]:
+                          - generic [ref=e2658]:
+                            - img [ref=e2659]
+                            - img [ref=e2663]
+                          - generic [ref=e2666]:
+                            - img [ref=e2667]
+                            - img [ref=e2671]
+                          - generic [ref=e2674]:
+                            - img [ref=e2675]
+                            - img [ref=e2679]
+                          - generic [ref=e2682]:
+                            - img [ref=e2683]
+                            - img [ref=e2687]
+                          - generic [ref=e2690]:
+                            - img [ref=e2691]
+                            - img [ref=e2695]
+                        - link "Link, 3996 Reviews, Navigate to details" [ref=e3898] [cursor=pointer]: "3996"
+                      - generic [ref=e2700]:
+                        - generic [ref=e2701]: Price is
+                        - text: $13.99
+                      - generic [ref=e2702]:
+                        - button "1, Collapsed undefined collapsed Quantity, quantity selector" [ref=e2707] [cursor=pointer]:
+                          - generic [ref=e2708]: "1"
+                          - img [ref=e2709]
+                        - button "Add to cart BIC Gel-ocity Original Retractable Gel Pens, Medium Point, 0.7mm, Black Ink, Dozen (31563)" [ref=e2712] [cursor=pointer]:
+                          - generic [ref=e2713]: Add
+                  - listitem "Item 3 of 4" [ref=e2714]:
+                    - generic [ref=e2717]:
+                      - link "BIC Gel-ocity Retractable Original Gel Pens, Medium Point, 0.7 mm, Blue Ink, 12/Pack (31564/RLC11)" [ref=e2719] [cursor=pointer]:
+                        - /url: /bic-gel-ocity-retractable-original-gel-pens-medium-point-0-7-mm-blue-ink-12-pack-31564-rlc11/product_495366
+                        - img "BIC Gel-ocity Retractable Original Gel Pens, Medium Point, 0.7 mm, Blue Ink, 12/Pack (31564/RLC11)~#|#~A7B99A0E-4A88-4054-B55C35199369D702_sc7" [ref=e2720]
+                        - img "BIC Gel-ocity Retractable Original Gel Pens, Medium Point, 0.7 mm, Blue Ink, 12/Pack (31564/RLC11)~#|#~A9D924A9-7D26-4C3E-9C5CFE9D0F64791B_sc7" [ref=e2721]
+                      - link [ref=e2722] [cursor=pointer]:
+                        - /url: /bic-gel-ocity-retractable-original-gel-pens-medium-point-0-7-mm-blue-ink-12-pack-31564-rlc11/product_495366
+                        - text: BIC Gel-ocity Retractable Original Gel Pens, Medium Point, 0.7 mm, Blue Ink, 12/Pack (31564/RLC11)
+                      - generic [ref=e2724]:
+                        - generic [ref=e2725]:
+                          - generic [ref=e2726]:
+                            - img [ref=e2727]
+                            - img [ref=e2731]
+                          - generic [ref=e2734]:
+                            - img [ref=e2735]
+                            - img [ref=e2739]
+                          - generic [ref=e2742]:
+                            - img [ref=e2743]
+                            - img [ref=e2747]
+                          - generic [ref=e2750]:
+                            - img [ref=e2751]
+                            - img [ref=e2755]
+                          - generic [ref=e2758]:
+                            - img [ref=e2759]
+                            - img [ref=e2763]
+                        - link "Link, 3996 Reviews, Navigate to details" [ref=e3828] [cursor=pointer]: "3996"
+                      - generic [ref=e2768]:
+                        - generic [ref=e2769]: Price is
+                        - text: $13.99
+                      - generic [ref=e2770]:
+                        - button "1, Collapsed undefined collapsed Quantity, quantity selector" [ref=e2775] [cursor=pointer]:
+                          - generic [ref=e2776]: "1"
+                          - img [ref=e2777]
+                        - button "Add to cart BIC Gel-ocity Retractable Original Gel Pens, Medium Point, 0.7 mm, Blue Ink, 12/Pack (31564/RLC11)" [ref=e2780] [cursor=pointer]:
+                          - generic [ref=e2781]: Add
+                  - listitem [ref=e2782]:
+                    - generic [ref=e2785]:
+                      - link [ref=e2787] [cursor=pointer]:
+                        - /url: /bic-gel-ocity-quick-dry-retractable-gel-pens-medium-point-0-7mm-assorted-inks-16-pack-rglcga16-ast/product_24563611
+                        - img [ref=e2788]
+                        - img [ref=e2789]
+                      - link [ref=e2790] [cursor=pointer]:
+                        - /url: /bic-gel-ocity-quick-dry-retractable-gel-pens-medium-point-0-7mm-assorted-inks-16-pack-rglcga16-ast/product_24563611
+                        - text: BIC Gel-ocity Quick Dry Retractable Gel Pens, Medium Point, 0.7mm, Assorted Inks, 16/Pack (RGLCGA16-AST)
+                      - generic [ref=e2792]:
+                        - generic [ref=e2793]:
+                          - generic [ref=e2794]:
+                            - img [ref=e2795]
+                            - img [ref=e2799]
+                          - generic [ref=e2802]:
+                            - img [ref=e2803]
+                            - img [ref=e2807]
+                          - generic [ref=e2810]:
+                            - img [ref=e2811]
+                            - img [ref=e2815]
+                          - generic [ref=e2818]:
+                            - img [ref=e2819]
+                            - img [ref=e2823]
+                          - generic [ref=e2826]:
+                            - img [ref=e2827]
+                            - img [ref=e2831]
+                        - link [ref=e2834] [cursor=pointer]: "4795"
+                      - generic [ref=e2836]:
+                        - generic [ref=e2837]: Price is
+                        - text: $29.99
+                      - generic [ref=e2838]:
+                        - button [ref=e2843] [cursor=pointer]:
+                          - generic [ref=e2844]: "1"
+                          - img [ref=e2845]
+                        - button [ref=e2848] [cursor=pointer]:
+                          - generic [ref=e2849]: Add
+              - button "Next page of carousel" [ref=e2850]:
+                - img [ref=e2852] [cursor=pointer]
+      - generic [ref=e2856]:
+        - generic [ref=e2857]:
+          - generic [ref=e2858]:
+            - generic [ref=e2860]:
+              - generic [ref=e2861]: 1856 results for
+              - heading "pens" [level=1] [ref=e2862]: “pens”
+            - generic [ref=e2863]:
+              - generic [ref=e2864] [cursor=pointer]:
+                - generic [ref=e2865]: Sort by
+                - button "Best Match" [active] [ref=e2866]:
+                  - generic [ref=e2867]: Best Match
+                  - img [ref=e2868]
+              - button "grid view" [ref=e2872] [cursor=pointer]:
+                - img [ref=e2874]
+                - generic [ref=e2877]: Grid view
+                - img [ref=e2878]
+          - generic [ref=e2883]:
+            - generic [ref=e2884]: Page 1 of 2
+            - region "carousel" [ref=e2885]:
+              - group "carousel" [ref=e2886]:
+                - list "carousel - 7 items total" [ref=e2887]:
+                  - listitem "Item 1 of 7" [ref=e2888]:
+                    - link "Deals" [ref=e2889] [cursor=pointer]:
+                      - link "Deals Deals" [ref=e2891]:
+                        - /url: /pens/directory_pens?fids=Deals_3A_22On%21Promotion_22&isVF=true
+                        - generic [ref=e2892]:
+                          - img "Deals" [ref=e2894]
+                          - generic [ref=e2895]: Deals
+                  - listitem "Item 2 of 7" [ref=e2896]:
+                    - link "Staples Brands" [ref=e2897] [cursor=pointer]:
+                      - link "Staples Brands Staples Brands" [ref=e2899]:
+                        - /url: /pens/directory_pens?fids=Brand_3A_22Staples_22%7CBrand_3A_22TRU+RED_22&isVF=true
+                        - generic [ref=e2900]:
+                          - img "Staples Brands" [ref=e2902]
+                          - generic [ref=e2903]: Staples Brands
+                  - listitem "Item 3 of 7" [ref=e2904]:
+                    - link "Ballpoint Pens" [ref=e2905] [cursor=pointer]:
+                      - link "Ballpoint Pens Ballpoint Pens" [ref=e2907]:
+                        - /url: /pens/directory_pens?fids=Ink+Type_3A_22Ballpoint_22&isVF=true
+                        - generic [ref=e2908]:
+                          - img "Ballpoint Pens" [ref=e2910]
+                          - generic [ref=e2911]: Ballpoint Pens
+                  - listitem "Item 4 of 7" [ref=e2912]:
+                    - link "Gel Pens" [ref=e2913] [cursor=pointer]:
+                      - link "Gel Pens Gel Pens" [ref=e2915]:
+                        - /url: /pens/directory_pens?fids=Ink+Type_3A_22Gel_22&isVF=true
+                        - generic [ref=e2916]:
+                          - img "Gel Pens" [ref=e2918]
+                          - generic [ref=e2919]: Gel Pens
+                  - listitem "Item 5 of 7" [ref=e2920]:
+                    - link "Black Pens" [ref=e2921] [cursor=pointer]:
+                      - link "Black Pens Black Pens" [ref=e2923]:
+                        - /url: /pens/directory_pens?fids=Ink%21Color_3A_22Black_22&isVF=true
+                        - generic [ref=e2924]:
+                          - img "Black Pens" [ref=e2926]
+                          - generic [ref=e2927]: Black Pens
+                  - listitem "Item 6 of 7" [ref=e2928]:
+                    - link "Blue Pens" [ref=e2929] [cursor=pointer]:
+                      - link "Blue Pens Blue Pens" [ref=e2931]:
+                        - /url: /pens/directory_pens?fids=Ink%21Color_3A_22Blue_22&isVF=true
+                        - generic [ref=e2932]:
+                          - img "Blue Pens" [ref=e2934]
+                          - generic [ref=e2935]: Blue Pens
+                  - listitem "Item 7 of 7" [ref=e2936]:
+                    - link "Bulk Packs" [ref=e2937] [cursor=pointer]:
+                      - link "Bulk Packs Bulk Packs" [ref=e2939]:
+                        - /url: /pens/directory_pens?fids=Pen%21Pack%21Size_3A_2236%21Pack_22%7CPen%21Pack%21Size_3A_22Bulk%21Pack_22%7CPen%21Pack%21Size_3A_2272%21Pack_22%7CPen%21Pack%21Size_3A_2260%21Pack_22%7CPen%21Pack%21Size_3A_2248%21Pack_22&isVF=true
+                        - generic [ref=e2940]:
+                          - img "Bulk Packs" [ref=e2942]
+                          - generic [ref=e2943]: Bulk Packs
+              - button "Next page of carousel" [ref=e2944]:
+                - img [ref=e2946] [cursor=pointer]
+        - region "Filters" [ref=e2950]:
+          - generic [ref=e2952]:
+            - combobox "StoreFilterGroup collapsed" [ref=e2954] [cursor=pointer]:
+              - generic [ref=e2955]:
+                - generic [ref=e2956]: Pick up and Delivery
+                - img [ref=e2958]
+            - checkbox "AutoRestock" [ref=e2965] [cursor=pointer]:
+              - img [ref=e2969]
+              - generic [ref=e2972]:
+                - generic [ref=e2973]:
+                  - img [ref=e2974]
+                  - img [ref=e2977]
+                - text: AutoRestock
+            - combobox "Brand collapsed" [ref=e2981] [cursor=pointer]:
+              - generic [ref=e2982]:
+                - generic [ref=e2983]: Brand
+                - img [ref=e2985]
+            - combobox "Ink Color collapsed" [ref=e2989] [cursor=pointer]:
+              - generic [ref=e2990]:
+                - generic [ref=e2991]: Ink Color
+                - img [ref=e2993]
+            - combobox "Pen Type collapsed" [ref=e2997] [cursor=pointer]:
+              - generic [ref=e2998]:
+                - generic [ref=e2999]: Pen Type
+                - img [ref=e3001]
+            - combobox "Pen Pack Size collapsed" [ref=e3005] [cursor=pointer]:
+              - generic [ref=e3006]:
+                - generic [ref=e3007]: Pen Pack Size
+                - img [ref=e3009]
+            - combobox "Price collapsed" [ref=e3013] [cursor=pointer]:
+              - generic [ref=e3014]:
+                - generic [ref=e3015]: Price
+                - img [ref=e3017]
+            - button "All Filters" [ref=e3021] [cursor=pointer]:
+              - generic [ref=e3022]:
+                - img [ref=e3023]
+                - text: All Filters
+        - region "Search Results" [ref=e3026]:
+          - generic [ref=e3027]:
+            - generic [ref=e3030]:
+              - generic [ref=e3031]:
+                - link "Pentel EnerGel RTX Retractable Gel Pens, Medium Point, 0.7mm, Assorted Ink, 14/Pack (BL77PC14M)" [ref=e3032] [cursor=pointer]:
+                  - /url: /energel-rtx-retractable-gel-pens-medium-point-assorted-ink-14-pack-bl77pc14m/product_24499346
+                  - img "Pentel EnerGel RTX Retractable Gel Pens, Medium Point, 0.7mm, Assorted Ink, 14/Pack (BL77PC14M)~#|#~sp150701276_sc7" [ref=e3033]
+                  - img "Pentel EnerGel RTX Retractable Gel Pens, Medium Point, 0.7mm, Assorted Ink, 14/Pack (BL77PC14M)~#|#~sp150701275_sc7" [ref=e3034]
+                - generic [ref=e3035]:
+                  - text: 52% off
+                  - generic [ref=e3036]: of Pentel EnerGel RTX Retractable Gel Pens, Medium Point, 0.7mm, Assorted Ink, 14/Pack (BL77PC14M)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - strong: In Demand!
+                        - text: 63 sold in the last 48 hrs
+              - generic [ref=e3037]: Sponsored
+              - heading [level=2] [ref=e3038]:
+                - link [ref=e3039] [cursor=pointer]:
+                  - /url: /energel-rtx-retractable-gel-pens-medium-point-assorted-ink-14-pack-bl77pc14m/product_24499346
+                  - text: Pentel EnerGel RTX Retractable Gel Pens, Medium Point, 0.7mm, Assorted Ink, 14/Pack (BL77PC14M)
+              - generic [ref=e3040]:
+                - generic [ref=e3041]: "Item: 24499346"
+                - generic [ref=e3042]: "Model: BL77PC14M"
+              - generic [ref=e3044]:
+                - generic [ref=e3045]:
+                  - generic [ref=e3046]:
+                    - img [ref=e3047]
+                    - img [ref=e3051]
+                  - generic [ref=e3054]:
+                    - img [ref=e3055]
+                    - img [ref=e3059]
+                  - generic [ref=e3062]:
+                    - img [ref=e3063]
+                    - img [ref=e3067]
+                  - generic [ref=e3070]:
+                    - img [ref=e3071]
+                    - img [ref=e3075]
+                  - generic [ref=e3078]:
+                    - img [ref=e3079]
+                    - img [ref=e3083]
+                - link "Link, 517 Reviews, Navigate to details" [ref=e3086] [cursor=pointer]: "517"
+              - generic [ref=e3087]:
+                - generic [ref=e3088]:
+                  - generic [ref=e3089]: Price is
+                  - text: $14.99
+                  - generic [ref=e3090]: ", Regular price was $31.79, You save 52%"
+                - generic [ref=e3091]: $31.79
+              - generic [ref=e3092]:
+                - generic [ref=e3093]: Price per unit $1.07/Pen
+                - generic [ref=e3094]: ($1.07/Pen)
+              - generic [ref=e3095]:
+                - img [ref=e3096]
+                - text: Next-Day Delivery
+                - generic [ref=e3099]: by Mon, May 18
+              - button "pick up in store" [ref=e3101] [cursor=pointer]: 30-min pickup
+              - generic [ref=e3103]:
+                - button "1, Collapsed undefined collapsed Quantity, quantity selector" [ref=e3108] [cursor=pointer]:
+                  - generic [ref=e3109]: "1"
+                  - img [ref=e3110]
+                - button "Add to cart Pentel EnerGel RTX Retractable Gel Pens, Medium Point, 0.7mm, Assorted Ink, 14/Pack (BL77PC14M)" [ref=e3113] [cursor=pointer]:
+                  - generic [ref=e3114]: Add
+              - generic [ref=e3115]:
+                - button "Compare Pentel EnerGel RTX Retractable Gel Pens, Medium Point, 0.7mm, Assorted Ink, 14/Pack (BL77PC14M)" [ref=e3116] [cursor=pointer]:
+                  - generic [ref=e3117]:
+                    - img [ref=e3118]
+                    - text: Compare
+                - button "Add To List Pentel EnerGel RTX Retractable Gel Pens, Medium Point, 0.7mm, Assorted Ink, 14/Pack (BL77PC14M)" [ref=e3832] [cursor=pointer]:
+                  - img [ref=e3835]
+            - generic [ref=e3125]:
+              - generic [ref=e3126]:
+                - link "Pentel R.S.V.P. Ballpoint Pens, Fine Point, Assorted Ink, 5 Pack (BK90BP5M)" [ref=e3127] [cursor=pointer]:
+                  - /url: /pentel-r-s-v-p-ballpoint-pens-fine-point-assorted-ink-5-pack-bk90bp5m/product_474028
+                  - img "Pentel R.S.V.P. Ballpoint Pens, Fine Point, Assorted Ink, 5 Pack (BK90BP5M)~#|#~sp255101427_sc7" [ref=e3128]
+                  - img "Pentel R.S.V.P. Ballpoint Pens, Fine Point, Assorted Ink, 5 Pack (BK90BP5M)~#|#~sp255101501_sc7" [ref=e3129]
+                - generic [ref=e3130]:
+                  - text: 54% off
+                  - generic [ref=e3131]: of Pentel R.S.V.P. Ballpoint Pens, Fine Point, Assorted Ink, 5 Pack (BK90BP5M)
+              - generic [ref=e3132]: Sponsored
+              - heading [level=2] [ref=e3133]:
+                - link [ref=e3134] [cursor=pointer]:
+                  - /url: /pentel-r-s-v-p-ballpoint-pens-fine-point-assorted-ink-5-pack-bk90bp5m/product_474028
+                  - text: Pentel R.S.V.P. Ballpoint Pens, Fine Point, Assorted Ink, 5 Pack (BK90BP5M)
+              - generic [ref=e3135]:
+                - generic [ref=e3136]: "Item: 474028"
+                - generic [ref=e3137]: "Model: BK90BP5M"
+              - generic [ref=e3139]:
+                - generic [ref=e3140]:
+                  - generic [ref=e3141]:
+                    - img [ref=e3142]
+                    - img [ref=e3146]
+                  - generic [ref=e3149]:
+                    - img [ref=e3150]
+                    - img [ref=e3154]
+                  - generic [ref=e3157]:
+                    - img [ref=e3158]
+                    - img [ref=e3162]
+                  - generic [ref=e3165]:
+                    - img [ref=e3166]
+                    - img [ref=e3170]
+                  - generic [ref=e3173]:
+                    - img [ref=e3174]
+                    - img [ref=e3178]
+                - link "Link, 1418 Reviews, Navigate to details" [ref=e3181] [cursor=pointer]: "1418"
+              - generic [ref=e3182]:
+                - generic [ref=e3183]:
+                  - generic [ref=e3184]: Price is
+                  - text: $2.99
+                  - generic [ref=e3185]: ", Regular price was $6.59, You save 54%"
+                - generic [ref=e3186]: $6.59
+              - generic [ref=e3187]:
+                - generic [ref=e3188]: Unit of measure 5/Pack Price per unit $0.60/Pen
+                - text: 5/Pack
+                - generic [ref=e3189]: ($0.60/Pen)
+              - generic [ref=e3190]:
+                - img [ref=e3191]
+                - text: Next-Day Delivery
+                - generic [ref=e3194]: by Mon, May 18
+              - button "pick up in store" [ref=e3196] [cursor=pointer]: 30-min pickup
+              - generic [ref=e3197]:
+                - text: $2.84
+                - button "Autorestock subscription price is $2.84. Save 5%" [ref=e3198] [cursor=pointer]:
+                  - generic [ref=e3199]:
+                    - img [ref=e3200]
+                    - img [ref=e3203]
+                  - generic [ref=e3206]: AutoRestock
+              - generic [ref=e3207]:
+                - button "1, Collapsed undefined collapsed Quantity, quantity selector" [ref=e3212] [cursor=pointer]:
+                  - generic [ref=e3213]: "1"
+                  - img [ref=e3214]
+                - button "Add to cart Pentel R.S.V.P. Ballpoint Pens, Fine Point, Assorted Ink, 5 Pack (BK90BP5M)" [ref=e3217] [cursor=pointer]:
+                  - generic [ref=e3218]: Add
+              - generic [ref=e3219]:
+                - button "Compare Pentel R.S.V.P. Ballpoint Pens, Fine Point, Assorted Ink, 5 Pack (BK90BP5M)" [ref=e3220] [cursor=pointer]:
+                  - generic [ref=e3221]:
+                    - img [ref=e3222]
+                    - text: Compare
+                - button "Add To List Pentel R.S.V.P. Ballpoint Pens, Fine Point, Assorted Ink, 5 Pack (BK90BP5M)" [ref=e3841] [cursor=pointer]:
+                  - img [ref=e3844]
+            - generic [ref=e3229]:
+              - generic [ref=e3230]:
+                - link "Staples ProGel™ Retractable Gel Pen, Fine Point, 0.7mm, Black Ink, Dozen (ST62095)" [ref=e3231] [cursor=pointer]:
+                  - /url: /staples-progel-retractable-gel-pen-fine-point-0-7mm-black-ink-dozen-st62095/product_24581664
+                  - img "Staples ProGel™ Retractable Gel Pen, Fine Point, 0.7mm, Black Ink, Dozen (ST62095)~#|#~9C45C508-D1F2-41A9-ABCD2E73DD4653CA_sc7" [ref=e3232]
+                  - img "Staples ProGel™ Retractable Gel Pen, Fine Point, 0.7mm, Black Ink, Dozen (ST62095)~#|#~B5BE2F89-89FF-4E11-BFC103C7CD25556D_sc7" [ref=e3233]
+                - generic [ref=e3234]:
+                  - text: 23% off
+                  - generic [ref=e3235]: of Staples ProGel™ Retractable Gel Pen, Fine Point, 0.7mm, Black Ink, Dozen (ST62095)
+                - generic:
+                  - generic:
+                    - generic:
+                      - generic:
+                        - strong: In Demand!
+                        - text: 100+ sold in the last 48 hrs
+              - heading [level=2] [ref=e3236]:
+                - link [ref=e3237] [cursor=pointer]:
+                  - /url: /staples-progel-retractable-gel-pen-fine-point-0-7mm-black-ink-dozen-st62095/product_24581664
+                  - text: Staples ProGel™ Retractable Gel Pen, Fine Point, 0.7mm, Black Ink, Dozen (ST62095)
+              - generic [ref=e3238]:
+                - generic [ref=e3239]: "Item: 24581664"
+                - generic [ref=e3240]: "Model: ST62095M-CC"
+              - generic [ref=e3241]:
+                - generic [ref=e3242]:
+                  - generic [ref=e3243]:
+                    - generic [ref=e3244]:
+                      - img [ref=e3245]
+                      - img [ref=e3249]
+                    - generic [ref=e3252]:
+                      - img [ref=e3253]
+                      - img [ref=e3257]
+                    - generic [ref=e3260]:
+                      - img [ref=e3261]
+                      - img [ref=e3265]
+                    - generic [ref=e3268]:
+                      - img [ref=e3269]
+                      - img [ref=e3273]
+                    - generic [ref=e3276]:
+                      - img [ref=e3277]
+                      - img [ref=e3281]
+                  - link "Link, 590 Reviews, Navigate to details" [ref=e3284] [cursor=pointer]: "590"
+                - button "Staples brand" [ref=e3850]:
+                  - img [ref=e3852] [cursor=pointer]
+              - generic [ref=e3285]:
+                - generic [ref=e3286]:
+                  - generic [ref=e3287]: Price is
+                  - text: $9.99
+                  - generic [ref=e3288]: ", Regular price was $12.99, You save 23%"
+                - generic [ref=e3289]: $12.99
+              - generic [ref=e3290]:
+                - generic [ref=e3291]: Unit of measure Dozen Price per unit $0.83/Pen
+                - text: Dozen
+                - generic [ref=e3292]: ($0.83/Pen)
+              - generic [ref=e3293]:
+                - img [ref=e3294]
+                - text: Next-Day Delivery
+                - generic [ref=e3297]: by Mon, May 18
+              - button "pick up in store" [ref=e3299] [cursor=pointer]: 30-min pickup
+              - generic [ref=e3300]:
+                - text: $9.49
+                - button "Autorestock subscription price is $9.49. Save 5%" [ref=e3301] [cursor=pointer]:
+                  - generic [ref=e3302]:
+                    - img [ref=e3303]
+                    - img [ref=e3306]
+                  - generic [ref=e3309]: AutoRestock
+              - generic [ref=e3310]:
+                - button "1, Collapsed undefined collapsed Quantity, quantity selector" [ref=e3315] [cursor=pointer]:
+                  - generic [ref=e3316]: "1"
+                  - img [ref=e3317]
+                - button "Add to cart Staples ProGel™ Retractable Gel Pen, Fine Point, 0.7mm, Black Ink, Dozen (ST62095)" [ref=e3320] [cursor=pointer]:
+                  - generic [ref=e3321]: Add
+              - generic [ref=e3322]:
+                - button "Compare Staples ProGel™ Retractable Gel Pen, Fine Point, 0.7mm, Black Ink, Dozen (ST62095)" [ref=e3323] [cursor=pointer]:
+                  - generic [ref=e3324]:
+                    - img [ref=e3325]
+                    - text: Compare
+                - button "Add To List Staples ProGel™ Retractable Gel Pen, Fine Point, 0.7mm, Black Ink, Dozen (ST62095)" [ref=e3858] [cursor=pointer]:
+                  - img [ref=e3861]
+            - generic [ref=e3332]:
+              - link "TRU RED Retractable Quick Dry Gel Pens, Medium Point, 0.7mm, Black, Dozen (TR54498-CC)" [ref=e3334] [cursor=pointer]:
+                - /url: /tru-red-retractable-quick-dry-gel-pens-medium-point-0-7mm-black-dozen-tr54498/product_24377026
+                - img "TRU RED Retractable Quick Dry Gel Pens, Medium Point, 0.7mm, Black, Dozen (TR54498-CC)~#|#~61835130-AC0D-4C72-A72BE5BC79C72C02_sc7" [ref=e3335]
+                - img "TRU RED Retractable Quick Dry Gel Pens, Medium Point, 0.7mm, Black, Dozen (TR54498-CC)~#|#~1CB58FC9-591B-4364-BC203AB78CDFE6EA_sc7" [ref=e3336]
+              - heading [level=2] [ref=e3337]:
+                - link [ref=e3338] [cursor=pointer]:
+                  - /url: /tru-red-retractable-quick-dry-gel-pens-medium-point-0-7mm-black-dozen-tr54498/product_24377026
+                  - text: TRU RED Retractable Quick Dry Gel Pens, Medium Point, 0.7mm, Black, Dozen (TR54498-CC)
+              - generic [ref=e3339]:
+                - generic [ref=e3340]: "Item: 24377026"
+                - generic [ref=e3341]: "Model: TR54498M-CC"
+              - generic [ref=e3342]:
+                - generic [ref=e3343]:
+                  - generic [ref=e3344]:
+                    - generic [ref=e3345]:
+                      - img [ref=e3346]
+                      - img [ref=e3350]
+                    - generic [ref=e3353]:
+                      - img [ref=e3354]
+                      - img [ref=e3358]
+                    - generic [ref=e3361]:
+                      - img [ref=e3362]
+                      - img [ref=e3366]
+                    - generic [ref=e3369]:
+                      - img [ref=e3370]
+                      - img [ref=e3374]
+                    - generic [ref=e3377]:
+                      - img [ref=e3378]
+                      - img [ref=e3382]
+                  - link "Link, 663 Reviews, Navigate to details" [ref=e3385] [cursor=pointer]: "663"
+                - button "Staples brand" [ref=e3867]:
+                  - img [ref=e3869] [cursor=pointer]
+              - generic [ref=e3387]:
+                - generic [ref=e3388]: Price is
+                - text: $10.99
+              - generic [ref=e3389]:
+                - generic [ref=e3390]: Unit of measure Dozen Price per unit $0.92/Pen
+                - text: Dozen
+                - generic [ref=e3391]: ($0.92/Pen)
+              - generic [ref=e3392]:
+                - img [ref=e3393]
+                - text: Next-Day Delivery
+                - generic [ref=e3396]: by Mon, May 18
+              - generic [ref=e3398]:
+                - text: $10.44
+                - button "Autorestock subscription price is $10.44. Save 5%" [ref=e3399] [cursor=pointer]:
+                  - generic [ref=e3400]:
+                    - img [ref=e3401]
+                    - img [ref=e3404]
+                  - generic [ref=e3407]: AutoRestock
+              - generic [ref=e3408]:
+                - button "1, Collapsed undefined collapsed Quantity, quantity selector" [ref=e3413] [cursor=pointer]:
+                  - generic [ref=e3414]: "1"
+                  - img [ref=e3415]
+                - button "Add to cart TRU RED Retractable Quick Dry Gel Pens, Medium Point, 0.7mm, Black, Dozen (TR54498-CC)" [ref=e3418] [cursor=pointer]:
+                  - generic [ref=e3419]: Add
+              - generic [ref=e3420]:
+                - button "Compare TRU RED Retractable Quick Dry Gel Pens, Medium Point, 0.7mm, Black, Dozen (TR54498-CC)" [ref=e3421] [cursor=pointer]:
+                  - generic [ref=e3422]:
+                    - img [ref=e3423]
+                    - text: Compare
+                - button "Add To List TRU RED Retractable Quick Dry Gel Pens, Medium Point, 0.7mm, Black, Dozen (TR54498-CC)" [ref=e3875] [cursor=pointer]:
+                  - img [ref=e3878]
+            - generic [ref=e3438]:
+              - generic:
+                - generic:
+                  - link "Staples. Trusted quality, better value. Switch to Staples pens. Shop now.":
+                    - /url: /Staples-Pens/cat_CL110001/006y1?ivid=Pg%3AP1%3BPl%3AS%3BPt%3AB%3BCmp%3AStaplesPens
+                    - generic:
+                      - generic:
+                        - generic:
+                          - generic:
+                            - img "Staples. Trusted quality, better value. Switch to Staples pens. Shop now."
+        - group "Was this page helpful?" [ref=e3884]:
+          - generic [ref=e3885]: Was this page helpful?
+          - generic [ref=e3886]:
+            - button "Yes" [ref=e3887] [cursor=pointer]
+            - button "No" [ref=e3888] [cursor=pointer]
+    - contentinfo [ref=e522]:
+      - generic [ref=e523]:
+        - generic [ref=e3529]:
+          - generic [ref=e3532]:
+            - generic [ref=e3533]:
+              - generic [ref=e3534]: Unlock
+              - generic [ref=e3535]: EXCLUSIVE
+              - generic [ref=e3536]: offers and deals
+            - generic [ref=e3537]:
+              - generic [ref=e3539]: Sign up for email and text to get exclusive offers and special deals.
+              - generic [ref=e3540]: By clicking continue you agree to sign up to receive emails from Staples about special offers, products and services. See our
+              - link "privacy policy" [ref=e3541] [cursor=pointer]:
+                - /url: https://staples.com/hc?id=dbb94c10-973c-478b-a078-00e58f66ba32
+                - generic [ref=e3542]: privacy policy
+              - generic [ref=e3543]: for more details.
+          - generic [ref=e3546]:
+            - generic [ref=e3548]:
+              - generic [ref=e3549]:
+                - text: Email
+                - generic [ref=e3550]: "*"
+              - generic "inputBoxWrapper" [ref=e3551]:
+                - textbox "Email" [ref=e3553]:
+                  - /placeholder: ""
+            - button "Continue" [ref=e3555] [cursor=pointer]:
+              - generic [ref=e3557]: Continue
+        - generic [ref=e3559]:
+          - generic [ref=e3561]:
+            - heading "Customer Service" [level=2] [ref=e3562]:
+              - generic [ref=e3563]: Customer Service
+            - list [ref=e3564]:
+              - listitem [ref=e3565]:
+                - link "Help Center" [ref=e3566] [cursor=pointer]:
+                  - /url: /hc
+                  - generic [ref=e3567]: Help Center
+              - listitem [ref=e3568]:
+                - link "Returns" [ref=e3569] [cursor=pointer]:
+                  - /url: /hc?id=4b8b9d06-566c-4b72-9788-99f4adea6fab
+                  - generic [ref=e3570]: Returns
+              - listitem [ref=e3571]:
+                - link "Shipping" [ref=e3572] [cursor=pointer]:
+                  - /url: /hc?id=56c09a7a-cd63-4a26-b277-29023d9ece2e
+                  - generic [ref=e3573]: Shipping
+              - listitem [ref=e3574]:
+                - link "Contact Us" [ref=e3575] [cursor=pointer]:
+                  - /url: /hc
+                  - generic [ref=e3576]: Contact Us
+              - listitem [ref=e3577]:
+                - button "Account Overview" [ref=e3578] [cursor=pointer]:
+                  - generic [ref=e3579]: Account Overview
+              - listitem [ref=e3580]:
+                - link "AutoRestock Subscriptions" [ref=e3581] [cursor=pointer]:
+                  - /url: /deals/Auto-Restock/BI1498644
+                  - generic [ref=e3582]: AutoRestock Subscriptions
+              - listitem [ref=e3583]:
+                - link "Store Locator" [ref=e3584] [cursor=pointer]:
+                  - /url: https://stores.staples.com/index.html
+                  - generic [ref=e3585]: Store Locator
+              - listitem [ref=e3586]:
+                - link "Warranty" [ref=e3587] [cursor=pointer]:
+                  - /url: /hc?id=82fa8122-aa65-4545-9557-8dad55a188fc
+                  - generic [ref=e3588]: Warranty
+              - listitem [ref=e3589]:
+                - link "Recalled Items" [ref=e3590] [cursor=pointer]:
+                  - /url: /hc?id=2c8f6603-069b-42dc-a0b9-3823621293a0
+                  - generic [ref=e3591]: Recalled Items
+              - listitem [ref=e3592]:
+                - link "Legal & Policies" [ref=e3593] [cursor=pointer]:
+                  - /url: /hc?topicId=9
+                  - generic [ref=e3594]: Legal & Policies
+              - listitem [ref=e3595]:
+                - link "Privacy & Security" [ref=e3596] [cursor=pointer]:
+                  - /url: /hc?topicId=10
+                  - generic [ref=e3597]: Privacy & Security
+              - listitem [ref=e3598]:
+                - button "Feedback" [ref=e3599] [cursor=pointer]:
+                  - generic [ref=e3600]: Feedback
+          - generic [ref=e3601]:
+            - generic [ref=e3602]:
+              - heading "Company Information" [level=2] [ref=e3603]:
+                - generic [ref=e3604]: Company Information
+              - list [ref=e3605]:
+                - listitem [ref=e3606]:
+                  - link "About Staples" [ref=e3607] [cursor=pointer]:
+                    - /url: https://www.staples.com/sbd/cre/noheader/about_us/index.html
+                    - generic [ref=e3608]: About Staples
+                - listitem [ref=e3609]:
+                  - link "Staples in the News" [ref=e3610] [cursor=pointer]:
+                    - /url: /lp/newsroom
+                    - generic [ref=e3611]: Staples in the News
+                - listitem [ref=e3612]:
+                  - link "Meet Our Experts" [ref=e3613] [cursor=pointer]:
+                    - /url: /lp/meet-our-experts
+                    - generic [ref=e3614]: Meet Our Experts
+                - listitem [ref=e3615]:
+                  - link "Supplier Diversity" [ref=e3616] [cursor=pointer]:
+                    - /url: https://www.staples.com/sbd/cre/marketing/supplier_diversity/supplier_diversity_program_mission.html
+                    - generic [ref=e3617]: Supplier Diversity
+                - listitem [ref=e3618]:
+                  - link "Financial Information" [ref=e3619] [cursor=pointer]:
+                    - /url: https://www.staplesadvantage.com/sites/financial-information/
+                    - generic [ref=e3620]: Financial Information
+                - listitem [ref=e3621]:
+                  - link "Patents" [ref=e3622] [cursor=pointer]:
+                    - /url: /deals/patents/BI3001677
+                    - generic [ref=e3623]: Patents
+                - listitem [ref=e3624]:
+                  - link "Media Information" [ref=e3625] [cursor=pointer]:
+                    - /url: https://www.staples.com/sbd/cre/noheader/about_us/media/
+                    - generic [ref=e3626]: Media Information
+                - listitem [ref=e3627]:
+                  - link "Community Relations" [ref=e3628] [cursor=pointer]:
+                    - /url: https://www.staples.com/sbd/cre/noheader/about_us/corporate-responsibility/community/
+                    - generic [ref=e3629]: Community Relations
+                - listitem [ref=e3630]:
+                  - link "Accessibility Commitment" [ref=e3631] [cursor=pointer]:
+                    - /url: /sbd/cre/resources/accessibility/index.html
+                    - generic [ref=e3632]: Accessibility Commitment
+                - listitem [ref=e3633]:
+                  - link "Staples Media Network" [ref=e3634] [cursor=pointer]:
+                    - /url: /staplesmedianetwork
+                    - generic [ref=e3635]: Staples Media Network
+                - listitem [ref=e3636]:
+                  - link "Affiliate Program" [ref=e3637] [cursor=pointer]:
+                    - /url: /sbd/content/about/affiliate/
+                    - generic [ref=e3638]: Affiliate Program
+                - listitem [ref=e3639]:
+                  - link "CA Transparency in Supply Chain Act" [ref=e3640] [cursor=pointer]:
+                    - /url: /hc?id=a8daf352-4fc5-4e12-a15e-6f35814727f4
+                    - generic [ref=e3641]: CA Transparency in Supply Chain Act
+            - generic [ref=e3642]:
+              - heading "Other Staples Sites" [level=2] [ref=e3643]:
+                - generic [ref=e3644]: Other Staples Sites
+              - list [ref=e3645]:
+                - listitem [ref=e3646]:
+                  - link "Print & Marketing" [ref=e3647] [cursor=pointer]:
+                    - /url: https://www.staples.com/services/printing/?utm_source=staples.com&utm_medium=referral&utm_campaign=footer_othersitesservices&utm_content=footerlink_pms
+                    - generic [ref=e3648]: Print & Marketing
+                - listitem [ref=e3649]:
+                  - link "Promotional Products" [ref=e3650] [cursor=pointer]:
+                    - /url: https://staplespromo.com?utm_source=staples.com&utm_medium=referral&utm_campaign=promotional-products-footer
+                    - generic [ref=e3651]: Promotional Products
+                - listitem [ref=e3652]:
+                  - link "Quill.com" [ref=e3653] [cursor=pointer]:
+                    - /url: https://www.quill.com/
+                    - generic [ref=e3654]: Quill.com
+                - listitem [ref=e3655]:
+                  - link "Federal Government Customers" [ref=e3656] [cursor=pointer]:
+                    - /url: http://www.staples4government.com/staples4gov?cid=AF:Learn:dotcom_federal_footer:leadgen
+                    - generic [ref=e3657]: Federal Government Customers
+          - generic [ref=e3658]:
+            - generic [ref=e3659]:
+              - heading "Staples for Business" [level=2] [ref=e3660]:
+                - generic [ref=e3661]: Staples for Business
+              - list [ref=e3662]:
+                - listitem [ref=e3663]:
+                  - link "For Business" [ref=e3664] [cursor=pointer]:
+                    - /url: https://www.staplesadvantage.com?icid=PH:FOOTER:FORBUSINESS
+                    - generic [ref=e3665]: For Business
+                - listitem [ref=e3666]:
+                  - link "Breakroom Solutions" [ref=e3667] [cursor=pointer]:
+                    - /url: https://www.staplesadvantage.com/learn/expert-services/breakroom-solutions/breakroom-solutions.html
+                    - generic [ref=e3668]: Breakroom Solutions
+                - listitem [ref=e3669]:
+                  - link "Facility Solutions" [ref=e3670] [cursor=pointer]:
+                    - /url: https://www.staplesadvantage.com/learn/expert-services/facility-solutions/facility-solutions.html
+                    - generic [ref=e3671]: Facility Solutions
+                - listitem [ref=e3672]:
+                  - link "Furniture Solutions" [ref=e3673] [cursor=pointer]:
+                    - /url: https://www.staplesadvantage.com/learn/expert-services/furniture-solutions/furniture-solutions
+                    - generic [ref=e3674]: Furniture Solutions
+                - listitem [ref=e3675]:
+                  - link "Office Products & Services" [ref=e3676] [cursor=pointer]:
+                    - /url: https://www.staplesadvantage.com/office-supplies/cat_SC273214?&type=SC&Id=273214
+                    - generic [ref=e3677]: Office Products & Services
+                - listitem [ref=e3678]:
+                  - link "Print Solutions" [ref=e3679] [cursor=pointer]:
+                    - /url: https://www.staplesadvantage.com/learn/expert-services/printing-services/print-and-marketing
+                    - generic [ref=e3680]: Print Solutions
+                - listitem [ref=e3681]:
+                  - link "Tech Solutions" [ref=e3682] [cursor=pointer]:
+                    - /url: https://www.staplesadvantage.com/learn/expert-services/technology-solutions/technology-solutions
+                    - generic [ref=e3683]: Tech Solutions
+                - listitem [ref=e3684]:
+                  - link "Contact Staples Business" [ref=e3685] [cursor=pointer]:
+                    - /url: https://www.staplesadvantage.com/learn/contact-us/contact-us
+                    - generic [ref=e3686]: Contact Staples Business
+            - generic [ref=e3687]:
+              - heading "Careers" [level=2] [ref=e3688]:
+                - generic [ref=e3689]: Careers
+              - list [ref=e3690]:
+                - listitem [ref=e3691]:
+                  - generic [ref=e3693]: Staples Inc
+                - listitem [ref=e3694]:
+                  - link "Corporate/Warehouse/Delivery" [ref=e3695] [cursor=pointer]:
+                    - /url: https://careers.staples.com/
+                    - generic [ref=e3696]: Corporate/Warehouse/Delivery
+                - listitem [ref=e3697]:
+                  - generic [ref=e3699]: Retail
+                - listitem [ref=e3700]:
+                  - link "Corporate/Warehouse/Print Facility" [ref=e3701] [cursor=pointer]:
+                    - /url: https://retailcareers.staples.com
+                    - generic [ref=e3702]: Corporate/Warehouse/Print Facility
+                - listitem [ref=e3703]:
+                  - link "Retail Stores" [ref=e3704] [cursor=pointer]:
+                    - /url: https://retailcareers.staples.com
+                    - generic [ref=e3705]: Retail Stores
+          - generic [ref=e3706]:
+            - generic [ref=e3707]:
+              - heading "Staples Programs" [level=2] [ref=e3708]:
+                - generic [ref=e3709]: Staples Programs
+              - list [ref=e3710]:
+                - listitem [ref=e3711]:
+                  - link "Easy Rewards Overview" [ref=e3712] [cursor=pointer]:
+                    - /url: /lp/easyrewardsoverview
+                    - generic [ref=e3713]: Easy Rewards Overview
+            - generic [ref=e3714]:
+              - heading "Services" [level=2] [ref=e3715]:
+                - generic [ref=e3716]: Services
+              - list [ref=e3717]:
+                - listitem [ref=e3718]:
+                  - link "All Services" [ref=e3719] [cursor=pointer]:
+                    - /url: /deals/all-services/BI3001123
+                    - generic [ref=e3720]: All Services
+                - listitem [ref=e3721]:
+                  - link "Print & Marketing" [ref=e3722] [cursor=pointer]:
+                    - /url: /services/printing/?utm_source=staples.com&utm_medium=referral&utm_campaign=footer_othersitesservices&utm_content=footerlink_pms
+                    - generic [ref=e3723]: Print & Marketing
+                - listitem [ref=e3724]:
+                  - link "Recycling" [ref=e3725] [cursor=pointer]:
+                    - /url: /stores/recycling
+                    - generic [ref=e3726]: Recycling
+                - listitem [ref=e3727]:
+                  - link "Shipping Services" [ref=e3728] [cursor=pointer]:
+                    - /url: /stores/services/shipping
+                    - generic [ref=e3729]: Shipping Services
+                - listitem [ref=e3730]:
+                  - link "Tech Services & Support" [ref=e3731] [cursor=pointer]:
+                    - /url: /tech-services/cat_SC5863
+                    - generic [ref=e3732]: Tech Services & Support
+                - listitem [ref=e3733]:
+                  - link "Warranties & Protection Plans" [ref=e3734] [cursor=pointer]:
+                    - /url: /Warranties-Protection-Plans/cat_SC5878
+                    - generic [ref=e3735]: Warranties & Protection Plans
+                - listitem [ref=e3736]:
+                  - link "Passport & TSA Services" [ref=e3737] [cursor=pointer]:
+                    - /url: /lp/staples-travel-hub
+                    - generic [ref=e3738]: Passport & TSA Services
+                - listitem [ref=e3739]:
+                  - link "Promotional Products" [ref=e3740] [cursor=pointer]:
+                    - /url: https://staplespromo.com/?utm_source=staples.com&utm_medium=referral&utm_campaign=servicesnav
+                    - generic [ref=e3741]: Promotional Products
+                - listitem [ref=e3742]:
+                  - link "Online Notary Services" [ref=e3743] [cursor=pointer]:
+                    - /url: /deals/notarize/BI3000627
+                    - generic [ref=e3744]: Online Notary Services
+                - listitem [ref=e3745]:
+                  - link "Custom Packaging" [ref=e3746] [cursor=pointer]:
+                    - /url: /deals/custom-packaging/BI3000851
+                    - generic [ref=e3747]: Custom Packaging
+                - listitem [ref=e3748]:
+                  - link "Primo Water Delivery Services" [ref=e3749] [cursor=pointer]:
+                    - /url: /deals/primo-water/BI3000780
+                    - generic [ref=e3750]: Primo Water Delivery Services
+                - listitem [ref=e3751]:
+                  - link "Virtual Mailing Address" [ref=e3752] [cursor=pointer]:
+                    - /url: /stores/services/iPostal1
+                    - generic [ref=e3753]: Virtual Mailing Address
+        - generic [ref=e3756]:
+          - img [ref=e3759]
+          - generic [ref=e3764]:
+            - heading "Join us on" [level=2] [ref=e3765]:
+              - generic [ref=e3767]: Join us on
+            - generic [ref=e3768]:
+              - link "Facebook" [ref=e3769] [cursor=pointer]:
+                - /url: https://facebook.com/staples
+                - img [ref=e3771]
+              - link "Twitter" [ref=e3774] [cursor=pointer]:
+                - /url: https://x.com/StaplesStores
+                - img [ref=e3776]
+              - link "Pinterest" [ref=e3779] [cursor=pointer]:
+                - /url: https://www.pinterest.com/staples/
+                - img [ref=e3781]
+              - link "LinkedIn" [ref=e3784] [cursor=pointer]:
+                - /url: https://www.linkedin.com/company/staples
+                - img [ref=e3786]
+              - link "Twitter" [ref=e3789] [cursor=pointer]:
+                - /url: https://www.instagram.com/staples/
+                - img [ref=e3791]
+          - generic [ref=e3795]:
+            - heading "Download our mobile app" [level=2] [ref=e3796]:
+              - generic [ref=e3798]: Download our mobile app
+            - generic [ref=e3799]:
+              - link "Android" [ref=e3800] [cursor=pointer]:
+                - /url: https://play.google.com/store/apps/details?id=com.staplesconnect.app.twa&referrer=utm_source%3DStaples_App%26utm_medium%3Dreferral%26utm_campaign%3Dstaples_app_migration%26anid%3Dadmob
+                - img [ref=e3802]
+              - link "Apple" [ref=e3808] [cursor=pointer]:
+                - /url: https://apps.apple.com/us/app/staples-connect/id1570643833?utm_source=Staples_App&utm_medium=referral&utm_campaign=staples_app_migration
+                - img [ref=e3810]
+      - generic [ref=e524]:
+        - generic [ref=e527]: This website is intended for personal use by US residents only.
+        - link "See our delivery policy for full details." [ref=e529] [cursor=pointer]:
+          - /url: /hc?id=56c09a7a-cd63-4a26-b277-29023d9ece2e
+          - generic [ref=e530]: See our delivery policy for full details.
+        - link "Copyright 1998-2026, Staples, Inc., All Rights Reserved" [ref=e532] [cursor=pointer]:
+          - /url: /hc?id=52e40651-0852-4ad7-a532-45017c287d50
+          - generic [ref=e533]: Copyright 1998-2026, Staples, Inc., All Rights Reserved.
+        - navigation "footer" [ref=e534]:
+          - link "Site Map" [ref=e535] [cursor=pointer]:
+            - /url: /htmlsitemap/
+            - generic [ref=e536]: Site Map
+          - button "Feedback" [ref=e538] [cursor=pointer]:
+            - generic [ref=e539]: Feedback
+          - link "Privacy Notice" [ref=e541] [cursor=pointer]:
+            - /url: /hc?id=dbb94c10-973c-478b-a078-00e58f66ba32
+            - generic [ref=e542]: Privacy Notice
+          - link "Terms & Conditions" [ref=e544] [cursor=pointer]:
+            - /url: /hc?id=52e40651-0852-4ad7-a532-45017c287d50
+            - generic [ref=e545]: Terms & Conditions
+          - generic [ref=e548] [cursor=pointer]: Cookie Preferences
+          - generic [ref=e551] [cursor=pointer]: Do Not Sell or Share My Personal Information
+          - link "California Notice" [ref=e553] [cursor=pointer]:
+            - /url: /hc?id=d0641e76-dd9f-4d69-80d3-ff148ddcd188
+            - generic [ref=e554]: California Notice
+        - generic [ref=e557]: "*By clicking Instacart links, you will leave staples.com and enter the Instacart site, which they operate and control. Item prices may vary from in-store prices. Service fees may apply. Available in select zip codes or location."
+  - alert [ref=e558]: /pens/directory_pens
+  - button "Chat" [ref=e2521] [cursor=pointer]:
+    - img "Live chat icon, click to open the live chat pane."
+  - button "Provide Feedback" [ref=e3889] [cursor=pointer]:
+    - img "Provide Feedback" [ref=e3890]
+  - dialog [ref=e3891]:
+    - button [ref=e3893] [cursor=pointer]:
+      - img [ref=e3894]

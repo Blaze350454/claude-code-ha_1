@@ -1,0 +1,149 @@
+[
+  {
+    "aliases": [],
+    "area_id": "living_room",
+    "created_at": 1766812774.199994,
+    "floor_id": null,
+    "humidity_entity_id": null,
+    "icon": "mdi:sofa",
+    "labels": [],
+    "modified_at": 1766812774.199995,
+    "name": "Living Room",
+    "picture": null,
+    "temperature_entity_id": null
+  },
+  {
+    "aliases": [],
+    "area_id": "kitchen",
+    "created_at": 1766812774.200085,
+    "floor_id": null,
+    "humidity_entity_id": null,
+    "icon": "mdi:stove",
+    "labels": [],
+    "modified_at": 1766812774.200086,
+    "name": "Kitchen",
+    "picture": null,
+    "temperature_entity_id": null
+  },
+  {
+    "aliases": [],
+    "area_id": "bedroom",
+    "created_at": 1766812774.200124,
+    "floor_id": null,
+    "humidity_entity_id": null,
+    "icon": "mdi:bed",
+    "labels": [],
+    "modified_at": 1766812774.200125,
+    "name": "Bedroom",
+    "picture": null,
+    "temperature_entity_id": null
+  },
+  {
+    "aliases": [],
+    "area_id": "tent",
+    "created_at": 1766849442.834318,
+    "floor_id": "loft",
+    "humidity_entity_id": null,
+    "icon": "mdi:tent",
+    "labels": [],
+    "modified_at": 1766849442.834321,
+    "name": "Tent",
+    "picture": null,
+    "temperature_entity_id": null
+  },
+  {
+    "aliases": [],
+    "area_id": "3d_printer",
+    "created_at": 1766849477.450373,
+    "floor_id": "loft",
+    "humidity_entity_id": null,
+    "icon": "mdi:printer-3d-nozzle",
+    "labels": [],
+    "modified_at": 1766849477.450375,
+    "name": "3D Printer",
+    "picture": null,
+    "temperature_entity_id": null
+  },
+  {
+    "aliases": [],
+    "area_id": "pc",
+    "created_at": 1766849501.380816,
+    "floor_id": "loft",
+    "humidity_entity_id": null,
+    "icon": "mdi:laptop",
+    "labels": [],
+    "modified_at": 1766849501.380818,
+    "name": "PC",
+    "picture": null,
+    "temperature_entity_id": null
+  },
+  {
+    "aliases": [],
+    "area_id": "desk",
+    "created_at": 1766849531.048248,
+    "floor_id": "loft",
+    "humidity_entity_id": null,
+    "icon": "mdi:desk",
+    "labels": [],
+    "modified_at": 1766849531.048251,
+    "name": "Desk",
+    "picture": null,
+    "temperature_entity_id": null
+  },
+  {
+    "aliases": [],
+    "area_id": "outside",
+    "created_at": 1767246113.258924,
+    "floor_id": "outside",
+    "humidity_entity_id": null,
+    "icon": "mdi:border-outside",
+    "labels": [
+      "outside"
+    ],
+    "modified_at": 1767246113.258927,
+    "name": "Outside",
+    "picture": null,
+    "temperature_entity_id": null
+  },
+  {
+    "aliases": [],
+    "area_id": "tent_irrigation",
+    "created_at": 1773158279.037927,
+    "floor_id": "loft",
+    "humidity_entity_id": null,
+    "icon": "mdi:thermometer-water",
+    "labels": [
+      "irrigation_tent"
+    ],
+    "modified_at": 1773158279.03793,
+    "name": "Tent Irrigation",
+    "picture": null,
+    "temperature_entity_id": null
+  },
+  {
+    "aliases": [],
+    "area_id": "brentons",
+    "created_at": 1774135944.264638,
+    "floor_id": "loft",
+    "humidity_entity_id": null,
+    "icon": "mdi:home-account",
+    "labels": [],
+    "modified_at": 1774135944.26464,
+    "name": "Brentons",
+    "picture": null,
+    "temperature_entity_id": null
+  },
+  {
+    "aliases": [],
+    "area_id": "ambient",
+    "created_at": 1775173241.770435,
+    "floor_id": null,
+    "humidity_entity_id": null,
+    "icon": null,
+    "labels": [],
+    "modified_at": 1775173241.770437,
+    "name": "ambient",
+    "picture": null,
+    "temperature_entity_id": null
+  }
+]

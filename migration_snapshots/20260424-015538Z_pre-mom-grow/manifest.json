@@ -1,0 +1,12 @@
+{
+  "timestamp_utc": "20260424-015538Z",
+  "label": "pre-mom-grow",
+  "ha_url": "http://192.168.2.151:8123",
+  "ha_version": "2026.4.0",
+  "counts": {
+    "entity_registry": 803,
+    "area_registry": 10,
+    "device_registry": 78,
+    "label_registry": 51
+  }
+}

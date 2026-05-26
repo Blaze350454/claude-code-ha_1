@@ -1,0 +1,12 @@
+{
+  "timestamp_utc": "20260423-193422Z",
+  "label": "post-phase2-camera",
+  "ha_url": "http://192.168.2.151:8123",
+  "ha_version": "2026.4.0",
+  "counts": {
+    "entity_registry": 787,
+    "area_registry": 10,
+    "device_registry": 75,
+    "label_registry": 52
+  }
+}

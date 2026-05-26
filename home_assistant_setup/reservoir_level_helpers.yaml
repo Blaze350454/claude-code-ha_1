@@ -1,0 +1,89 @@
+# Reservoir Level Template Sensors
+# XKC-Y25 capacitive liquid level sensors
+# Logic: Check sensors from highest to lowest, report highest level that is ON
+# Add to configuration.yaml: template: !include reservoir_level_helpers.yaml
+
+sensor:
+  # Feed Reservoir — 4 sensors: empty, half, three quarter, full
+  - name: "Feed Level Irrigation Tent"
+    unique_id: feed_level_irrigation_tent
+    unit_of_measurement: "%"
+    state_class: measurement
+    icon: mdi:gauge
+    state: >
+      {% if is_state('binary_sensor.feed_full_irrigation_tent', 'on') %}
+        100
+      {% elif is_state('binary_sensor.feed_three_quarter_irrigation_tent', 'on') %}
+        75
+      {% elif is_state('binary_sensor.feed_half_irrigation_tent', 'on') %}
+        50
+      {% elif is_state('binary_sensor.feed_empty_irrigation_tent', 'on') %}
+        25
+      {% else %}
+        0
+      {% endif %}
+    attributes:
+      level_text: >
+        {% if is_state('binary_sensor.feed_full_irrigation_tent', 'on') %}
+          Full
+        {% elif is_state('binary_sensor.feed_three_quarter_irrigation_tent', 'on') %}
+          3/4
+        {% elif is_state('binary_sensor.feed_half_irrigation_tent', 'on') %}
+          1/2
+        {% elif is_state('binary_sensor.feed_empty_irrigation_tent', 'on') %}
+          Low
+        {% else %}
+          Empty
+        {% endif %}
+
+  # Flush Reservoir — 3 sensors: empty, half, full
+  - name: "Flush Level Irrigation Tent"
+    unique_id: flush_level_irrigation_tent
+    unit_of_measurement: "%"
+    state_class: measurement
+    icon: mdi:gauge
+    state: >
+      {% if is_state('binary_sensor.flush_full_irrigation_tent', 'on') %}
+        100
+      {% elif is_state('binary_sensor.flush_half_irrigation_tent', 'on') %}
+        50
+      {% elif is_state('binary_sensor.flush_empty_irrigation_tent', 'on') %}
+        25
+      {% else %}
+        0
+      {% endif %}
+    attributes:
+      level_text: >
+        {% if is_state('binary_sensor.flush_full_irrigation_tent', 'on') %}
+          Full
+        {% elif is_state('binary_sensor.flush_half_irrigation_tent', 'on') %}
+          1/2
+        {% elif is_state('binary_sensor.flush_empty_irrigation_tent', 'on') %}
+          Low
+        {% else %}
+          Empty
+        {% endif %}
+
+  # Table Drain — 2 sensors: empty, full
+  - name: "Table Drain Level Irrigation Tent"
+    unique_id: table_drain_level_irrigation_tent
+    unit_of_measurement: "%"
+    state_class: measurement
+    icon: mdi:gauge
+    state: >
+      {% if is_state('binary_sensor.table_drain_full_irrigation_tent', 'on') %}
+        100
+      {% elif is_state('binary_sensor.table_drain_empty_irrigation_tent', 'on') %}
+        50
+      {% else %}
+        0
+      {% endif %}
+    attributes:
+      level_text: >
+        {% if is_state('binary_sensor.table_drain_full_irrigation_tent', 'on') %}
+          Full
+        {% elif is_state('binary_sensor.table_drain_empty_irrigation_tent', 'on') %}
+          Half
+        {% else %}
+          Empty
+        {% endif %}

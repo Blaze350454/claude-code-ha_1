@@ -1,0 +1,77 @@
+# Irrigation Dashboard Card
+# Add this to your Lovelace dashboard (raw configuration editor)
+
+type: vertical-stack
+cards:
+  # Header
+  - type: markdown
+    content: |
+      ## Irrigation System
+
+  # Status Overview
+  - type: horizontal-stack
+    cards:
+      - type: entity
+        entity: binary_sensor.irrigation_controller_controller_status
+        name: Controller
+        icon: mdi:chip
+      - type: entity
+        entity: sensor.irrigation_controller_reservoir_temperature
+        name: Reservoir Temp
+        icon: mdi:thermometer
+      - type: entity
+        entity: sensor.irrigation_controller_wifi_signal
+        name: WiFi
+        icon: mdi:wifi
+
+  # Reservoir Levels
+  - type: glance
+    title: Reservoir Levels
+    entities:
+      - entity: binary_sensor.irrigation_controller_reservoir_high_level
+        name: High Level
+      - entity: binary_sensor.irrigation_controller_reservoir_low_level
+        name: Low Level
+    show_state: true
+
+  # Zone Controls
+  - type: entities
+    title: Irrigation Zones
+    show_header_toggle: false
+    entities:
+      - entity: switch.irrigation_controller_zone_1_valve
+        name: Zone 1
+        icon: mdi:valve
+      - entity: switch.irrigation_controller_zone_2_valve
+        name: Zone 2
+        icon: mdi:valve
+      - entity: switch.irrigation_controller_zone_3_valve
+        name: Zone 3
+        icon: mdi:valve
+      - entity: switch.irrigation_controller_rainbird_zone_1
+        name: Rainbird Zone 1
+        icon: mdi:sprinkler-variant
+
+  # Pumps (HS300)
+  - type: entities
+    title: Pumps
+    show_header_toggle: false
+    entities:
+      - entity: switch.main_pump_irrigation_tent
+        name: Main Pump
+        icon: mdi:pump
+      - entity: switch.main_stir_pump_irrigation_tent
+        name: Main Stir Pump
+        icon: mdi:pump
+      - entity: switch.flush_pump_irrigation_tent
+        name: Flush Pump
+        icon: mdi:pump
+      - entity: switch.flush_stir_pump_irrigation_tent
+        name: Flush Stir Pump
+        icon: mdi:pump
+      - entity: switch.air_pump_irrigation_tent
+        name: Air Pump
+        icon: mdi:weather-windy
+      - entity: switch.irrigation_controller_tent
+        name: Irrigation Controller
+        icon: mdi:chip

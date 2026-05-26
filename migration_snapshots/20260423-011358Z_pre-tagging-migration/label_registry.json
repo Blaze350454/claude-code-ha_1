@@ -1,0 +1,182 @@
+[
+  {
+    "color": "light-blue",
+    "created_at": 1767068113.444751,
+    "description": null,
+    "icon": "mdi:sprinkler",
+    "label_id": "irrigation_tent",
+    "modified_at": 1767068113.444753,
+    "name": "Irrigation Tent"
+  },
+  {
+    "color": "blue-grey",
+    "created_at": 1767068137.019431,
+    "description": null,
+    "icon": "mdi:fan",
+    "label_id": "fans_tent",
+    "modified_at": 1767068137.019433,
+    "name": "Fans Tent"
+  },
+  {
+    "color": "yellow",
+    "created_at": 1767068158.645274,
+    "description": null,
+    "icon": "mdi:alarm-light",
+    "label_id": "lights_tent",
+    "modified_at": 1767068158.645277,
+    "name": "Lights Tent"
+  },
+  {
+    "color": "light-green",
+    "created_at": 1767068191.240384,
+    "description": null,
+    "icon": "mdi:tent",
+    "label_id": "tent",
+    "modified_at": 1767068191.240387,
+    "name": "Tent"
+  },
+  {
+    "color": "amber",
+    "created_at": 1767068320.361056,
+    "description": null,
+    "icon": "mdi:chess-rook",
+    "label_id": "grow_tower",
+    "modified_at": 1767068320.361059,
+    "name": "Grow Tower"
+  },
+  {
+    "color": "indigo",
+    "created_at": 1767068502.326784,
+    "description": null,
+    "icon": "mdi:air-filter",
+    "label_id": "air_quality_tent",
+    "modified_at": 1767068502.326787,
+    "name": "Air Quality Tent"
+  },
+  {
+    "color": "red",
+    "created_at": 1767068886.183387,
+    "description": null,
+    "icon": "mdi:air-conditioner",
+    "label_id": "ac_tent",
+    "modified_at": 1767068886.18339,
+    "name": "AC Tent"
+  },
+  {
+    "color": "primary",
+    "created_at": 1767068909.976388,
+    "description": null,
+    "icon": "mdi:air-humidifier",
+    "label_id": "humidifier_tent",
+    "modified_at": 1767068909.97639,
+    "name": "Humidifier Tent"
+  },
+  {
+    "color": "orange",
+    "created_at": 1767068943.732029,
+    "description": null,
+    "icon": "mdi:printer-3d-nozzle",
+    "label_id": "3d_printer",
+    "modified_at": 1767068943.732031,
+    "name": "3D Printer"
+  },
+  {
+    "color": "teal",
+    "created_at": 1767069159.660203,
+    "description": null,
+    "icon": "mdi:desktop-classic",
+    "label_id": "pc",
+    "modified_at": 1767069159.660205,
+    "name": "PC"
+  },
+  {
+    "color": "brown",
+    "created_at": 1767186904.025751,
+    "description": null,
+    "icon": "mdi:camera",
+    "label_id": "camera",
+    "modified_at": 1767186904.025754,
+    "name": "Camera"
+  },
+  {
+    "color": "light-grey",
+    "created_at": 1767188585.9056,
+    "description": null,
+    "icon": "mdi:power-socket",
+    "label_id": "electricity",
+    "modified_at": 1767188585.905603,
+    "name": "Electricity"
+  },
+  {
+    "color": "white",
+    "created_at": 1767189224.816971,
+    "description": null,
+    "icon": "mdi:desktop-classic",
+    "label_id": "controller",
+    "modified_at": 1767189224.816973,
+    "name": "Controller"
+  },
+  {
+    "color": "yellow",
+    "created_at": 1767246099.584954,
+    "description": null,
+    "icon": "mdi:border-outside",
+    "label_id": "outside",
+    "modified_at": 1767246099.584956,
+    "name": "Outside"
+  },
+  {
+    "color": "amber",
+    "created_at": 1767248263.952323,
+    "description": null,
+    "icon": "mdi:battery-alert",
+    "label_id": "battery",
+    "modified_at": 1767248263.952339,
+    "name": "Battery"
+  },
+  {
+    "color": "light-grey",
+    "created_at": 1767248413.826288,
+    "description": null,
+    "icon": "mdi:web",
+    "label_id": "wi_fi",
+    "modified_at": 1767248413.826291,
+    "name": "Wi-Fi"
+  },
+  {
+    "color": "red",
+    "created_at": 1768735757.787942,
+    "description": null,
+    "icon": "mdi:power",
+    "label_id": "power_switch",
+    "modified_at": 1768735757.787946,
+    "name": "Power Switch"
+  },
+  {
+    "color": "primary",
+    "created_at": 1768739758.405777,
+    "description": null,
+    "icon": "mdi:printer-3d-nozzle",
+    "label_id": "bambu",
+    "modified_at": 1768739758.40578,
+    "name": "BAMBU"
+  },
+  {
+    "color": "green",
+    "created_at": 1768831863.548313,
+    "description": null,
+    "icon": "mdi:phone",
+    "label_id": "phone",
+    "modified_at": 1768831863.548316,
+    "name": "Phone"
+  },
+  {
+    "color": "deep-purple",
+    "created_at": 1769014542.217979,
+    "description": null,
+    "icon": "mdi:ticket-confirmation",
+    "label_id": "firmware",
+    "modified_at": 1769014542.217982,
+    "name": "Firmware"
+  }
+]

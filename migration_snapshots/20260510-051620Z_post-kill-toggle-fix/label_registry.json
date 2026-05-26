@@ -1,0 +1,461 @@
+[
+  {
+    "color": "amber",
+    "created_at": 1767068320.361056,
+    "description": null,
+    "icon": "mdi:chess-rook",
+    "label_id": "grow_tower",
+    "modified_at": 1767068320.361059,
+    "name": "Grow Tower"
+  },
+  {
+    "color": "teal",
+    "created_at": 1767069159.660203,
+    "description": null,
+    "icon": "mdi:desktop-classic",
+    "label_id": "pc",
+    "modified_at": 1767069159.660205,
+    "name": "PC"
+  },
+  {
+    "color": "light-grey",
+    "created_at": 1767188585.9056,
+    "description": null,
+    "icon": "mdi:power-socket",
+    "label_id": "electricity",
+    "modified_at": 1767188585.905603,
+    "name": "Electricity"
+  },
+  {
+    "color": "yellow",
+    "created_at": 1767246099.584954,
+    "description": null,
+    "icon": "mdi:border-outside",
+    "label_id": "outside",
+    "modified_at": 1767246099.584956,
+    "name": "Outside"
+  },
+  {
+    "color": "amber",
+    "created_at": 1767248263.952323,
+    "description": null,
+    "icon": "mdi:battery-alert",
+    "label_id": "battery",
+    "modified_at": 1767248263.952339,
+    "name": "Battery"
+  },
+  {
+    "color": "red",
+    "created_at": 1768735757.787942,
+    "description": null,
+    "icon": "mdi:power",
+    "label_id": "power_switch",
+    "modified_at": 1768735757.787946,
+    "name": "Power Switch"
+  },
+  {
+    "color": "primary",
+    "created_at": 1768739758.405777,
+    "description": null,
+    "icon": "mdi:printer-3d-nozzle",
+    "label_id": "bambu",
+    "modified_at": 1768739758.40578,
+    "name": "BAMBU"
+  },
+  {
+    "color": "green",
+    "created_at": 1768831863.548313,
+    "description": null,
+    "icon": "mdi:phone",
+    "label_id": "phone",
+    "modified_at": 1768831863.548316,
+    "name": "Phone"
+  },
+  {
+    "color": "light-blue",
+    "created_at": 1776908798.14239,
+    "description": null,
+    "icon": "mdi:sprinkler",
+    "label_id": "sys_irrigation",
+    "modified_at": 1776908798.142392,
+    "name": "sys_irrigation"
+  },
+  {
+    "color": "green",
+    "created_at": 1776908798.143262,
+    "description": null,
+    "icon": "mdi:watering-can",
+    "label_id": "sub_irrigation_feed_loop",
+    "modified_at": 1776908798.143263,
+    "name": "sub_irrigation_feed_loop"
+  },
+  {
+    "color": "cyan",
+    "created_at": 1776908798.144244,
+    "description": null,
+    "icon": "mdi:water-sync",
+    "label_id": "sub_irrigation_flush_loop",
+    "modified_at": 1776908798.144245,
+    "name": "sub_irrigation_flush_loop"
+  },
+  {
+    "color": "teal",
+    "created_at": 1776908798.144928,
+    "description": null,
+    "icon": "mdi:pipe-disconnected",
+    "label_id": "sub_irrigation_drain_loop",
+    "modified_at": 1776908798.144929,
+    "name": "sub_irrigation_drain_loop"
+  },
+  {
+    "color": "blue",
+    "created_at": 1776908798.145749,
+    "description": null,
+    "icon": "mdi:cup-water",
+    "label_id": "sub_irrigation_reservoir",
+    "modified_at": 1776908798.14575,
+    "name": "sub_irrigation_reservoir"
+  },
+  {
+    "color": "indigo",
+    "created_at": 1776908798.146463,
+    "description": null,
+    "icon": "mdi:pump",
+    "label_id": "fn_pump",
+    "modified_at": 1776908798.146464,
+    "name": "fn_pump"
+  },
+  {
+    "color": "deep-purple",
+    "created_at": 1776908798.147226,
+    "description": null,
+    "icon": "mdi:valve",
+    "label_id": "fn_valve",
+    "modified_at": 1776908798.147227,
+    "name": "fn_valve"
+  },
+  {
+    "color": "purple",
+    "created_at": 1776908798.147851,
+    "description": null,
+    "icon": "mdi:chip",
+    "label_id": "fn_controller",
+    "modified_at": 1776908798.147852,
+    "name": "fn_controller"
+  },
+  {
+    "color": "orange",
+    "created_at": 1776908798.148603,
+    "description": null,
+    "icon": "mdi:flash",
+    "label_id": "fn_power_meter",
+    "modified_at": 1776908798.148603,
+    "name": "fn_power_meter"
+  },
+  {
+    "color": "light-blue",
+    "created_at": 1776908798.149274,
+    "description": null,
+    "icon": "mdi:waves-arrow-up",
+    "label_id": "fn_sensor_level",
+    "modified_at": 1776908798.149275,
+    "name": "fn_sensor_level"
+  },
+  {
+    "color": "red",
+    "created_at": 1776908798.149885,
+    "description": null,
+    "icon": "mdi:gauge",
+    "label_id": "fn_sensor_pressure",
+    "modified_at": 1776908798.149886,
+    "name": "fn_sensor_pressure"
+  },
+  {
+    "color": "teal",
+    "created_at": 1776908798.150489,
+    "description": null,
+    "icon": "mdi:waves-arrow-right",
+    "label_id": "fn_sensor_flow",
+    "modified_at": 1776908798.15049,
+    "name": "fn_sensor_flow"
+  },
+  {
+    "color": "yellow",
+    "created_at": 1776908798.151195,
+    "description": null,
+    "icon": "mdi:thermometer",
+    "label_id": "fn_sensor_temp",
+    "modified_at": 1776908798.151196,
+    "name": "fn_sensor_temp"
+  },
+  {
+    "color": "red",
+    "created_at": 1776908798.151766,
+    "description": null,
+    "icon": "mdi:alert-octagon",
+    "label_id": "sev_critical",
+    "modified_at": 1776908798.151767,
+    "name": "sev_critical"
+  },
+  {
+    "color": "amber",
+    "created_at": 1776908798.152362,
+    "description": null,
+    "icon": "mdi:alert",
+    "label_id": "sev_warning",
+    "modified_at": 1776908798.152363,
+    "name": "sev_warning"
+  },
+  {
+    "color": "light-grey",
+    "created_at": 1776908798.15338,
+    "description": null,
+    "icon": "mdi:information-outline",
+    "label_id": "sev_info",
+    "modified_at": 1776908798.153381,
+    "name": "sev_info"
+  },
+  {
+    "color": "light-green",
+    "created_at": 1776920593.332127,
+    "description": null,
+    "icon": "mdi:thermometer-lines",
+    "label_id": "sys_climate",
+    "modified_at": 1776920593.332129,
+    "name": "sys_climate"
+  },
+  {
+    "color": "yellow",
+    "created_at": 1776920593.333092,
+    "description": null,
+    "icon": "mdi:lightbulb-on",
+    "label_id": "sys_lighting",
+    "modified_at": 1776920593.333093,
+    "name": "sys_lighting"
+  },
+  {
+    "color": "blue",
+    "created_at": 1776920593.334288,
+    "description": null,
+    "icon": "mdi:air-conditioner",
+    "label_id": "sub_climate_ac",
+    "modified_at": 1776920593.334289,
+    "name": "sub_climate_ac"
+  },
+  {
+    "color": "cyan",
+    "created_at": 1776920593.33516,
+    "description": null,
+    "icon": "mdi:air-humidifier",
+    "label_id": "sub_climate_humidifier",
+    "modified_at": 1776920593.335161,
+    "name": "sub_climate_humidifier"
+  },
+  {
+    "color": "light-blue",
+    "created_at": 1776920593.33626,
+    "description": null,
+    "icon": "mdi:air-humidifier-off",
+    "label_id": "sub_climate_dehumidifier",
+    "modified_at": 1776920593.336261,
+    "name": "sub_climate_dehumidifier"
+  },
+  {
+    "color": "teal",
+    "created_at": 1776920593.33709,
+    "description": null,
+    "icon": "mdi:fan",
+    "label_id": "sub_climate_circulation",
+    "modified_at": 1776920593.337091,
+    "name": "sub_climate_circulation"
+  },
+  {
+    "color": "blue-grey",
+    "created_at": 1776920593.337768,
+    "description": null,
+    "icon": "mdi:fan-chevron-up",
+    "label_id": "sub_climate_exhaust",
+    "modified_at": 1776920593.337769,
+    "name": "sub_climate_exhaust"
+  },
+  {
+    "color": "light-green",
+    "created_at": 1776920593.338848,
+    "description": null,
+    "icon": "mdi:leaf",
+    "label_id": "sub_climate_canopy",
+    "modified_at": 1776920593.338849,
+    "name": "sub_climate_canopy"
+  },
+  {
+    "color": "pink",
+    "created_at": 1776920593.339772,
+    "description": null,
+    "icon": "mdi:flower",
+    "label_id": "sub_climate_flower",
+    "modified_at": 1776920593.339773,
+    "name": "sub_climate_flower"
+  },
+  {
+    "color": "deep-purple",
+    "created_at": 1776920593.341014,
+    "description": null,
+    "icon": "mdi:molecule-co2",
+    "label_id": "sub_climate_co2",
+    "modified_at": 1776920593.341015,
+    "name": "sub_climate_co2"
+  },
+  {
+    "color": "blue-grey",
+    "created_at": 1776920593.342016,
+    "description": null,
+    "icon": "mdi:fan",
+    "label_id": "fn_fan",
+    "modified_at": 1776920593.342017,
+    "name": "fn_fan"
+  },
+  {
+    "color": "amber",
+    "created_at": 1776920593.342709,
+    "description": null,
+    "icon": "mdi:lightbulb",
+    "label_id": "fn_light",
+    "modified_at": 1776920593.34271,
+    "name": "fn_light"
+  },
+  {
+    "color": "green",
+    "created_at": 1776920593.343744,
+    "description": null,
+    "icon": "mdi:thermostat",
+    "label_id": "fn_climate",
+    "modified_at": 1776920593.343746,
+    "name": "fn_climate"
+  },
+  {
+    "color": "light-blue",
+    "created_at": 1776920593.344439,
+    "description": null,
+    "icon": "mdi:water-percent",
+    "label_id": "fn_sensor_humidity",
+    "modified_at": 1776920593.344441,
+    "name": "fn_sensor_humidity"
+  },
+  {
+    "color": "deep-purple",
+    "created_at": 1776920593.345415,
+    "description": null,
+    "icon": "mdi:molecule-co2",
+    "label_id": "fn_sensor_co2",
+    "modified_at": 1776920593.345416,
+    "name": "fn_sensor_co2"
+  },
+  {
+    "color": "green",
+    "created_at": 1776920593.346011,
+    "description": null,
+    "icon": "mdi:cannabis",
+    "label_id": "grow",
+    "modified_at": 1776920593.346013,
+    "name": "grow"
+  },
+  {
+    "color": "deep-purple",
+    "created_at": 1776968993.620936,
+    "description": null,
+    "icon": "mdi:printer-3d",
+    "label_id": "sys_printer",
+    "modified_at": 1776968993.620938,
+    "name": "sys_printer"
+  },
+  {
+    "color": "indigo",
+    "created_at": 1776968993.621858,
+    "description": null,
+    "icon": "mdi:cctv",
+    "label_id": "fn_camera",
+    "modified_at": 1776968993.621859,
+    "name": "fn_camera"
+  },
+  {
+    "color": "grey",
+    "created_at": 1776968993.622502,
+    "description": null,
+    "icon": "mdi:information-outline",
+    "label_id": "fn_sensor_status",
+    "modified_at": 1776968993.622503,
+    "name": "fn_sensor_status"
+  },
+  {
+    "color": "orange",
+    "created_at": 1776968993.623483,
+    "description": null,
+    "icon": "mdi:printer-3d-nozzle-alert",
+    "label_id": "prusa",
+    "modified_at": 1776968993.623484,
+    "name": "prusa"
+  },
+  {
+    "color": "red",
+    "created_at": 1776972804.335929,
+    "description": null,
+    "icon": "mdi:cctv",
+    "label_id": "sys_camera",
+    "modified_at": 1776972804.33593,
+    "name": "sys_camera"
+  },
+  {
+    "color": "blue",
+    "created_at": 1776972804.336981,
+    "description": null,
+    "icon": "mdi:video-wireless",
+    "label_id": "blink",
+    "modified_at": 1776972804.336982,
+    "name": "blink"
+  },
+  {
+    "color": "light-green",
+    "created_at": 1776972804.337627,
+    "description": null,
+    "icon": "mdi:home",
+    "label_id": "sub_camera_indoor",
+    "modified_at": 1776972804.337628,
+    "name": "sub_camera_indoor"
+  },
+  {
+    "color": "brown",
+    "created_at": 1776972804.338248,
+    "description": null,
+    "icon": "mdi:tree",
+    "label_id": "sub_camera_outdoor",
+    "modified_at": 1776972804.338249,
+    "name": "sub_camera_outdoor"
+  },
+  {
+    "color": "amber",
+    "created_at": 1776972804.338944,
+    "description": null,
+    "icon": "mdi:motion-sensor",
+    "label_id": "fn_sensor_motion",
+    "modified_at": 1776972804.338945,
+    "name": "fn_sensor_motion"
+  },
+  {
+    "color": "green",
+    "created_at": 1776972804.339644,
+    "description": null,
+    "icon": "mdi:battery-medium",
+    "label_id": "fn_sensor_battery",
+    "modified_at": 1776972804.339645,
+    "name": "fn_sensor_battery"
+  },
+  {
+    "color": "teal",
+    "created_at": 1776972804.340322,
+    "description": null,
+    "icon": "mdi:wifi",
+    "label_id": "fn_sensor_signal",
+    "modified_at": 1776972804.340323,
+    "name": "fn_sensor_signal"
+  }
+]

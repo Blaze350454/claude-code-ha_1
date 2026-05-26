@@ -1,0 +1,100 @@
+alias: Transition Manager - Daily Light Adjustment
+description: Gradually reduces light hours during veg-to-flower transition
+
+trigger:
+  # Trigger when lights turn off during transition
+  - platform: state
+    entity_id:
+      - light.chilled
+      - light.hlg
+    to: "off"
+
+condition:
+  # Only run if in Transition mode
+  - condition: state
+    entity_id: input_select.growth_stage
+    state: "Transition"
+
+  # Only run if both lights are off
+  - condition: state
+    entity_id: light.chilled
+    state: "off"
+  - condition: state
+    entity_id: light.hlg
+    state: "off"
+
+action:
+  - variables:
+      current_day: "{{ states('input_number.transition_day_counter') | int }}"
+      current_off_time: "{{ states('input_datetime.veg_lights_off_time') }}"
+
+      # Calculate new off time (1 hour earlier)
+      current_hour: "{{ current_off_time.split(':')[0] | int }}"
+      current_minute: "{{ current_off_time.split(':')[1] | int }}"
+      new_hour: "{{ (current_hour - 1) % 24 }}"
+      new_off_time: "{{ '%02d:%02d:00' | format(new_hour, current_minute) }}"
+
+  - choose:
+      # If still transitioning (days 0-5), adjust time and increment counter
+      - conditions:
+          - condition: template
+            value_template: "{{ current_day < 6 }}"
+        sequence:
+          # Increment transition day
+          - service: input_number.set_value
+            target:
+              entity_id: input_number.transition_day_counter
+            data:
+              value: "{{ current_day + 1 }}"
+
+          # Move off time 1 hour earlier
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.veg_lights_off_time
+            data:
+              time: "{{ new_off_time }}"
+
+          # Optional: Send notification about progress
+          - service: persistent_notification.create
+            data:
+              title: "Grow Lights Transition"
+              message: >
+                Day {{ current_day + 1 }} of 6 complete.
+                New schedule: {{ states('input_datetime.veg_lights_on_time') }} to {{ new_off_time }}
+                ({{ 18 - (current_day + 1) }} hours on)
+
+      # If transition complete (day 6), switch to Flower mode
+      - conditions:
+          - condition: template
+            value_template: "{{ current_day >= 6 }}"
+        sequence:
+          # Switch to Flower mode
+          - service: input_select.select_option
+            target:
+              entity_id: input_select.growth_stage
+            data:
+              option: "Flower"
+
+          # Reset transition counter
+          - service: input_number.set_value
+            target:
+              entity_id: input_number.transition_day_counter
+            data:
+              value: 0
+
+          # Reset veg off time back to original (for future transitions)
+          - service: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.veg_lights_off_time
+            data:
+              time: "12:00:00"
+
+          # Notification
+          - service: persistent_notification.create
+            data:
+              title: "Grow Lights Transition Complete"
+              message: >
+                Transition complete! Now in Flower mode with 12/12 light schedule.
+
+mode: single
+max_exceeded: silent

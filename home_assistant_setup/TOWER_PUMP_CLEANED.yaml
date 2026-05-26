@@ -1,0 +1,112 @@
+alias: Tower Pump Control - Optimized
+description: Aeroponic tower pump with automatic water cycling
+mode: restart  # Restart automation if triggered again (prevents overlaps)
+
+variables:
+  # Timing settings - easy to adjust here
+  drain_wait_time: 25     # Minutes to wait for water to drain back when sensor off
+  cycle_rest_time: 8      # Minutes to wait between pump cycles
+  retry_rest_time: 10     # Minutes to wait between retry cycles
+  initial_pump_timeout: 3 # Minutes max for first pump cycle
+  retry_pump_timeout: 2   # Minutes max for retry cycles
+
+triggers:
+  # Trigger when sensor state changes (stable for 10 seconds)
+  - entity_id: binary_sensor.tower_water_sensor
+    for:
+      seconds: 10
+    trigger: state
+
+  # Also run on Home Assistant start
+  - event: start
+    trigger: homeassistant
+
+actions:
+  - choose:
+      # SAFETY: Sensor unavailable - turn off pump
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.tower_water_sensor
+            state:
+              - unavailable
+              - unknown
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.tower_water_pump
+          - action: persistent_notification.create
+            data:
+              title: "Tower Pump Alert"
+              message: "Water sensor unavailable - pump turned off for safety"
+
+      # Sensor OFF: No water in reservoir - wait for drain then stop
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.tower_water_sensor
+            state: "off"
+        sequence:
+          # Wait for water to drain back from tower
+          - delay:
+              minutes: "{{ drain_wait_time }}"
+          # Turn off pump (water hasn't returned or reservoir empty)
+          - action: switch.turn_off
+            target:
+              entity_id: switch.tower_water_pump
+
+      # Sensor ON: Water available - run pump cycles
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.tower_water_sensor
+            state: "on"
+        sequence:
+          # === INITIAL PUMP CYCLE ===
+          - action: switch.turn_on
+            target:
+              entity_id: switch.tower_water_pump
+
+          # Wait for water level to drop OR timeout
+          - wait_for_trigger:
+              - entity_id: binary_sensor.tower_water_sensor
+                to: "off"
+                trigger: state
+            timeout:
+              minutes: "{{ initial_pump_timeout }}"
+
+          # Stop pump
+          - action: switch.turn_off
+            target:
+              entity_id: switch.tower_water_pump
+
+          # Wait for water to drain back down
+          - delay:
+              minutes: "{{ cycle_rest_time }}"
+
+          # === RETRY CYCLES (if still needed) ===
+          - repeat:
+              # Continue while sensor shows water available
+              while:
+                - condition: state
+                  entity_id: binary_sensor.tower_water_sensor
+                  state: "on"
+              sequence:
+                # Turn on pump
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.tower_water_pump
+
+                # Wait for level drop or timeout
+                - wait_for_trigger:
+                    - entity_id: binary_sensor.tower_water_sensor
+                      to: "off"
+                      trigger: state
+                  timeout:
+                    minutes: "{{ retry_pump_timeout }}"
+
+                # Stop pump
+                - action: switch.turn_off
+                  target:
+                    entity_id: switch.tower_water_pump
+
+                # Rest before next cycle
+                - delay:
+                    minutes: "{{ retry_rest_time }}"

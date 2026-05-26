@@ -1,0 +1,109 @@
+alias: Tower Pump Control - Enhanced with Safety
+description: Aeroponic tower with max runtime protection and notifications
+mode: restart
+
+variables:
+  # Timing
+  drain_wait_time: 25
+  cycle_rest_time: 8
+  retry_rest_time: 10
+  initial_pump_timeout: 3
+  retry_pump_timeout: 2
+
+  # Safety limits
+  max_retry_cycles: 5  # Prevent infinite loops
+  max_total_runtime: 30  # Minutes - total max pump time
+
+triggers:
+  - entity_id: binary_sensor.tower_water_sensor
+    for:
+      seconds: 10
+    trigger: state
+  - event: start
+    trigger: homeassistant
+
+actions:
+  - choose:
+      # SAFETY: Sensor unavailable
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.tower_water_sensor
+            state:
+              - unavailable
+              - unknown
+        sequence:
+          - action: switch.turn_off
+            target:
+              entity_id: switch.tower_water_pump
+          - action: notify.persistent_notification
+            data:
+              title: "🚨 Tower Pump Alert"
+              message: "Water sensor unavailable - pump turned off"
+
+      # Sensor OFF: Wait for water drain
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.tower_water_sensor
+            state: "off"
+        sequence:
+          - delay:
+              minutes: "{{ drain_wait_time }}"
+          - action: switch.turn_off
+            target:
+              entity_id: switch.tower_water_pump
+
+      # Sensor ON: Run pump cycles
+      - conditions:
+          - condition: state
+            entity_id: binary_sensor.tower_water_sensor
+            state: "on"
+        sequence:
+          # === INITIAL CYCLE ===
+          - action: switch.turn_on
+            target:
+              entity_id: switch.tower_water_pump
+          - wait_for_trigger:
+              - entity_id: binary_sensor.tower_water_sensor
+                to: "off"
+                trigger: state
+            timeout:
+              minutes: "{{ initial_pump_timeout }}"
+          - action: switch.turn_off
+            target:
+              entity_id: switch.tower_water_pump
+          - delay:
+              minutes: "{{ cycle_rest_time }}"
+
+          # === RETRY CYCLES WITH LIMITS ===
+          - repeat:
+              count: "{{ max_retry_cycles }}"  # Max 5 retries
+              while:
+                - condition: state
+                  entity_id: binary_sensor.tower_water_sensor
+                  state: "on"
+              sequence:
+                - action: switch.turn_on
+                  target:
+                    entity_id: switch.tower_water_pump
+                - wait_for_trigger:
+                    - entity_id: binary_sensor.tower_water_sensor
+                      to: "off"
+                      trigger: state
+                  timeout:
+                    minutes: "{{ retry_pump_timeout }}"
+                - action: switch.turn_off
+                  target:
+                    entity_id: switch.tower_water_pump
+                - delay:
+                    minutes: "{{ retry_rest_time }}"
+
+          # === ALERT IF MAX CYCLES REACHED ===
+          - if:
+              - condition: state
+                entity_id: binary_sensor.tower_water_sensor
+                state: "on"
+            then:
+              - action: notify.persistent_notification
+                data:
+                  title: "⚠️ Tower Pump Notice"
+                  message: "Pump completed {{ max_retry_cycles }} cycles but sensor still shows water available. Check for issues."

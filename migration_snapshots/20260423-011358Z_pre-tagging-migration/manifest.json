@@ -1,0 +1,12 @@
+{
+  "timestamp_utc": "20260423-011358Z",
+  "label": "pre-tagging-migration",
+  "ha_url": "http://192.168.2.151:8123",
+  "ha_version": "2026.4.0",
+  "counts": {
+    "entity_registry": 784,
+    "area_registry": 11,
+    "device_registry": 75,
+    "label_registry": 20
+  }
+}

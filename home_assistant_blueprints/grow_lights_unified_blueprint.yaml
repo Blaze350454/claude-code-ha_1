@@ -1,0 +1,278 @@
+blueprint:
+  name: Grow Room Lights with Transition
+  description: |
+    Complete grow light controller with automatic veg-to-flower transition.
+
+    Features:
+    - Controls two grow lights together
+    - Veg mode: 18 hours on (6pm-12pm)
+    - Flower mode: 12 hours on (6pm-6am)
+    - Transition mode: Automatically reduces light hours by 1 hour per day
+    - Handles midnight crossover correctly
+    - Sends notifications during transition
+
+    Required helpers:
+    - Growth Stage dropdown (Vegetative/Transition/Flower)
+    - Transition Day Counter (number 0-6)
+    - 4 time helpers for veg/flower on/off times
+
+  domain: automation
+
+  input:
+    light_chilled:
+      name: Chilled Light
+      description: First grow light entity
+      default: light.chilled
+      selector:
+        entity:
+          domain: light
+
+    light_hlg:
+      name: HLG Light
+      description: Second grow light entity
+      default: light.hlg
+      selector:
+        entity:
+          domain: light
+
+    growth_stage:
+      name: Growth Stage Selector
+      description: Input select helper for growth stage
+      default: input_select.growth_stage
+      selector:
+        entity:
+          domain: input_select
+
+    transition_counter:
+      name: Transition Day Counter
+      description: Number helper to track transition progress
+      default: input_number.transition_day_counter
+      selector:
+        entity:
+          domain: input_number
+
+    veg_on_time:
+      name: Veg Lights On Time
+      description: Time helper for veg cycle lights on
+      default: input_datetime.veg_lights_on_time
+      selector:
+        entity:
+          domain: input_datetime
+
+    veg_off_time:
+      name: Veg Lights Off Time
+      description: Time helper for veg cycle lights off
+      default: input_datetime.veg_lights_off_time
+      selector:
+        entity:
+          domain: input_datetime
+
+    flower_on_time:
+      name: Flower Lights On Time
+      description: Time helper for flower cycle lights on
+      default: input_datetime.flower_lights_on_time
+      selector:
+        entity:
+          domain: input_datetime
+
+    flower_off_time:
+      name: Flower Lights Off Time
+      description: Time helper for flower cycle lights off
+      default: input_datetime.flower_lights_off_time
+      selector:
+        entity:
+          domain: input_datetime
+
+# Multiple triggers for different scenarios
+trigger:
+  # Check every minute if lights should be on or off
+  - platform: time_pattern
+    minutes: "/1"
+    id: "check_lights"
+
+  # Trigger when growth stage changes
+  - platform: state
+    entity_id: !input growth_stage
+    id: "stage_change"
+
+  # Trigger when lights turn off (for transition management)
+  - platform: state
+    entity_id: !input light_chilled
+    to: "off"
+    id: "light_off"
+
+variables:
+  # Get current growth stage
+  current_stage: "{{ states(growth_stage) }}"
+
+  # Get current transition day
+  transition_day: "{{ states(transition_counter) | int }}"
+
+  # Get appropriate times based on growth stage
+  on_time: >
+    {% if current_stage in ['Vegetative', 'Transition'] %}
+      {{ states(veg_on_time) }}
+    {% else %}
+      {{ states(flower_on_time) }}
+    {% endif %}
+
+  off_time: >
+    {% if current_stage in ['Vegetative', 'Transition'] %}
+      {{ states(veg_off_time) }}
+    {% else %}
+      {{ states(flower_off_time) }}
+    {% endif %}
+
+  # Determine if lights should be on (handles midnight crossover)
+  lights_should_be_on: >
+    {% set on_minutes = (on_time.split(':')[0] | int * 60) + (on_time.split(':')[1] | int) %}
+    {% set off_minutes = (off_time.split(':')[0] | int * 60) + (off_time.split(':')[1] | int) %}
+    {% set current_minutes = now().hour * 60 + now().minute %}
+    {% if on_minutes < off_minutes %}
+      {{ current_minutes >= on_minutes and current_minutes < off_minutes }}
+    {% else %}
+      {{ current_minutes >= on_minutes or current_minutes < off_minutes }}
+    {% endif %}
+
+action:
+  - choose:
+      ##########################################################
+      # SCENARIO 1: Handle transition when lights turn off
+      ##########################################################
+      - conditions:
+          - condition: trigger
+            id: "light_off"
+          - condition: state
+            entity_id: !input growth_stage
+            state: "Transition"
+          # Both lights must be off
+          - condition: state
+            entity_id: !input light_chilled
+            state: "off"
+          - condition: state
+            entity_id: !input light_hlg
+            state: "off"
+        sequence:
+          - variables:
+              current_off_time: "{{ states(veg_off_time) }}"
+              current_hour: "{{ current_off_time.split(':')[0] | int }}"
+              current_minute: "{{ current_off_time.split(':')[1] | int }}"
+              new_hour: "{{ (current_hour - 1) % 24 }}"
+              new_off_time: "{{ '%02d:%02d:00' | format(new_hour, current_minute) }}"
+
+          - choose:
+              # Still transitioning (days 0-5)
+              - conditions:
+                  - condition: template
+                    value_template: "{{ transition_day < 6 }}"
+                sequence:
+                  # Increment transition day
+                  - service: input_number.set_value
+                    target:
+                      entity_id: !input transition_counter
+                    data:
+                      value: "{{ transition_day + 1 }}"
+
+                  # Move off time 1 hour earlier
+                  - service: input_datetime.set_datetime
+                    target:
+                      entity_id: !input veg_off_time
+                    data:
+                      time: "{{ new_off_time }}"
+
+                  # Send notification
+                  - service: persistent_notification.create
+                    data:
+                      title: "Grow Lights Transition"
+                      message: >
+                        Day {{ transition_day + 1 }} of 6 complete.
+                        New schedule: {{ states(veg_on_time) }} to {{ new_off_time }}
+                        ({{ 18 - (transition_day + 1) }} hours on)
+
+              # Transition complete (day 6)
+              - conditions:
+                  - condition: template
+                    value_template: "{{ transition_day >= 6 }}"
+                sequence:
+                  # Switch to Flower mode
+                  - service: input_select.select_option
+                    target:
+                      entity_id: !input growth_stage
+                    data:
+                      option: "Flower"
+
+                  # Reset counter
+                  - service: input_number.set_value
+                    target:
+                      entity_id: !input transition_counter
+                    data:
+                      value: 0
+
+                  # Reset veg off time to original
+                  - service: input_datetime.set_datetime
+                    target:
+                      entity_id: !input veg_off_time
+                    data:
+                      time: "12:00:00"
+
+                  # Send completion notification
+                  - service: persistent_notification.create
+                    data:
+                      title: "Grow Lights Transition Complete"
+                      message: >
+                        Transition complete! Now in Flower mode with 12/12 light schedule.
+
+      ##########################################################
+      # SCENARIO 2: Normal light control (check_lights or stage_change)
+      ##########################################################
+      - conditions:
+          - condition: or
+            conditions:
+              - condition: trigger
+                id: "check_lights"
+              - condition: trigger
+                id: "stage_change"
+        sequence:
+          - choose:
+              # Turn lights ON
+              - conditions:
+                  - condition: template
+                    value_template: "{{ lights_should_be_on }}"
+                  - condition: or
+                    conditions:
+                      - condition: state
+                        entity_id: !input light_chilled
+                        state: "off"
+                      - condition: state
+                        entity_id: !input light_hlg
+                        state: "off"
+                sequence:
+                  - service: light.turn_on
+                    target:
+                      entity_id:
+                        - !input light_chilled
+                        - !input light_hlg
+                    data:
+                      brightness_pct: 100
+
+              # Turn lights OFF
+              - conditions:
+                  - condition: template
+                    value_template: "{{ not lights_should_be_on }}"
+                  - condition: or
+                    conditions:
+                      - condition: state
+                        entity_id: !input light_chilled
+                        state: "on"
+                      - condition: state
+                        entity_id: !input light_hlg
+                        state: "on"
+                sequence:
+                  - service: light.turn_off
+                    target:
+                      entity_id:
+                        - !input light_chilled
+                        - !input light_hlg
+
+mode: queued
+max: 5

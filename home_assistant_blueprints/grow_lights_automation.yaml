@@ -1,0 +1,94 @@
+alias: Grow Lights Controller
+description: Controls grow lights based on growth stage with veg/flower schedules
+
+# Triggers - check every minute if lights should be on or off
+trigger:
+  - platform: time_pattern
+    minutes: "/1"
+
+  # Also trigger when growth stage changes
+  - platform: state
+    entity_id: input_select.growth_stage
+
+# Conditions and Actions
+action:
+  - variables:
+      # Get current growth stage
+      current_stage: "{{ states('input_select.growth_stage') }}"
+
+      # Get appropriate times based on growth stage
+      on_time: >
+        {% if current_stage == 'Vegetative' %}
+          {{ states('input_datetime.veg_lights_on_time') }}
+        {% else %}
+          {{ states('input_datetime.flower_lights_on_time') }}
+        {% endif %}
+
+      off_time: >
+        {% if current_stage == 'Vegetative' %}
+          {{ states('input_datetime.veg_lights_off_time') }}
+        {% else %}
+          {{ states('input_datetime.flower_lights_off_time') }}
+        {% endif %}
+
+      # Current time
+      current_time: "{{ now().strftime('%H:%M') }}"
+
+      # Determine if lights should be on
+      # Handles cases where on_time > off_time (crosses midnight)
+      lights_should_be_on: >
+        {% set on_minutes = (on_time.split(':')[0] | int * 60) + (on_time.split(':')[1] | int) %}
+        {% set off_minutes = (off_time.split(':')[0] | int * 60) + (off_time.split(':')[1] | int) %}
+        {% set current_minutes = now().hour * 60 + now().minute %}
+
+        {% if on_minutes < off_minutes %}
+          {# Normal case: on and off same day (e.g., 6am to 6pm) #}
+          {{ current_minutes >= on_minutes and current_minutes < off_minutes }}
+        {% else %}
+          {# Crosses midnight (e.g., 6pm to 12pm next day) #}
+          {{ current_minutes >= on_minutes or current_minutes < off_minutes }}
+        {% endif %}
+
+  - choose:
+      # Turn lights ON
+      - conditions:
+          - condition: template
+            value_template: "{{ lights_should_be_on }}"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: light.chilled
+                state: "off"
+              - condition: state
+                entity_id: light.hlg
+                state: "off"
+        sequence:
+          - service: light.turn_on
+            target:
+              entity_id:
+                - light.chilled
+                - light.hlg
+            data:
+              brightness_pct: 100
+
+      # Turn lights OFF
+      - conditions:
+          - condition: template
+            value_template: "{{ not lights_should_be_on }}"
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: light.chilled
+                state: "on"
+              - condition: state
+                entity_id: light.hlg
+                state: "on"
+        sequence:
+          - service: light.turn_off
+            target:
+              entity_id:
+                - light.chilled
+                - light.hlg
+
+mode: single
+max_exceeded: silent

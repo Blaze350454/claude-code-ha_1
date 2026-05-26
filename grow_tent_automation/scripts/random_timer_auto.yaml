@@ -1,0 +1,58 @@
+random_timer_auto:
+  alias: "Random Timer Auto"
+  description: >
+    Toggle pulse: first run turns the targets ON for `duration_minutes` then OFF.
+    Pressing the button again while running turns the targets OFF immediately and
+    cancels the timer. The next press starts a fresh timer from the current
+    duration_minutes value. Works for any switch.*, valve.*, light.*, etc. via
+    homeassistant.turn_on / turn_off.
+  icon: mdi:timer-play-outline
+  mode: restart
+  fields:
+    targets:
+      name: Targets
+      description: Entities to pulse on.
+      required: true
+      selector:
+        entity:
+          multiple: true
+    duration_minutes:
+      name: Duration (minutes)
+      description: How long to keep targets ON.
+      required: true
+      default: 5
+      selector:
+        number:
+          min: 1
+          max: 60
+          step: 1
+          mode: slider
+          unit_of_measurement: min
+  sequence:
+    - choose:
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.random_timer_running
+              state: "on"
+          sequence:
+            - service: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.random_timer_running
+            - service: homeassistant.turn_off
+              target:
+                entity_id: "{{ targets }}"
+            - stop: "Cancelled by user — entities turned off, timer reset"
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.random_timer_running
+    - service: homeassistant.turn_on
+      target:
+        entity_id: "{{ targets }}"
+    - delay:
+        minutes: "{{ duration_minutes | int }}"
+    - service: homeassistant.turn_off
+      target:
+        entity_id: "{{ targets }}"
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.random_timer_running

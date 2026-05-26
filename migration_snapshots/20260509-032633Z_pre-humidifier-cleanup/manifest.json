@@ -1,0 +1,12 @@
+{
+  "timestamp_utc": "20260509-032633Z",
+  "label": "pre-humidifier-cleanup",
+  "ha_url": "http://192.168.2.151:8123",
+  "ha_version": "2026.5.0",
+  "counts": {
+    "entity_registry": 857,
+    "area_registry": 11,
+    "device_registry": 80,
+    "label_registry": 51
+  }
+}

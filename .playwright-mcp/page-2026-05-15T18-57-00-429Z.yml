@@ -1,0 +1,312 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - link "Skip to main content" [ref=e4] [cursor=pointer]
+      - link "Skip to footer" [ref=e5] [cursor=pointer]
+      - link "Skip to accessibility" [ref=e6] [cursor=pointer]: Accessibility Commitment
+      - generic [ref=e8]:
+        - link "Save $30 or more on custom print" [ref=e11] [cursor=pointer]:
+          - /url: https://www.staples.com/services/printing/offers/print-coupons/?utm_source=staples.com&utm_medium=referral&utm_campaign=tophat&utm_content=default-tiered-offer
+          - generic [ref=e12]:
+            - img [ref=e14]
+            - generic [ref=e17]: Save $30 or more on custom print
+        - link "Chair savings event, extra 20% off" [ref=e21] [cursor=pointer]:
+          - /url: /lp/furniture-savings-event
+          - generic [ref=e22]:
+            - img [ref=e24]
+            - generic [ref=e27]: Chair savings event, extra 20% off
+        - link "2 for $40 K-Cup pods, 40-48/pk" [ref=e31] [cursor=pointer]:
+          - /url: /Single-Serve-Coffee-Deals/cat_CL164886/00792
+          - generic [ref=e32]:
+            - img [ref=e34]
+            - generic [ref=e37]: 2 for $40 K-Cup pods, 40-48/pk
+      - generic [ref=e38]:
+        - generic [ref=e42]:
+          - link "Staples Homepage" [ref=e45] [cursor=pointer]:
+            - /url: /
+            - img [ref=e48]
+          - navigation "main" [ref=e52]:
+            - link "Pickup in store" [ref=e55] [cursor=pointer]:
+              - generic [ref=e57]:
+                - img [ref=e60]
+                - generic [ref=e71]:
+                  - generic [ref=e72]: Pickup in store
+                  - generic [ref=e73]: Find a store near you
+          - search [ref=e75]:
+            - combobox "Type to Search." [ref=e76]
+            - button "search" [ref=e77] [cursor=pointer]:
+              - img [ref=e78]
+          - navigation "secondary" [ref=e81]:
+            - generic [ref=e82]:
+              - link "Sign In Menu for Desktop" [ref=e84] [cursor=pointer]:
+                - generic [ref=e86]:
+                  - img [ref=e88]
+                  - generic [ref=e92]: Sign In
+                  - img [ref=e94]
+              - link "Orders" [ref=e98] [cursor=pointer]:
+                - generic [ref=e100]:
+                  - img [ref=e102]
+                  - generic [ref=e106]: Orders
+                  - img [ref=e108]
+              - button "Cart Menu, Items in cart 0" [ref=e112] [cursor=pointer]:
+                - generic [ref=e114]:
+                  - img [ref=e116]
+                  - generic [ref=e119]: "0"
+        - generic [ref=e122]:
+          - generic [ref=e123]:
+            - link "Shop Menu" [ref=e126] [cursor=pointer]:
+              - generic [ref=e128]:
+                - img [ref=e130]
+                - generic [ref=e134]: Shop
+                - img [ref=e136]
+            - link "Deals" [ref=e141] [cursor=pointer]:
+              - generic [ref=e143]:
+                - img [ref=e145]
+                - generic [ref=e151]: Deals
+                - img [ref=e153]
+            - link "Print & Marketing Menu" [ref=e158] [cursor=pointer]:
+              - generic [ref=e160]:
+                - img [ref=e162]
+                - generic [ref=e166]: Print & Marketing
+                - img [ref=e168]
+            - separator [ref=e171]
+          - generic [ref=e173]:
+            - generic [ref=e174]: Page 1 of 4
+            - region "carousel" [ref=e175]:
+              - group "carousel" [ref=e176]:
+                - list "carousel - 12 items total" [ref=e177]:
+                  - listitem "Item 1 of 12" [ref=e178]:
+                    - link "Easy Rewards" [ref=e182] [cursor=pointer]:
+                      - /url: /lp/easyrewardsoverview?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT2%3BCmp%3AESYRWDSLO
+                  - listitem "Item 2 of 12" [ref=e184]:
+                    - link "Party City" [ref=e188] [cursor=pointer]:
+                      - /url: /deals/party-city-stores/BI3001689
+                  - listitem "Item 3 of 12" [ref=e190]:
+                    - link "Balloons" [ref=e194] [cursor=pointer]:
+                      - /url: /balloons-accessories/cat_DP367070
+                      - generic [ref=e195]: Balloons
+                  - listitem "Item 4 of 12" [ref=e196]:
+                    - link "Staples Business" [ref=e200] [cursor=pointer]:
+                      - /url: /deals/staples-is-built-for-business/BI3000762?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT4%3BCmp%3ASTPLSBIZ
+                      - img [ref=e202]
+                  - listitem [ref=e206]:
+                    - link [ref=e210] [cursor=pointer]:
+                      - /url: /deals/all-services/BI3001123
+                      - generic [ref=e211]: Services
+                  - listitem [ref=e212]:
+                    - link [ref=e216] [cursor=pointer]:
+                      - /url: /printer-ink-cartridges-toner-finder/cat_SC43
+                      - generic [ref=e217]: Ink & Toner
+                  - listitem [ref=e218]:
+                    - link [ref=e222] [cursor=pointer]:
+                      - /url: https://www.staples.com/services/printing/copies-documents-printing/?utm_source=staples.com&utm_medium=referral&utm_campaign=headernav_bottom_right&utm_content=document-printing
+                      - generic [ref=e223]: Document Printing
+                  - listitem [ref=e224]:
+                    - link [ref=e228] [cursor=pointer]:
+                      - /url: /lp/new-and-trending?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT6%3BCmp%3ANWTRND
+                      - generic [ref=e229]: New & Trending
+                  - listitem [ref=e230]:
+                    - link [ref=e234] [cursor=pointer]:
+                      - /url: /deals/30-minute-store-pick-up-deals/BI1146948?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT7%3BCmp%3AGTTDY
+                      - generic [ref=e235]: Get it Today
+                  - listitem [ref=e236]:
+                    - link [ref=e240] [cursor=pointer]:
+                      - /url: /deals/business-center/BI3001255?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT16%3BCmp%3ABIZCTR
+                      - generic [ref=e241]: Business Center
+                  - listitem [ref=e242]:
+                    - link [ref=e246] [cursor=pointer]:
+                      - /url: /lp/staples-travel-hub?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT9%3BCmp%3ATRVLHB
+                      - generic [ref=e247]: Travel Hub
+                  - listitem [ref=e248]:
+                    - link [ref=e252] [cursor=pointer]:
+                      - /url: /deals/Auto-Restock/BI1498644?ivid=Pg%3AHDR%3BPl%3ABTMBR%3BPt%3ASLT11%3BCmp%3AARS
+                      - generic [ref=e253]:
+                        - generic [ref=e255]:
+                          - img [ref=e256]
+                          - img [ref=e259]
+                        - generic [ref=e262]: AutoRestock
+              - button "Next page of carousel" [ref=e263] [cursor=pointer]:
+                - img [ref=e265]
+      - generic: • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • • •
+    - main "content" [ref=e269]:
+      - generic [ref=e271]:
+        - link "40th Anniversary Sale. Up to 50% off. 2 weeks of deals! Ends 5/23. Shop now." [ref=e277] [cursor=pointer]:
+          - /url: /lp/staples-sales-event?ivid=Pg%3AB%3BPl%3AHP%3BPt%3AB%3BCmp%3ACam_40Anniversary_Pro_Upto50off_Slot_1_SEQ_1_Cat_All_Asset_SliverBanner_P4W2-W3
+          - img "40th Anniversary Sale. Up to 50% off. 2 weeks of deals! Ends 5/23. Shop now." [ref=e282]
+        - generic [ref=e285]:
+          - generic [ref=e286]: Page 1 of 5
+          - region "carousel" [ref=e287]:
+            - group "carousel" [ref=e288]:
+              - list "carousel - 9 items total" [ref=e289]:
+                - listitem "Item 1 of 9" [ref=e290]:
+                  - alert "loading animation" [ref=e295]
+                - listitem "Item 2 of 9" [ref=e297]:
+                  - link "Easy rewards. 20% back in points on all ink and toner. Online and In store. Image of HP Ink and Toner. Shop now." [ref=e304] [cursor=pointer]:
+                    - /url: /printer-ink-cartridges-toner-finder/cat_SC43?ivid=Pg%3AB%3BPl%3AHP%3BPt%3AB%3BCmp%3ACam_40Anniversary_Pro_20bipInkToner_thurs-sat_Slot_2_SEQ_1_Cat_inkAndToner_Asset_4by_P4W2
+                    - img "Easy rewards. 20% back in points on all ink and toner. Online and In store. Image of HP Ink and Toner. Shop now." [ref=e309]
+                - listitem "Item 3 of 9" [ref=e310]:
+                  - generic "Custom Print" [ref=e311]:
+                    - generic [ref=e312]:
+                      - generic [ref=e313]:
+                        - generic [ref=e315]: $30 off custom print
+                        - generic [ref=e317]: orders of $150 or more
+                      - generic [ref=e320]:
+                        - generic [ref=e321]:
+                          - link "Up to $300 off select laptops. White bubble with \"Plus free data transfer in store.\" Image of HP Laptop. Shop now." [ref=e322] [cursor=pointer]:
+                            - /url: https://www.staples.com/services/printing/copies-documents-printing?utm_source=staples.com&utm_medium=referral&utm_campaign=homepage&utm_content=4by-category-cards-docs
+                            - img "Up to $300 off select laptops. White bubble with \"Plus free data transfer in store.\" Image of HP Laptop. Shop now." [ref=e327]
+                          - generic [ref=e329]: Document printing
+                        - generic [ref=e330]:
+                          - link "Up to $300 off select laptops. White bubble with \"Plus free data transfer in store.\" Image of HP Laptop. Shop now." [ref=e331] [cursor=pointer]:
+                            - /url: https://www.staples.com/services/printing/business-cards/traditional-business-cards/?utm_source=staples.com&utm_medium=referral&utm_campaign=homepage&utm_content=4by-category-cards-business-cards
+                            - img "Up to $300 off select laptops. White bubble with \"Plus free data transfer in store.\" Image of HP Laptop. Shop now." [ref=e336]
+                          - generic [ref=e338]: Business cards
+                        - generic [ref=e339]:
+                          - link "Cards & invites" [ref=e340] [cursor=pointer]:
+                            - /url: https://www.staples.com/services/printing/custom-labels-stickers/?utm_source=staples.com&utm_medium=referral&utm_campaign=homepage&utm_content=4by-category-cards-labels
+                            - img "Cards & invites" [ref=e345]
+                          - generic [ref=e347]: Labels
+                        - generic [ref=e348]:
+                          - link "Blueprints" [ref=e349] [cursor=pointer]:
+                            - /url: https://www.staples.com/services/printing/engineering-blueprints?utm_source=staples.com&utm_medium=referral&utm_campaign=homepage&utm_content=4by-category-card-blueprints
+                            - img "Blueprints" [ref=e354]
+                          - generic [ref=e356]: Blueprints
+                      - link "Get started" [ref=e359] [cursor=pointer]:
+                        - /url: https://www.staples.com/services/printing/offers/print-coupons/?utm_source=staples.com&utm_medium=referral&utm_campaign=homepage&utm_content=4by-category-cards-get-started
+                - listitem [ref=e360]:
+                  - link [ref=e367] [cursor=pointer]:
+                    - /url: /tru-red-8-5-x-11-copy-paper-20-lbs-92-brightness-500-sheets-ream-tr56957/product_135855?ivid=Pg%3AB%3BPl%3AHP%3BPt%3AB%3BCmp%3ACam_40Anniversary_Pro_4.99TruRed_thurs-sat_Slot_4_SEQ_2_Cat_Paper_Asset_4by_P4W2
+                    - img [ref=e372]
+                - listitem [ref=e373]:
+                  - alert [ref=e378]
+                - listitem [ref=e380]:
+                  - alert [ref=e385]
+                - listitem [ref=e387]:
+                  - alert [ref=e392]
+                - listitem [ref=e394]:
+                  - link [ref=e401] [cursor=pointer]:
+                    - /url: /zq9zq9Coffee-Makers-Espresso-Machines/cat_CL140860/0069wkrjgsrtn5o?IPID=NGAM%3B12269493&ivid=Pg%3AB%3BPl%3AHP%3BPt%3AB%3BCmp%3ACam_40Anniversary_Pro_99.95Keurig_SMN_Slot_8_SEQ_2_Cat_CoffeeMachines_Asset_4by_P4W1-W2
+                    - img [ref=e406]
+                - listitem [ref=e407]:
+                  - generic [ref=e409]:
+                    - generic [ref=e410]:
+                      - generic [ref=e412]: 40% off event prints
+                      - generic [ref=e414]: Promote your business and save!
+                    - generic [ref=e417]:
+                      - generic [ref=e418]:
+                        - link [ref=e419] [cursor=pointer]:
+                          - /url: https://www.staples.com/services/printing/cards-invitations-announcements/?utm_source=staples.com&utm_medium=referral&utm_campaign=homepage&utm_content=4by-product-card-cards
+                          - img [ref=e424]
+                        - generic [ref=e426]: Cards & Invitations
+                      - generic [ref=e427]:
+                        - link [ref=e428] [cursor=pointer]:
+                          - /url: https://www.staples.com/services/printing/signs-banners-posters/?utm_source=staples.com&utm_medium=referral&utm_campaign=homepage&utm_content=4by-product-card-posters-banners
+                          - img [ref=e433]
+                        - generic [ref=e435]: Posters & Banners
+                      - generic [ref=e436]:
+                        - link [ref=e437] [cursor=pointer]:
+                          - /url: https://www.staples.com/services/printing/signs/?utm_source=staples.com&utm_medium=referral&utm_campaign=homepage&utm_content=4by-category-card-signs
+                          - img [ref=e442]
+                        - generic [ref=e444]: Yard Signs
+                      - generic [ref=e445]:
+                        - link [ref=e446] [cursor=pointer]:
+                          - /url: https://www.staples.com/services/printing/photo-gifts/?utm_source=staples.com&utm_medium=referral&utm_campaign=homepage&utm_content=4by-product-card-photo-gifts
+                          - img [ref=e451]
+                        - generic [ref=e453]: Photo Gifts
+                    - link [ref=e456] [cursor=pointer]:
+                      - /url: "https://www.staples.com/services/printing/?utm_source=staples.com&utm_medium=referral&utm_campaign=homepage&utm_content=4by-get-started-events-promo "
+                      - text: Get started
+            - button "Next page of carousel" [ref=e457] [cursor=pointer]:
+              - img [ref=e459]
+      - generic [ref=e471]:
+        - heading "Staples drives your business with an extensive product assortment wherever you need it." [level=1] [ref=e473]
+        - generic [ref=e475]:
+          - paragraph [ref=e478]:
+            - text: At Staples, we’ve been providing our customers with an extensive assortment of essential office supplies for over 35 years. From writing supplies and paper to shredders and school supplies, Staples is the
+            - link "office supply" [ref=e479] [cursor=pointer]:
+              - /url: https://www.staples.com/Office-Supplies/cat_SC1
+            - text: expert. We are a top provider of office chairs, desks, tables & office furniture. We also offer the latest technology—from laptops, computers & accessories, to printers, ink & toner, and more. We have all the tools you need to stay productive and connected, plus a wide assortment of unexpected
+            - link "new & trending products" [ref=e480] [cursor=pointer]:
+              - /url: https://www.staples.com/lp/new-and-trending
+            - text: like luggage, smart home technology, gaming consoles & accessories, décor, and gift cards.
+          - generic [ref=e481]:
+            - img "Staples has everything you could ever need for school." [ref=e483]
+            - generic [ref=e484]:
+              - heading "Back to School Made Easy at Staples" [level=3] [ref=e485]
+              - paragraph [ref=e486]:
+                - text: For students and parents, Staples is a one-stop shop for all
+                - link "school supplies" [ref=e487] [cursor=pointer]:
+                  - /url: https://www.staples.com/School-Supplies/cat_SC350235
+                - text: . Parents and students can find everything they need to succeed, from notebooks and art materials to backpacks and lunch boxes. Teachers will appreciate our extensive selection of classroom essentials, including educational materials, classroom decor, organizational tools, and more.
+                - link "Find your school supply list" [ref=e488] [cursor=pointer]:
+                  - /url: https://www.staples.com/supplylist
+                - text: "& shop for everything you need, all in one place!"
+          - generic [ref=e489]:
+            - generic [ref=e490]:
+              - img "Wireless headphones are essential while traveling." [ref=e492]
+              - generic [ref=e493]:
+                - heading "Staples Travel Hub" [level=3] [ref=e494]
+                - paragraph [ref=e495]:
+                  - text: Whether your next trip is for business or pleasure,
+                  - link "Staples Travel Hub" [ref=e496] [cursor=pointer]:
+                    - /url: https://www.staples.com/lp/staples-travel-hub
+                  - text: is your new destination for all things travel. Find luggage and travel accessories, and tech gadgets to make your trip run smoothly. Visit us in-store to take advantage of our
+                  - link "TSA PreCheck" [ref=e497] [cursor=pointer]:
+                    - /url: https://www.staples.com/stores/services/tsa
+                  - text: and passport services.
+            - generic [ref=e498]:
+              - img "Prioritizing wellness throughout your day." [ref=e500]
+              - generic [ref=e501]:
+                - heading "Health & Wellness" [level=3] [ref=e502]
+                - paragraph [ref=e503]:
+                  - text: Staples range of
+                  - link "health & wellness products" [ref=e504] [cursor=pointer]:
+                    - /url: https://www.staples.com/lp/health-wellness-and-lifestyle-essentials
+                  - text: can enhance your workspace and overall well-being. Shop ergonomic furniture & tech options, as well as smart watches, candles, essential oils & more. Our curved whiteboard has an ergonomically crafted shape to prevent strain. And a new selection of
+                  - link "guided journals" [ref=e505] [cursor=pointer]:
+                    - /url: https://www.staples.com/Guided-Journals/cat_CL166390/w3165
+                  - text: are available, with topics including anxiety & productivity.
+            - generic [ref=e506]:
+              - img "Take advantage of Staples EasyRewards and AutoRestock and check another thing off your list for good." [ref=e508]
+              - generic [ref=e509]:
+                - heading "Perks of Shopping Staples" [level=3] [ref=e510]
+                - paragraph [ref=e511]:
+                  - text: We pride ourselves on making shopping a breeze. With
+                  - link "Staples Easy Rewards" [ref=e512] [cursor=pointer]:
+                    - /url: https://www.staples.com/lp/easyrewardsoverview
+                  - text: ", you can earn rewards on every purchase, plus extra rewards on your chosen bonus categories. Our"
+                  - link "AutoRestock" [ref=e513] [cursor=pointer]:
+                    - /url: https://www.staples.com/deals/Auto-Restock/BI1498644
+                  - text: feature ensures you never run out of essential supplies, with easy-to-manage subscriptions. Whether you prefer to shop in-store or online, we offer flexible options for shipping, same-day delivery, or in-store pickup.
+            - paragraph [ref=e516]: At Staples, we are here to help you navigate your business, office, and school needs with ease. Explore our website and discover all that Staples has to offer. We're confident you will find exactly what you're looking for and more.
+        - generic "Read more" [ref=e519]:
+          - button "Read more" [ref=e520] [cursor=pointer]:
+            - generic [ref=e521]: Read more
+    - contentinfo [ref=e522]:
+      - generic [ref=e524]:
+        - generic [ref=e527]: This website is intended for personal use by US residents only.
+        - link "See our delivery policy for full details." [ref=e529] [cursor=pointer]:
+          - /url: /hc?id=56c09a7a-cd63-4a26-b277-29023d9ece2e
+          - generic [ref=e530]: See our delivery policy for full details.
+        - link "Copyright 1998-2026, Staples, Inc., All Rights Reserved" [ref=e532] [cursor=pointer]:
+          - /url: /hc?id=52e40651-0852-4ad7-a532-45017c287d50
+          - generic [ref=e533]: Copyright 1998-2026, Staples, Inc., All Rights Reserved.
+        - navigation "footer" [ref=e534]:
+          - link "Site Map" [ref=e535] [cursor=pointer]:
+            - /url: /htmlsitemap/
+            - generic [ref=e536]: Site Map
+          - button "Feedback" [ref=e538] [cursor=pointer]:
+            - generic [ref=e539]: Feedback
+          - link "Privacy Notice" [ref=e541] [cursor=pointer]:
+            - /url: /hc?id=dbb94c10-973c-478b-a078-00e58f66ba32
+            - generic [ref=e542]: Privacy Notice
+          - link "Terms & Conditions" [ref=e544] [cursor=pointer]:
+            - /url: /hc?id=52e40651-0852-4ad7-a532-45017c287d50
+            - generic [ref=e545]: Terms & Conditions
+          - generic [ref=e548] [cursor=pointer]: Cookie Preferences
+          - generic [ref=e551] [cursor=pointer]: Do Not Sell or Share My Personal Information
+          - link "California Notice" [ref=e553] [cursor=pointer]:
+            - /url: /hc?id=d0641e76-dd9f-4d69-80d3-ff148ddcd188
+            - generic [ref=e554]: California Notice
+        - generic [ref=e557]: "*By clicking Instacart links, you will leave staples.com and enter the Instacart site, which they operate and control. Item prices may vary from in-store prices. Service fees may apply. Available in select zip codes or location."
+  - alert [ref=e558]

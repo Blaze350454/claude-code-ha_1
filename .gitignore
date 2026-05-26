@@ -3,3 +3,17 @@
 __pycache__/
 *.pyc
 storage/document_chunks_cache.pkl
+
+# Credentials
+Google Drive Credentials Client ID.json
+Google Drive client_secret.json
+Irrigation/esphome/secrets.yaml
+Pics/Github access token.jpg
+Pics/Backups Encryption Key.jpg
+
+# Backups
+*.tar
+home_assistant_backup_emergency_kit_*.txt
+
+# Claude temp files
+tmpclaude-*
