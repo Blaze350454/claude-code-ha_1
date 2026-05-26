@@ -9,7 +9,8 @@ from mcp_server.data_loader import load_and_chunk_documents, get_all_chunks
 
 # Import the tools modules to ensure decorators run and register tools
 import mcp_server.mcp_tools  # noqa: F401
-import mcp_server.ha_tools  # noqa: F401 - Home Assistant tools
+import mcp_server.ha_tools  # noqa: F401
+import mcp_server.proxmox_tools  # noqa: F401
 
 # --- Main Execution (for direct run `python -m mcp_server.main`) ---
 if __name__ == "__main__":

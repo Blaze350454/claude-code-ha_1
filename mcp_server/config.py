@@ -10,10 +10,13 @@ STORAGE_DIR = Path("./storage")
 CACHE_FILE_PATH = STORAGE_DIR / "document_chunks_cache.pkl"
 
 # Home Assistant configuration
-# These can be overridden via environment variables: HA_URL and HA_TOKEN
 HA_URL = os.getenv("HA_URL", "")
 HA_TOKEN = os.getenv("HA_TOKEN", "")
-
-# Flag to enable/disable Home Assistant integration
-# Auto-enabled if both HA_URL and HA_TOKEN are provided
 HA_ENABLED = bool(HA_URL and HA_TOKEN)
+
+# Proxmox configuration
+PROXMOX_URL = os.getenv("PROXMOX_URL", "")
+PROXMOX_USER = os.getenv("PROXMOX_USER", "root@pam")
+PROXMOX_PASSWORD = os.getenv("PROXMOX_PASSWORD", "")
+PROXMOX_NODE = os.getenv("PROXMOX_NODE", "proxmox")
+PROXMOX_ENABLED = bool(PROXMOX_URL and PROXMOX_PASSWORD)
