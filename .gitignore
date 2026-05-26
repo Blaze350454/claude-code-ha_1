@@ -5,6 +5,7 @@ __pycache__/
 storage/document_chunks_cache.pkl
 
 # Credentials
+.claude/mcp.json
 Google Drive Credentials Client ID.json
 Google Drive client_secret.json
 Irrigation/esphome/secrets.yaml
