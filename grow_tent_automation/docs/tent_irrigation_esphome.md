@@ -75,21 +75,25 @@ Device: `tent-irrigation-controller`
 ### Sensors
 | Entity | GPIO | Description |
 |--------|------|-------------|
-| Reservoir Temperature Tent | GPIO4 (1-wire) | Nutrient reservoir temp (Dallas) |
-| Air Pump Temperature Tent | GPIO4 (1-wire) | Air pump area temp (Dallas) |
+| Feed Temperature | GPIO4 (1-wire) | Feed reservoir temp (Dallas, addr `0x5000000047758c28`) — `sensor.feed_temperature_irrigation_tent` |
+| Flush Temperature | GPIO4 (1-wire) | Flush reservoir temp (Dallas, addr `0x6f000000455cab28`) — `sensor.flush_temperature_irrigation_tent` |
 | Pressure Pre-Regulator Tent | GPIO34 (ADC) | System pressure before regulator (PSI) |
 | Pressure Post-Regulator Tent | GPIO35 (ADC) | System pressure after regulator (PSI) |
 | Flow Rate Irrigation Tent | GPIO32 (pulse) | Flow rate (L/min) — sensor range: 0.5–20 L/min — entity: `sensor.flow_rate_irrigation_tent` |
 | Flow Total Irrigation Tent | GPIO32 (pulse) | Cumulative volume (L) — entity: `sensor.flow_total_irrigation_tent` |
 
+**Fault flag (template binary_sensor):** `binary_sensor.pressure_sensor_fault_irrigation_tent` (`device_class: problem`) — ON when a pressure transducer reads below its electrical floor (disconnected/unpowered, raw ADC < 0.20 V) or over-range (> 32 psi). Informational only; HA decides what to do.
+
 ### Valves (solenoid control)
 | Entity | GPIO | Description |
 |--------|------|-------------|
-| Flush Drain | GPIO22 | End-of-line drain valve |
-| Flush Irrigation | GPIO23 | Flush reservoir input valve |
-| Feed Fill Valve | GPIO25 | Feed reservoir fill valve — HA entity: `valve.feed_fill_valve_irrigation_tent` |
-| Flush Fill Valve | GPIO26 | Flush reservoir fill valve — HA entity: `valve.flush_fill_valve_irrigation_tent` |
-| Feed Irrigation | GPIO27 | Feed distribution valve |
+| Flush Drain Valve | GPIO22 | End-of-line drain valve — `valve.flush_drain_valve_irrigation_tent` |
+| Flush Valve | GPIO23 | Flush distribution valve — `valve.flush_valve_irrigation_tent` |
+| Flush Fill Valve | GPIO25 | Flush reservoir fill valve — `valve.flush_fill_valve_irrigation_tent` |
+| Feed Fill Valve | GPIO26 | Feed reservoir fill valve — `valve.feed_fill_valve_irrigation_tent` |
+| Feed Valve | GPIO27 | Feed distribution valve — `valve.feed_valve_irrigation_tent` |
+
+> **GPIO25 = Flush Fill, GPIO26 = Feed Fill** — confirmed against the wiring 2026-06-19 (an earlier revision of this doc had these two reversed).
 
 ---
 
@@ -99,273 +103,25 @@ Device: `tent-irrigation-controller`
 **Framework:** `esp-idf`
 **Attenuation note:** Valid options are `0db`(1.1V), `2.5db`(1.5V), `6db`(2.2V), `12db`(3.9V), `auto`. Use `12db` for voltage divider output range (0.33–3.0V).
 
-**Live source of truth:** `D:\Claude\Projects\esphome-config\tent-irrigation-controller.yaml` (deploys to ESPHome VM at `192.168.2.14:/root/config`). The YAML below is a reference snapshot and may drift — for any actual change, edit the live file and trigger a build/flash via the ESPHome dashboard at http://192.168.2.14:6052.
+**Live source of truth:** `D:\Claude\Projects\esphome-config\tent-irrigation-controller.yaml` (deploys to ESPHome VM at `192.168.2.14:/root/config`). For any change, edit that file (or the dashboard copy) and trigger a build/flash via the ESPHome dashboard at http://192.168.2.14:6052.
 
-```yaml
-esphome:
-  name: tent-irrigation-controller
-  friendly_name: Tent Irrigation Controller
-
-esp32:
-  board: esp32dev
-  framework:
-    type: esp-idf
-
-logger:
-
-api:
-  encryption:
-    key: "6QW8BdnIVJgYu+IoT/SGzCpkUOMSvI2ksIbLwLHsLUA="
-
-ota:
-  - platform: esphome
-    password: "e9d18a3d5531692f06956f87737ce080"
-
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-  ap:
-    ssid: "Tent-Irrigation-Controller"
-    password: "qLhuT30xVe6X"
-
-captive_portal:
-
-binary_sensor:
-   - platform: gpio
-     pin:
-       number: GPIO21
-       mode: INPUT_PULLUP
-       inverted: true
-     name: "Feed Empty"
-     id: feed_empty_irrigation_tent
-     device_class: moisture
-     filters:
-       - delayed_on: 2s
-       - delayed_off: 2s
-
-   - platform: gpio
-     pin:
-       number: GPIO19
-       mode: INPUT_PULLUP
-       inverted: true
-     name: "Feed Half"
-     id: feed_half_irrigation_tent
-     device_class: moisture
-     filters:
-       - delayed_on: 2s
-       - delayed_off: 2s
-
-   - platform: gpio
-     pin:
-       number: GPIO18
-       mode: INPUT_PULLUP
-       inverted: true
-     name: "Feed Three Quarter"
-     id: feed_three_quarter_irrigation_tent
-     device_class: moisture
-     filters:
-       - delayed_on: 2s
-       - delayed_off: 2s
-
-   - platform: gpio
-     pin:
-       number: GPIO17
-       mode: INPUT_PULLUP
-       inverted: true
-     name: "Feed Full"
-     id: feed_full_irrigation_tent
-     device_class: moisture
-     filters:
-       - delayed_on: 2s
-       - delayed_off: 2s
-
-   - platform: gpio
-     pin:
-       number: GPIO16
-       mode: INPUT_PULLUP
-       inverted: true
-     name: "Flush Empty"
-     id: flush_empty_irrigation_tent
-     device_class: moisture
-     filters:
-       - delayed_on: 2s
-       - delayed_off: 2s
-
-   - platform: gpio
-     pin:
-       number: GPIO13
-       mode: INPUT_PULLUP
-       inverted: true
-     name: "Flush Half"
-     id: flush_half_irrigation_tent
-     device_class: moisture
-     filters:
-       - delayed_on: 2s
-       - delayed_off: 2s
-
-   - platform: gpio
-     pin:
-       number: GPIO14
-       mode: INPUT_PULLUP
-       inverted: true
-     name: "Flush Full"
-     id: flush_full_irrigation_tent
-     device_class: moisture
-     filters:
-       - delayed_on: 2s
-       - delayed_off: 2s
-
-one_wire:
-   - platform: gpio
-     pin: GPIO4
-
-sensor:
-   - platform: dallas_temp
-     address: 0x5000000047758c28
-     name: "Feed Temperature"
-     id: feed_temperauture_irrigation_tent
-
-   - platform: dallas_temp
-     address: 0x6f000000455cab28
-     name: "Flush Temperature"
-     id: flush_temperature_irrigation_tent
-
-   - platform: adc
-     pin: GPIO34
-     name: "Pressure Pre-Regulator Tent"
-     id: pressure_pre_regulator
-     attenuation: 12db
-     update_interval: 2s
-     filters:
-       - lambda: |-
-           float psi = (x - 0.333f) / (3.0f - 0.333f) * 100.0f;
-           return psi < 0.0f ? 0.0f : psi;
-       - sliding_window_moving_average:
-           window_size: 5
-           send_every: 5
-     unit_of_measurement: "PSI"
-     device_class: pressure
-     state_class: measurement
-     accuracy_decimals: 1
-
-   - platform: adc
-     pin: GPIO35
-     name: "Pressure Post-Regulator Tent"
-     id: pressure_post_regulator
-     attenuation: 12db
-     update_interval: 2s
-     filters:
-       - lambda: |-
-           float psi = (x - 0.333f) / (3.0f - 0.333f) * 100.0f;
-           return psi < 0.0f ? 0.0f : psi;
-       - sliding_window_moving_average:
-           window_size: 5
-           send_every: 5
-     unit_of_measurement: "PSI"
-     device_class: pressure
-     state_class: measurement
-     accuracy_decimals: 1
-
-   - platform: pulse_counter
-     pin:
-       number: GPIO32
-       mode: INPUT
-     name: "Flow Rate Tent"
-     id: flow_rate
-     update_interval: 60s
-     filters:
-       - lambda: |-
-           return x / 7.5f;  # K-factor = 7.5 — confirm from sensor datasheet and update if needed
-     unit_of_measurement: "L/min"
-     state_class: measurement
-     accuracy_decimals: 2
-     total:
-       name: "Flow Total Tent"
-       id: flow_total
-       unit_of_measurement: "L"
-       state_class: total_increasing
-       filters:
-         - lambda: return x / 7.5f;  # K-factor = 7.5 — confirm from sensor datasheet and update if needed
-
-output:
-   - platform: gpio
-     pin:
-       number: GPIO22
-       mode: OUTPUT
-     id: flush_drain_valve_tent_output
-
-   - platform: gpio
-     pin:
-       number: GPIO23
-       mode: OUTPUT
-     id: flush_irrigation_valve_tent_output
-
-   - platform: gpio
-     pin:
-       number: GPIO25
-       mode: OUTPUT
-     id: empty_two_tent_output
-
-   - platform: gpio
-     pin:
-       number: GPIO26
-       mode: OUTPUT
-     id: empty_one_tent_output
-
-   - platform: gpio
-     pin:
-       number: GPIO27
-       mode: OUTPUT
-     id: main_irrigation_valve_tent_output
-
-valve:
-   - platform: template
-     name: "Flush Drain"
-     id: reservoir_prime_valve_tent
-     disabled_by_default: true
-     open_action:
-       - output.turn_on: flush_drain_valve_tent_output
-     close_action:
-       - output.turn_off: flush_drain_valve_tent_output
-     optimistic: true
-
-   - platform: template
-     name: "Flush Irrigation"
-     id: flush_irrigation_valve_tent
-     open_action:
-       - output.turn_on: flush_irrigation_valve_tent_output
-     close_action:
-       - output.turn_off: flush_irrigation_valve_tent_output
-     optimistic: true
-
-   - platform: template
-     name: "Empty Two"
-     id: reservoir_prime_block_valve_tent
-     disabled_by_default: true
-     open_action:
-       - output.turn_on: empty_two_tent_output
-     close_action:
-       - output.turn_off: empty_two_tent_output
-     optimistic: true
-
-   - platform: template
-     name: "Empty One"
-     id: empty_one_tent
-     open_action:
-       - output.turn_on: empty_one_tent_output
-     close_action:
-       - output.turn_off: empty_one_tent_output
-     optimistic: true
-
-   - platform: template
-     name: "Feed Irrigation"
-     id: main_irrigation_valve_tent
-     open_action:
-       - output.turn_on: main_irrigation_valve_tent_output
-     close_action:
-       - output.turn_off: main_irrigation_valve_tent_output
-     optimistic: true
-```
+> **The full config is no longer inlined here.** It drifted from the device and
+> previously leaked the live API/OTA secrets. Authoritative sources, kept in sync:
+>
+> - **Local copy (version-controlled):** `D:\Claude\Projects\esphome-config\tent-irrigation-controller.yaml`
+> - **Live dashboard (builds/flashes):** `http://192.168.2.14:6052` -> `tent-irrigation-controller.yaml`
+>
+> Secrets (`tent_irrigation_api_key`, `tent_irrigation_ota_password`, `wifi_*`,
+> `tent_irrigation_ap_password`) live in the dashboard `secrets.yaml`, not here.
+>
+> **On-device failsafes (added 2026-06-19), independent of Home Assistant:**
+> - Per-valve max-on watchdog - force-closes any valve open past `valve_max_on_time` (40 min).
+> - `api: reboot_timeout: 10min` - reboots (outputs default OFF -> valves closed) if HA is unreachable.
+> - Fill-full interlocks - `Feed Full` / `Flush Full` float trips immediately close the matching fill valve.
+> - `Pressure Sensor Fault` flag - disconnected / over-range transducer detection (see Sensors above).
+>
+> Pressure transfer function: `psi = (V - 0.333) / (3.0 - 0.333) * 30` (0-30 psi sensor).
+> Flow K-factor: 62.72 pulses/L (bucket test 2026-05-10).
 
 ---
 
@@ -497,3 +253,4 @@ number:
 2. Jog open slowly via `number.needle_valve_position` until fully open, note step count
 3. Set `max_value` to that count
 4. Mark physical "closed" position on coupler/bracket for re-homing after power loss
+
