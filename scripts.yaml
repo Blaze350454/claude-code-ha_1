@@ -130,6 +130,11 @@ run_feed_cycle:
         title: Feed Blocked — Reservoir Dry
         message: Feed cycle blocked. Feed reservoir is dry. Refill before next feed.
     - stop: "Feed reservoir dry"
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.last_feed_time
+    data:
+      datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
   - action: script.stop_alternating
   - variables:
       is_last_feed: >

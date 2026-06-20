@@ -15,6 +15,50 @@ views:
           Edit entities or delay: **Settings → Automations & Scenes →
           Random Timer Auto → Actions**.
 
+  - title: Irrigation
+    path: irrigation
+    icon: mdi:watering-can
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: markdown
+            content: >
+              {% macro rel(ts) %}
+              {%- set d = as_timestamp(states(ts), 0) - as_timestamp(now()) -%}
+              {%- set a = (d | abs) -%}
+              {%- set hh = (a // 3600) | int -%}
+              {%- set mm = ((a % 3600) // 60) | int -%}
+              {%- if states(ts) in ['unknown', 'unavailable', ''] -%}—
+              {%- elif d < 0 -%}{{ hh }}h {{ '%02d' | format(mm) }}m ago
+              {%- else -%}in {{ hh }}h {{ '%02d' | format(mm) }}m{%- endif -%}
+              {% endmacro %}
+              ### 🌱 Irrigation Schedule
+
+              **Status:** {{ states('input_text.tent_irrigation_status') }}
+
+              **Last feed:** {{ rel('input_datetime.last_feed_time') }}
+              ({{ as_timestamp(states('input_datetime.last_feed_time'), 0)
+                   | timestamp_custom('%a %-I:%M %p', true, '—') }})
+
+              **Next feed:** {{ rel('input_datetime.next_feed_time') }}
+              ({{ as_timestamp(states('input_datetime.next_feed_time'), 0)
+                   | timestamp_custom('%a %-I:%M %p', true, '—') }})
+              — feed {{ states('input_number.current_feed_number') | int }}
+              of {{ states('input_number.feeds_per_day_2') | int }}
+
+              **Feed res:** {{ state_attr('sensor.feed_level_irrigation_tent', 'level_text') | trim }}
+              · **Flush res:** {{ state_attr('sensor.flush_level_irrigation_tent', 'level_text') | trim }}
+          - type: entities
+            entities:
+              - entity: input_boolean.tent_irrigation_enabled
+                name: Automation enabled
+              - entity: input_number.feeds_per_day_2
+                name: Feeds per day
+              - entity: sensor.feed_level_irrigation_tent
+                name: Feed reservoir
+              - entity: sensor.flush_level_irrigation_tent
+                name: Flush reservoir
+
   - title: VPD
     path: vpd
     icon: mdi:chart-scatter-plot

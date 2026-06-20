@@ -13,6 +13,12 @@ grow_tent_irrigation:
       initial: "17:00:00"
       icon: mdi:calendar-clock
 
+    last_feed_time:
+      name: Last Feed Time
+      has_date: true
+      has_time: true
+      icon: mdi:history
+
     night_pulse_veg_1:
       name: Night Pulse Veg 1
       has_date: false
