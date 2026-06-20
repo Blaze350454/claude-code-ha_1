@@ -79,3 +79,58 @@
           {% else %}
             Empty
           {% endif %}
+
+# --- Latched feed-time readings (added 2026-06-20) ---
+# Flow/pressure sensors read ~0 when pumps are idle. These trigger-based
+# template sensors update ONLY while a feed/flush pump is on, so they HOLD the
+# last active feed reading at idle — lets the dashboard show the last
+# good/low/high color at a glance even when nothing is running.
+- trigger:
+    - trigger: state
+      entity_id: sensor.flow_rate_irrigation_tent
+  condition:
+    - condition: template
+      value_template: >
+        {{ is_state('switch.feed_pump_irrigation_tent', 'on')
+           or is_state('switch.flush_pump_irrigation_tent', 'on') }}
+  sensor:
+    - name: "Last Feed Flow"
+      unique_id: last_feed_flow
+      unit_of_measurement: "L/min"
+      state_class: measurement
+      icon: mdi:pulse
+      state: "{{ states('sensor.flow_rate_irrigation_tent') | float(0) | round(2) }}"
+
+- trigger:
+    - trigger: state
+      entity_id: sensor.pressure_post_regulator_irrigation_tent
+  condition:
+    - condition: template
+      value_template: >
+        {{ is_state('switch.feed_pump_irrigation_tent', 'on')
+           or is_state('switch.flush_pump_irrigation_tent', 'on') }}
+  sensor:
+    - name: "Last Feed Pressure Post"
+      unique_id: last_feed_pressure_post
+      unit_of_measurement: "psi"
+      device_class: pressure
+      state_class: measurement
+      icon: mdi:gauge
+      state: "{{ states('sensor.pressure_post_regulator_irrigation_tent') | float(0) | round(1) }}"
+
+- trigger:
+    - trigger: state
+      entity_id: sensor.pressure_pre_regulator_irrigation_tent
+  condition:
+    - condition: template
+      value_template: >
+        {{ is_state('switch.feed_pump_irrigation_tent', 'on')
+           or is_state('switch.flush_pump_irrigation_tent', 'on') }}
+  sensor:
+    - name: "Last Feed Pressure Pre"
+      unique_id: last_feed_pressure_pre
+      unit_of_measurement: "psi"
+      device_class: pressure
+      state_class: measurement
+      icon: mdi:gauge
+      state: "{{ states('sensor.pressure_pre_regulator_irrigation_tent') | float(0) | round(1) }}"
