@@ -21,6 +21,36 @@ views:
     cards:
       - type: vertical-stack
         cards:
+          - type: horizontal-stack
+            cards:
+              - type: button
+                name: Feed Now
+                icon: mdi:watering-can
+                show_state: false
+                tap_action:
+                  action: perform-action
+                  perform_action: script.run_feed_cycle
+                  confirmation:
+                    text: "Run a manual feed cycle now? Standard pump timing (~8 min); if this is the last feed of the day it also runs the line-clear flush."
+                card_mod:
+                  style: |
+                    ha-card { background: rgba(67,160,71,0.18); }
+              - type: button
+                name: STOP ALL
+                icon: mdi:hand-back-right
+                entity: input_boolean.irrigation_tent_kill
+                show_state: true
+                tap_action:
+                  action: perform-action
+                  perform_action: input_boolean.turn_on
+                  target:
+                    entity_id: input_boolean.irrigation_tent_kill
+                card_mod:
+                  style: |
+                    ha-card {
+                      background: rgba(211,47,47,0.28);
+                      border: 1px solid #d32f2f;
+                    }
           - type: markdown
             card_mod:
               style:
@@ -55,6 +85,8 @@ views:
               **Feed res:** {{ state_attr('sensor.feed_level_irrigation_tent', 'level_text') | trim }} · **Flush res:** {{ state_attr('sensor.flush_level_irrigation_tent', 'level_text') | trim }}
           - type: entities
             entities:
+              - entity: input_boolean.irrigation_tent_kill
+                name: ⛔ Emergency stop (toggle off to resume)
               - entity: input_boolean.tent_irrigation_enabled
                 name: Automation enabled
               - entity: input_number.feeds_per_day_2
