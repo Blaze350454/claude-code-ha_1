@@ -32,7 +32,7 @@ views:
               {%- elif d < 0 -%}{{ hh }}h {{ '%02d' | format(mm) }}m ago
               {%- else -%}in {{ hh }}h {{ '%02d' | format(mm) }}m{%- endif -%}
               {% endmacro %}
-              ### 🌱 Irrigation Schedule
+              <h3 align="center">🌱 Irrigation Schedule</h3>
 
               **Status:** {{ states('input_text.tent_irrigation_status') }}
 
