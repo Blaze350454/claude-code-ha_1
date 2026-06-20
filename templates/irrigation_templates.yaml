@@ -113,7 +113,6 @@
     - name: "Last Feed Pressure Post"
       unique_id: last_feed_pressure_post
       unit_of_measurement: "psi"
-      device_class: pressure
       state_class: measurement
       icon: mdi:gauge
       state: "{{ states('sensor.pressure_post_regulator_irrigation_tent') | float(0) | round(1) }}"
@@ -130,7 +129,6 @@
     - name: "Last Feed Pressure Pre"
       unique_id: last_feed_pressure_pre
       unit_of_measurement: "psi"
-      device_class: pressure
       state_class: measurement
       icon: mdi:gauge
       state: "{{ states('sensor.pressure_pre_regulator_irrigation_tent') | float(0) | round(1) }}"
