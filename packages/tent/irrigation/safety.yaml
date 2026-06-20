@@ -565,6 +565,13 @@ tent_irrigation_safety:
 
     - id: automation.irrigation_low_flow_safety
       alias: Tent Irrigation — Low Flow Safety
+      # DISABLED during development (2026-06-20): the flow meter
+      # (sensor.flow_rate_irrigation_tent, GPIO32 pulse counter) is reading a
+      # flat 0.0 L/min, so this safety faulted on every feed and stalled the
+      # schedule. Lowering the 0.5 threshold can't help while flow reads 0.0.
+      # Re-enable by removing this initial_state line once the flow sensor is
+      # confirmed reporting real readings again.
+      initial_state: false
       description: >
         If a feed/flush pump has been running for 2 minutes but flow rate is
         still below 0.5 L/min, assume clogged emitter, dry pump head, kinked
