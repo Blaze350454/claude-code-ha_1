@@ -266,7 +266,7 @@ run_feed_cycle:
   mode: single
   icon: mdi:watering-can
 
-irrigation_advance_to_next_feed:
+tent_irrigation_advance_to_next_feed:
   alias: Advance to Next Feed
   sequence:
   - variables:
