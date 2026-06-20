@@ -176,6 +176,153 @@ grow_tent_irrigation:
       icon: mdi:counter
       initial: 0
 
+    # --- Per-stage feed profile (added 2026-06-20) ---
+    # Baseline feed-duration + feeds-per-day for each growth stage.
+    # input_select.feed_stage selects which is active; the
+    # "Apply Feed Stage Profile" automation copies the selected stage's values
+    # into feed_duration_minutes + feeds_per_day_2 (which the feed cycle and
+    # schedule already read). input_number state persists, so baselines carry
+    # over to the next crop. Flush timing is intentionally NOT staged.
+    feed_dur_seedling:
+      name: "Feed Duration — Seedling"
+      min: 0.5
+      max: 13
+      step: 0.5
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:timer
+      initial: 2
+    feed_dur_early_veg:
+      name: "Feed Duration — Early Veg"
+      min: 0.5
+      max: 13
+      step: 0.5
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:timer
+      initial: 3
+    feed_dur_medium_veg:
+      name: "Feed Duration — Medium Veg"
+      min: 0.5
+      max: 13
+      step: 0.5
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:timer
+      initial: 4
+    feed_dur_late_veg:
+      name: "Feed Duration — Late Veg"
+      min: 0.5
+      max: 13
+      step: 0.5
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:timer
+      initial: 6
+    feed_dur_early_flower:
+      name: "Feed Duration — Early Flower"
+      min: 0.5
+      max: 13
+      step: 0.5
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:timer
+      initial: 7
+    feed_dur_mid_flower:
+      name: "Feed Duration — Mid Flower"
+      min: 0.5
+      max: 13
+      step: 0.5
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:timer
+      initial: 8
+    feed_dur_late_flower:
+      name: "Feed Duration — Late Flower"
+      min: 0.5
+      max: 13
+      step: 0.5
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:timer
+      initial: 8
+    feeds_seedling:
+      name: "Feeds/Day — Seedling"
+      min: 2
+      max: 12
+      step: 1
+      unit_of_measurement: feeds
+      mode: box
+      icon: mdi:counter
+      initial: 2
+    feeds_early_veg:
+      name: "Feeds/Day — Early Veg"
+      min: 2
+      max: 12
+      step: 1
+      unit_of_measurement: feeds
+      mode: box
+      icon: mdi:counter
+      initial: 2
+    feeds_medium_veg:
+      name: "Feeds/Day — Medium Veg"
+      min: 2
+      max: 12
+      step: 1
+      unit_of_measurement: feeds
+      mode: box
+      icon: mdi:counter
+      initial: 3
+    feeds_late_veg:
+      name: "Feeds/Day — Late Veg"
+      min: 2
+      max: 12
+      step: 1
+      unit_of_measurement: feeds
+      mode: box
+      icon: mdi:counter
+      initial: 3
+    feeds_early_flower:
+      name: "Feeds/Day — Early Flower"
+      min: 2
+      max: 12
+      step: 1
+      unit_of_measurement: feeds
+      mode: box
+      icon: mdi:counter
+      initial: 3
+    feeds_mid_flower:
+      name: "Feeds/Day — Mid Flower"
+      min: 2
+      max: 12
+      step: 1
+      unit_of_measurement: feeds
+      mode: box
+      icon: mdi:counter
+      initial: 3
+    feeds_late_flower:
+      name: "Feeds/Day — Late Flower"
+      min: 2
+      max: 12
+      step: 1
+      unit_of_measurement: feeds
+      mode: box
+      icon: mdi:counter
+      initial: 4
+
+  input_select:
+    feed_stage:
+      name: Feed Stage
+      options:
+        - Seedling
+        - Early Veg
+        - Medium Veg
+        - Late Veg
+        - Early Flower
+        - Mid Flower
+        - Late Flower
+      initial: Seedling
+      icon: mdi:sprout
 
   input_boolean:
     tent_irrigation_kill_automations:

@@ -1,0 +1,63 @@
+tent_irrigation_feed_stage:
+  automation:
+    - id: automation.irrigation_apply_feed_stage
+      alias: Tent Irrigation — Apply Feed Stage Profile
+      description: >
+        Copies the selected feed stage's baseline feed-duration and feeds-per-day
+        into the active helpers (input_number.feed_duration_minutes and
+        input_number.feeds_per_day_2), which the feed cycle and schedule already
+        read. Fires when the stage changes and when any per-stage baseline is
+        edited (idempotent — it always re-applies the currently selected stage).
+        On an actual stage change it also rebuilds today's schedule so the new
+        feeds-per-day takes effect immediately (a baseline edit does not, since
+        feed_duration is read live and feeds-per-day only matters at setup).
+      triggers:
+        - trigger: state
+          entity_id: input_select.feed_stage
+          id: stage_change
+        - trigger: state
+          entity_id:
+            - input_number.feed_dur_seedling
+            - input_number.feed_dur_early_veg
+            - input_number.feed_dur_medium_veg
+            - input_number.feed_dur_late_veg
+            - input_number.feed_dur_early_flower
+            - input_number.feed_dur_mid_flower
+            - input_number.feed_dur_late_flower
+            - input_number.feeds_seedling
+            - input_number.feeds_early_veg
+            - input_number.feeds_medium_veg
+            - input_number.feeds_late_veg
+            - input_number.feeds_early_flower
+            - input_number.feeds_mid_flower
+            - input_number.feeds_late_flower
+          id: tune
+      actions:
+        - variables:
+            suffix: >
+              {{ {'Seedling': 'seedling', 'Early Veg': 'early_veg',
+                  'Medium Veg': 'medium_veg', 'Late Veg': 'late_veg',
+                  'Early Flower': 'early_flower', 'Mid Flower': 'mid_flower',
+                  'Late Flower': 'late_flower'
+                 }.get(states('input_select.feed_stage'), 'seedling') }}
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.feed_duration_minutes
+          data:
+            value: "{{ states('input_number.feed_dur_' ~ suffix) | float(8) }}"
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.feeds_per_day_2
+          data:
+            value: "{{ states('input_number.feeds_' ~ suffix) | int(3) }}"
+        - if:
+            - condition: trigger
+              id: stage_change
+            - condition: state
+              entity_id: input_boolean.tent_irrigation_enabled
+              state: "on"
+          then:
+            - action: automation.trigger
+              target:
+                entity_id: automation.tent_irrigation_daily_setup_at_lights_on
+      mode: single
