@@ -59,7 +59,7 @@ def gauge(ent, name, mx, sev):
     return {"type": "gauge", "entity": ent, "name": name, "min": 0, "max": mx,
             "severity": sev, "grid_options": {"columns": 4}}
 
-stats = {"type": "grid", "column_span": 2, "cards": [
+stats = {"type": "grid", "column_span": 1, "cards": [
     {"type": "heading", "heading": "Irrigation"},
     {"show_name": True, "show_icon": True, "type": "button", "name": "Feed Now", "icon": "mdi:watering-can", "color": "green",
      "tap_action": {"action": "perform-action", "perform_action": "script.run_feed_cycle",
@@ -99,7 +99,7 @@ stats = {"type": "grid", "column_span": 2, "cards": [
     gauge("sensor.last_feed_pressure_pre", "Pre-Reg", 60, {"green": 20, "yellow": 10, "red": 0}),
 ]}
 
-settings = {"type": "grid", "column_span": 2, "cards": [
+settings = {"type": "grid", "column_span": 1, "cards": [
     {"type": "heading", "heading": "Irrigation Settings"},
     {"type": "entities", "title": "Stage & Light Schedule", "entities": [
         {"entity": "input_select.grow_tent_growth_stage", "name": "Growth stage"},
