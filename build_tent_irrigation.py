@@ -99,17 +99,23 @@ stats = {"type": "grid", "column_span": 1, "cards": [
     gauge("sensor.last_feed_pressure_pre", "Pre-Reg", 60, {"green": 20, "yellow": 10, "red": 0}),
 ]}
 
-settings = {"type": "grid", "column_span": 1, "cards": [
-    {"type": "heading", "heading": "Irrigation Settings"},
-    {"type": "entities", "title": "Stage & Light Schedule", "entities": [
+def settings_section(title, entities):
+    # Each settings group is its own grid section: a heading card + one entities card.
+    return {"type": "grid", "column_span": 1, "cards": [
+        {"type": "heading", "heading": title},
+        {"type": "entities", "entities": entities},
+    ]}
+
+settings_sections = [
+    settings_section("Stage & Light Schedule", [
         {"entity": "input_select.grow_tent_growth_stage", "name": "Growth stage"},
         {"entity": "input_datetime.veg_lights_on_time", "name": "Veg lights on"},
         {"entity": "input_datetime.veg_lights_off_time", "name": "Veg lights off"},
         {"entity": "input_datetime.flower_lights_on_time", "name": "Flower lights on"},
         {"entity": "input_datetime.flower_lights_off_time", "name": "Flower lights off"},
         {"entity": "input_datetime.daily_setup_time", "name": "Daily setup time"},
-    ]},
-    {"type": "entities", "title": "Feed & Flush", "entities": [
+    ]),
+    settings_section("Feed & Flush", [
         {"entity": "input_boolean.tent_irrigation_enabled", "name": "Automation enabled"},
         {"entity": "input_number.feeds_per_day_2", "name": "Feeds per day"},
         {"entity": "input_number.feed_duration_minutes", "name": "Feed duration (min)"},
@@ -117,8 +123,8 @@ settings = {"type": "grid", "column_span": 1, "cards": [
         {"entity": "input_number.flush_duration_minutes", "name": "Flush duration (min)"},
         {"entity": "input_number.flush_day_interval", "name": "Flush every (days)"},
         {"entity": "input_number.air_stir_lead_minutes", "name": "Pre-feed air/stir lead (min)"},
-    ]},
-    {"type": "entities", "title": "Maintenance & Timeouts", "entities": [
+    ]),
+    settings_section("Maintenance & Timeouts", [
         {"entity": "input_number.maintenance_interval_minutes", "name": "Maintenance interval (min)"},
         {"entity": "input_number.maintenance_stir_minutes", "name": "Maintenance stir (min)"},
         {"entity": "input_number.maintenance_air_minutes", "name": "Maintenance air (min)"},
@@ -126,8 +132,8 @@ settings = {"type": "grid", "column_span": 1, "cards": [
         {"entity": "input_number.stir_on_duration_minutes", "name": "Stir on duration (min)"},
         {"entity": "input_number.feed_fill_timeout_seconds", "name": "Feed fill timeout (s)"},
         {"entity": "input_number.flush_fill_timeout_seconds", "name": "Flush fill timeout (s)"},
-    ]},
-    {"type": "entities", "title": "Night Pulses", "entities": [
+    ]),
+    settings_section("Night Pulses", [
         {"entity": "input_number.night_pulse_air_minutes", "name": "Air (min)"},
         {"entity": "input_number.night_pulse_stir_pre_minutes", "name": "Stir pre (min)"},
         {"entity": "input_number.night_pulse_stir_post_minutes", "name": "Stir post (min)"},
@@ -138,8 +144,23 @@ settings = {"type": "grid", "column_span": 1, "cards": [
         {"entity": "input_datetime.night_pulse_flower_3", "name": "Flower pulse 3"},
         {"entity": "input_datetime.night_pulse_flower_4", "name": "Flower pulse 4"},
         {"entity": "input_datetime.night_pulse_flower_5", "name": "Flower pulse 5"},
-    ]},
-]}
+    ]),
+]
+
+# Headings of the sections this script owns and rebuilds every run. Every other section on
+# the dashboard is preserved untouched. "Irrigation Settings" is the legacy single settings
+# section we split apart — listed so the migration run drops it instead of orphaning it.
+MANAGED_HEADINGS = {
+    "Irrigation", "Irrigation Settings",
+    "Stage & Light Schedule", "Feed & Flush",
+    "Maintenance & Timeouts", "Night Pulses",
+}
+
+def first_heading(sec):
+    for c in sec.get("cards", []):
+        if c.get("type") == "heading":
+            return c.get("heading")
+    return None
 
 
 async def req(ws, msg, _id):
@@ -161,14 +182,13 @@ async def main():
         pathlib.Path(f"dashboard_tent_backup_{ts}.json").write_text(json.dumps(cfg, indent=1))
         print("backup:", f"dashboard_tent_backup_{ts}.json")
         secs = cfg["views"][0]["sections"]
-        s0 = secs[0]["cards"][0]
-        s0head = s0.get("heading")
-        s1head = secs[1]["cards"][0].get("heading") if secs[1]["cards"] else ""
-        original = s0.get("type") == "markdown" and s1head == "Manual Control"
-        rebuilt = s0head == "Irrigation" and s1head == "Irrigation Settings"
-        assert original or rebuilt, \
-            "unexpected layout: %s / %r / %r" % (s0.get("type"), s0head, s1head)
-        cfg["views"][0]["sections"] = [stats, settings] + secs[2:]
+        # Safety: make sure we're looking at the right dashboard before we touch it.
+        assert any(first_heading(s) == "Irrigation" for s in secs), \
+            "no 'Irrigation' section found — wrong dashboard or unexpected layout?"
+        # Rebuild every managed section; keep all other (manually-built) sections as-is.
+        managed = [stats] + settings_sections
+        manual = [s for s in secs if first_heading(s) not in MANAGED_HEADINGS]
+        cfg["views"][0]["sections"] = managed + manual
         save = await req(ws, {"type": "lovelace/config/save", "url_path": "dashboard-tent", "config": cfg}, 2)
         print("save success:", save.get("success"), save.get("error", ""))
         chk = (await req(ws, {"type": "lovelace/config", "url_path": "dashboard-tent"}, 3))["result"]["views"][0]["sections"]
