@@ -1,6 +1,6 @@
 # Tent Irrigation — Home Assistant / ESPHome
 
-*HA-relevant content migrated from the Grow Tent project. Physical hardware docs remain in `D:\Claude\Projects\Grow Tent\Tent_Irrigation_Project.md`.*
+*HA-relevant content migrated from the Grow Tent project. Physical hardware docs are in [`Tent_Irrigation_Project.md`](./Tent_Irrigation_Project.md) (same folder).*
 
 ---
 
