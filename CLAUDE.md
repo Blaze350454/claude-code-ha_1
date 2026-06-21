@@ -4,11 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Two independent but related sub-projects live here:
+**Grow Home** is the umbrella repo for all of the home garden/grow automation projects — a single home for tooling and configs that grows as new grow systems (tent, tower, future builds) are added over time. It currently holds these independent but related sub-projects:
 
 1. **MCP Server** (`mcp_server/`) — A FastMCP server that combines semantic search over crawled documentation with live Home Assistant control via REST API. Consumed by AI agents (Claude Code, Cursor) over stdio.
 2. **ESPHome MCP** (`esphome_mcp/`) — A separate, self-contained MCP server specifically for ESPHome documentation. Has its own `pyproject.toml` and `uv` environment.
-3. **Grow Tent Automation** (`grow_tent_automation/`) — HA YAML configs for the irrigation system. `grow_tent_package.yaml` is the main HA package. Hardware/entity documentation is in `docs/tent_irrigation_esphome.md`.
+3. **Grow Tent Automation** (`grow_tent_automation/`) — HA YAML configs for the tent irrigation system. `grow_tent_package.yaml` is the main HA package. Hardware/entity documentation is in `docs/tent_irrigation_esphome.md`.
+
+New grow projects (e.g. the hydro tower, plant scales, CO2 sensor builds tracked in `MEMORY.md`) are added here as additional sub-directories rather than as separate repos.
 
 ## Commands
 
@@ -63,7 +65,7 @@ Migration tooling lives in this repo:
 - `tag_migration_phase1a.py` — idempotent migrator (dry-run default, `--apply` commits)
 - `registry_export.py` — pre/post-migration JSON snapshots under `migration_snapshots/<timestamp>[_label]/`
 
-## Home Assistant / Grow Tent Context
+## Home Assistant / Grow System Context
 
 - HA instance: `http://192.168.2.151:8123`
 - HS300 power strip pumps are controlled via a custom cloud-API service running on the Ubuntu VM (port 8765), not via the native TP-Link integration (firmware broke local auth).
