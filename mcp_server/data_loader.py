@@ -7,9 +7,8 @@ from typing import List, Dict, Union, Any  # Added Any
 
 import numpy as np  # For np.ndarray type hint
 
-# Import config variables and the embedding model
 from mcp_server.config import STORAGE_DIR, CACHE_FILE_PATH
-from mcp_server.app import embedding_model
+from mcp_server.model import get_model
 
 # Simple regex to find markdown headings (##, ###, etc.)
 HEADING_RE = re.compile(r"^(#{2,4})\s+(.*)")
@@ -212,9 +211,9 @@ def load_and_chunk_documents():
                     f"Generating embeddings for {len(texts_to_embed)} chunks...",
                     file=sys.stderr,
                 )
-                embeddings = embedding_model.encode(
+                embeddings = get_model().encode(
                     texts_to_embed,
-                    show_progress_bar=True,  # Enable progress bar
+                    show_progress_bar=True,
                 )
                 # Add embeddings back to the chunk dictionaries
                 for i, chunk in enumerate(loaded_chunks):

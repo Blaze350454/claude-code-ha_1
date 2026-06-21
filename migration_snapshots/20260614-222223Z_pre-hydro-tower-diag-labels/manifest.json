@@ -1,0 +1,12 @@
+{
+  "timestamp_utc": "20260614-222223Z",
+  "label": "pre-hydro-tower-diag-labels",
+  "ha_url": "http://192.168.2.151:8123",
+  "ha_version": "2026.6.0",
+  "counts": {
+    "entity_registry": 947,
+    "area_registry": 13,
+    "device_registry": 82,
+    "label_registry": 52
+  }
+}

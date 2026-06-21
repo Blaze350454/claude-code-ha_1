@@ -1,0 +1,1788 @@
+{
+ "views": [
+  {
+   "title": "Tent",
+   "type": "sections",
+   "max_columns": 4,
+   "icon": "mdi:tent",
+   "sections": [
+    {
+     "type": "grid",
+     "column_span": 1,
+     "cards": [
+      {
+       "type": "markdown",
+       "card_mod": {
+        "style": {
+         "ha-markdown$": "h3 {\n  text-align: center;\n  margin-top: 0;\n}\n"
+        }
+       },
+       "content": "{% macro rel(ts, future=false) -%}\n{%- set t = state_attr(ts, 'timestamp') -%}\n{%- if t is none -%}\u2014\n{%- else -%}\n{%- set d = t - now().timestamp() -%}\n{%- set a = (d | abs) | int -%}\n{%- set hh = (a // 3600) | int -%}\n{%- set mm = ((a % 3600) // 60) | int -%}\n{%- if d >= 0 -%}in {{ hh }}h {{ '%02d' | format(mm) }}m\n{%- elif future -%}overdue\n{%- else -%}{{ hh }}h {{ '%02d' | format(mm) }}m ago\n{%- endif -%}\n{%- endif -%}\n{%- endmacro -%}\n### \ud83c\udf31 Irrigation Schedule\n\n**Status:** {{ states('input_text.tent_irrigation_status') }}\n\n**Last feed:** {{ rel('input_datetime.last_feed_time') }} ({{ state_attr('input_datetime.last_feed_time', 'timestamp') | timestamp_custom('%a %-I:%M %p', true, '\u2014') }})\n\n**Next feed:** {{ rel('input_datetime.next_feed_time', true) }} ({{ state_attr('input_datetime.next_feed_time', 'timestamp') | timestamp_custom('%a %-I:%M %p', true, '\u2014') }}) \u2014 feed {{ states('input_number.current_feed_number') | int }} of {{ states('input_number.feeds_per_day_2') | int }}\n\n**Feed res:** {{ state_attr('sensor.feed_level_irrigation_tent', 'level_text') | trim }} \u00b7 **Flush res:** {{ state_attr('sensor.flush_level_irrigation_tent', 'level_text') | trim }}\n"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "column_span": 1,
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "Manual Control"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "name": "Feed Now",
+       "icon": "mdi:watering-can",
+       "color": "green",
+       "tap_action": {
+        "action": "perform-action",
+        "perform_action": "script.run_feed_cycle",
+        "confirmation": {
+         "text": "Run a manual feed cycle now? Standard pump timing (~8 min); if this is the last feed of the day it also runs the line-clear flush."
+        }
+       }
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "name": "STOP ALL",
+       "icon": "mdi:hand-back-right",
+       "color": "red",
+       "entity": "input_boolean.irrigation_tent_kill",
+       "show_state": true,
+       "tap_action": {
+        "action": "perform-action",
+        "perform_action": "input_boolean.turn_on",
+        "target": {
+         "entity_id": "input_boolean.irrigation_tent_kill"
+        }
+       },
+       "card_mod": {
+        "style": "ha-card { background: rgba(211,47,47,0.28); border: 1px solid #d32f2f; }"
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_boolean.irrigation_tent_kill",
+       "name": "Emergency stop (toggle off to resume)",
+       "icon": "mdi:alert-octagon"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "valve.flush_drain_valve_irrigation_tent",
+       "color": "accent"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "valve.flush_valve_irrigation_tent",
+       "name": "Flush",
+       "color": "accent"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "valve.feed_valve_irrigation_tent",
+       "color": "accent"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "valve.feed_fill_valve_irrigation_tent",
+       "color": "accent"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "valve.flush_fill_valve_irrigation_tent",
+       "color": "accent"
+      }
+     ],
+     "column_span": 1,
+     "background": {
+      "color": "accent",
+      "opacity": 50
+     }
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "switch.air_pump_irrigation_tent"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "switch.feed_pump_irrigation_tent",
+       "icon": "mdi:water-pump"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "switch.feed_stir_pump_irrigation_tent"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "switch.flush_pump_irrigation_tent"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "switch.flush_stir_pump_irrigation_tent"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "switch.table_drain_pump_irrigation_tent",
+       "icon": "mdi:water-pump"
+      }
+     ],
+     "column_span": 1,
+     "background": {
+      "color": "primary",
+      "opacity": 50
+     }
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "fan.ac_circulation_fan"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "fan.circulation_fans_tent",
+       "icon": "mdi:fan",
+       "color": "green",
+       "show_state": false
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "fan.duct_fan",
+       "icon": "mdi:fan",
+       "color": "green",
+       "show_state": false
+      },
+      {
+       "type": "tile",
+       "entity": "fan.tent_humidifier_fan_pwm",
+       "name": {
+        "type": "entity"
+       },
+       "vertical": false,
+       "features_position": "bottom"
+      },
+      {
+       "type": "tile",
+       "entity": "fan.tent_humidifier_fan_pwm",
+       "name": {
+        "type": "entity"
+       },
+       "vertical": false,
+       "features_position": "bottom"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "switch.tent_humidifier",
+       "icon": "mdi:cloud-percent-outline",
+       "color": "green",
+       "show_state": false
+      },
+      {
+       "type": "entity",
+       "entity": "sensor.tent_humidifier_reservoir_temperature"
+      }
+     ],
+     "column_span": 1,
+     "background": {
+      "color": "lime",
+      "opacity": 50
+     }
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "New section"
+      },
+      {
+       "type": "gauge",
+       "entity": "sensor.feed_level_irrigation_tent"
+      },
+      {
+       "type": "gauge",
+       "entity": "sensor.flush_level_irrigation_tent"
+      },
+      {
+       "type": "gauge",
+       "entity": "sensor.table_drain_level_irrigation_tent"
+      }
+     ],
+     "column_span": 4
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "New section"
+      },
+      {
+       "type": "tile",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       },
+       "entity": "binary_sensor.table_drain_empty",
+       "vertical": false,
+       "features_position": "bottom"
+      },
+      {
+       "type": "tile",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       },
+       "entity": "binary_sensor.table_drain_full",
+       "vertical": false,
+       "features_position": "bottom"
+      }
+     ],
+     "column_span": 1
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "New section"
+      },
+      {
+       "type": "tile",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       },
+       "entity": "binary_sensor.feed_empty_irrigation_tent",
+       "vertical": false,
+       "features_position": "bottom"
+      },
+      {
+       "type": "tile",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       },
+       "entity": "binary_sensor.feed_half_irrigation_tent",
+       "vertical": false,
+       "features_position": "bottom"
+      },
+      {
+       "type": "tile",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       },
+       "entity": "binary_sensor.feed_three_quarter_irrigation_tent",
+       "vertical": false,
+       "features_position": "bottom"
+      },
+      {
+       "type": "tile",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       },
+       "entity": "binary_sensor.feed_full_irrigation_tent",
+       "vertical": false,
+       "features_position": "bottom"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "tile",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       },
+       "entity": "binary_sensor.flush_empty_irrigation_tent",
+       "vertical": false,
+       "features_position": "bottom"
+      },
+      {
+       "type": "tile",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       },
+       "entity": "binary_sensor.flush_half_irrigation_tent",
+       "vertical": false,
+       "features_position": "bottom"
+      },
+      {
+       "type": "tile",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       },
+       "entity": "binary_sensor.flush_full_irrigation_tent",
+       "vertical": false,
+       "features_position": "bottom"
+      },
+      {
+       "type": "heading",
+       "heading": "New section"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "light.hlg",
+       "icon": "mdi:alarm-light",
+       "color": "green",
+       "show_state": false
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "light.chilled",
+       "icon": "mdi:alarm-light-outline",
+       "color": "green",
+       "show_state": false
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "New section"
+      },
+      {
+       "type": "gauge",
+       "entity": "sensor.pressure_pre_regulator_irrigation_tent",
+       "grid_options": {
+        "columns": 6,
+        "rows": "auto"
+       },
+       "unit": "PSI"
+      },
+      {
+       "type": "gauge",
+       "entity": "sensor.pressure_post_regulator_irrigation_tent",
+       "grid_options": {
+        "columns": 6,
+        "rows": "auto"
+       }
+      },
+      {
+       "type": "gauge",
+       "entity": "sensor.flow_rate_irrigation_tent",
+       "grid_options": {
+        "columns": 6,
+        "rows": "auto"
+       }
+      },
+      {
+       "type": "gauge",
+       "entity": "sensor.flow_total_irrigation_tent",
+       "grid_options": {
+        "columns": 6,
+        "rows": "auto"
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "switch.controller_tent"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "switch.irrigation_controller_tent"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "custom:modern-circular-gauge",
+       "entity": "sensor.flower_temperature_tent",
+       "secondary": {
+        "entity": "sensor.canopy_temperature_tent",
+        "unit": "C",
+        "show_gauge": "inner"
+       },
+       "tertiary": {
+        "entity": "sensor.tent_average_temperature",
+        "unit": "C",
+        "show_gauge": "outer",
+        "segments": [
+         {}
+        ]
+       },
+       "unit": "C",
+       "gauge_type": "standard",
+       "name": "Temp",
+       "min": 15,
+       "max": 35,
+       "segments": [
+        {
+         "from": 15,
+         "color": [
+          255,
+          0,
+          0
+         ]
+        },
+        {
+         "from": 20,
+         "color": [
+          0,
+          255,
+          0
+         ]
+        },
+        {
+         "from": 30,
+         "color": [
+          255,
+          0,
+          0
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": 6,
+        "rows": 3
+       }
+      },
+      {
+       "type": "custom:modern-circular-gauge",
+       "entity": "sensor.feed_temperature_irrigation_tent",
+       "secondary": {},
+       "tertiary": {},
+       "name": "Reservoir Temperature",
+       "min": 15,
+       "max": 30,
+       "needle": false,
+       "start_from_zero": false,
+       "show_state": true,
+       "show_unit": true,
+       "show_seconds": true,
+       "adaptive_state_color": true,
+       "adaptive_label_color": false,
+       "adaptive_graph_range": true,
+       "header_position": "bottom",
+       "smooth_segments": true,
+       "show_header": true,
+       "show_icon": true,
+       "adaptive_icon_color": true,
+       "show_entity_picture": false,
+       "gauge_type": "standard",
+       "segments": [
+        {
+         "from": 15,
+         "color": [
+          26,
+          113,
+          255
+         ]
+        },
+        {
+         "from": 21,
+         "color": [
+          5,
+          255,
+          55
+         ]
+        },
+        {
+         "from": 26,
+         "color": [
+          255,
+          0,
+          0
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": 6,
+        "rows": 3
+       }
+      },
+      {
+       "type": "custom:modern-circular-gauge",
+       "entity": "sensor.flush_temperature_irrigation_tent",
+       "secondary": {},
+       "tertiary": {},
+       "name": "Flush Temperature",
+       "min": 15,
+       "max": 50,
+       "needle": false,
+       "start_from_zero": false,
+       "show_state": true,
+       "show_unit": true,
+       "show_seconds": true,
+       "adaptive_state_color": true,
+       "adaptive_label_color": false,
+       "adaptive_graph_range": true,
+       "header_position": "bottom",
+       "smooth_segments": true,
+       "show_header": true,
+       "show_icon": true,
+       "adaptive_icon_color": true,
+       "show_entity_picture": false,
+       "gauge_type": "standard",
+       "segments": [
+        {
+         "from": 15,
+         "color": [
+          26,
+          113,
+          255
+         ]
+        },
+        {
+         "from": 19.9,
+         "color": [
+          5,
+          255,
+          55
+         ]
+        },
+        {
+         "from": 40,
+         "color": [
+          255,
+          0,
+          0
+         ]
+        }
+       ],
+       "grid_options": {
+        "columns": 6,
+        "rows": 3
+       }
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "New section"
+      },
+      {
+       "type": "humidifier",
+       "entity": "humidifier.dehumidifier_tent",
+       "features": [
+        {
+         "type": "humidifier-toggle"
+        }
+       ]
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "humidifier.dehumidifier_tent"
+      },
+      {
+       "type": "thermostat",
+       "entity": "climate.air_conditioner_tent",
+       "show_current_as_primary": true
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "climate.air_conditioner_tent"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "New section"
+      },
+      {
+       "type": "entities",
+       "title": "Stage Control",
+       "entities": [
+        {
+         "entity": "input_select.growth_stage",
+         "name": "Growth Stage"
+        },
+        {
+         "entity": "input_number.transition_day_counter",
+         "name": "Transition Day"
+        }
+       ]
+      },
+      {
+       "type": "entities",
+       "title": "Vegetative Schedule",
+       "entities": [
+        {
+         "entity": "input_datetime.veg_lights_on_time",
+         "name": "Lights On"
+        },
+        {
+         "entity": "input_datetime.veg_lights_off_time",
+         "name": "Lights Off"
+        }
+       ]
+      },
+      {
+       "type": "entities",
+       "title": "Flower Schedule",
+       "entities": [
+        {
+         "entity": "input_datetime.flower_lights_on_time",
+         "name": "Lights On"
+        },
+        {
+         "entity": "input_datetime.flower_lights_off_time",
+         "name": "Lights Off"
+        }
+       ]
+      },
+      {
+       "type": "markdown",
+       "content": "## Tent Lights\n{% set stage = states('input_select.growth_stage') %}\n{% set ns = namespace(on_t='', off_t='', lights_on=false, duration_h=0) %}\n{% if stage in ['Vegetative', 'Transition'] %}\n  {% set ns.on_t = states('input_datetime.veg_lights_on_time') %}\n  {% set ns.off_t = states('input_datetime.veg_lights_off_time') %}\n{% else %}\n  {% set ns.on_t = states('input_datetime.flower_lights_on_time') %}\n  {% set ns.off_t = states('input_datetime.flower_lights_off_time') %}\n{% endif %}\n{% set on_m = (ns.on_t.split(':')[0]|int * 60) + ns.on_t.split(':')[1]|int %}\n{% set off_m = (ns.off_t.split(':')[0]|int * 60) + ns.off_t.split(':')[1]|int %}\n{% set now_m = now().hour * 60 + now().minute %}\n{% if on_m < off_m %}\n  {% set ns.lights_on = now_m >= on_m and now_m < off_m %}\n  {% set ns.duration_h = (off_m - on_m) // 60 %}\n{% else %}\n  {% set ns.lights_on = now_m >= on_m or now_m < off_m %}\n  {% set ns.duration_h = (1440 - on_m + off_m) // 60 %}\n{% endif %}\n{% set next_m = off_m if ns.lights_on else on_m %}\n{% set diff = (next_m - now_m) % 1440 %}\n{% set on_fmt = as_timestamp(today_at(ns.on_t)) | timestamp_custom('%I:%M %p') %}\n{% set off_fmt = as_timestamp(today_at(ns.off_t)) | timestamp_custom('%I:%M %p') %}\n| | |\n|---|---|\n| **Stage** | {{ stage }} |\n| **Schedule** | {{ on_fmt }} to {{ off_fmt }} ({{ ns.duration_h }}h) |\n| **Tent Lights** | {{ 'ON' if ns.lights_on else 'OFF' }} |\n| **Next change** | {{ 'Off' if ns.lights_on else 'On' }} in {{ diff // 60 }}h {{ diff % 60 }}m |\n{% if stage == 'Transition' %}| **Transition** | Day {{ states('input_number.transition_day_counter')|int }} of 6 |{% endif %}\n"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "New section"
+      },
+      {
+       "show_name": true,
+       "show_icon": true,
+       "type": "button",
+       "entity": "input_select.tent_humidity_mode"
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "New section"
+      },
+      {
+       "cycle_interval": 5,
+       "show_when_clear": false,
+       "clear_message": "",
+       "clear_theme": "success",
+       "alerts": [
+        {
+         "operator": "=",
+         "state": "off",
+         "message": "Lava alert",
+         "priority": 1,
+         "theme": "lava",
+         "icon": "mdi:water-alert",
+         "entity_filter": "flush_empty",
+         "sound": true,
+         "show_filter_state": true,
+         "use_ha_icon": true
+        },
+        {
+         "entity": "automation.alert_feed_reservoir_dry",
+         "operator": "=",
+         "state": "off",
+         "message": "Alert \u2014 Feed Reservoir Dry",
+         "priority": 1,
+         "theme": "emergency",
+         "icon": ""
+        }
+       ],
+       "type": "custom:alert-ticker-card",
+       "cycle_animation": "curtain",
+       "large_buttons": true,
+       "ha_theme": true
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "New section"
+      },
+      {
+       "type": "entities",
+       "entities": [
+        {
+         "entity": "input_button.random_timer_trigger"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "New section"
+      },
+      {
+       "type": "custom:plotly-graph",
+       "refresh_interval": 30,
+       "hours_to_show": 0,
+       "ha_theme": false,
+       "card_mod": {
+        "style": "ha-card {\n  background: transparent !important;\n  box-shadow: none !important;\n  border: none !important;\n}\n"
+       },
+       "layout": {
+        "height": 450,
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "font": {
+         "color": "#e6e6e6"
+        },
+        "margin": {
+         "t": 150,
+         "r": 70,
+         "b": 60,
+         "l": 70
+        },
+        "xaxis": {
+         "type": "linear",
+         "title": "Temperature (\u00b0C)",
+         "range": [
+          15,
+          35
+         ],
+         "dtick": 2,
+         "gridcolor": "#3a3a3a",
+         "zeroline": false,
+         "showspikes": false,
+         "fixedrange": true
+        },
+        "yaxis": {
+         "type": "linear",
+         "title": "Relative Humidity (%)",
+         "range": [
+          30,
+          90
+         ],
+         "dtick": 10,
+         "gridcolor": "#3a3a3a",
+         "zeroline": false,
+         "showspikes": false,
+         "fixedrange": true
+        },
+        "showlegend": false,
+        "hovermode": "closest",
+        "annotations": [
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.5,
+          "y": 1.4,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "color": "#e6e6e6",
+           "size": 20
+          },
+          "text": "$ex 'VPD \u2014 ' + hass.states['input_select.grow_tent_growth_stage'].state + ' \u2014 ' + hass.states['input_select.tent_humidity_mode'].state\n"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.08,
+          "y": 1.3,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 32,
+           "color": "#ff9500"
+          },
+          "text": "\ud83c\udf21"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.36,
+          "y": 1.3,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 24,
+           "color": "#0a84ff"
+          },
+          "text": "\ud83d\udca7"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.64,
+          "y": 1.3,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 18,
+           "color": "#ff6b6b"
+          },
+          "text": "<b>VPD</b>"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.92,
+          "y": 1.3,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 28,
+           "color": "#4ade80"
+          },
+          "text": "\u00b1"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": -0.02,
+          "y": 1.2,
+          "xanchor": "right",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 13,
+           "color": "#ffd60a"
+          },
+          "text": "Set"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.08,
+          "y": 1.2,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 14,
+           "color": "#ffd60a"
+          },
+          "text": "$ex (hass.states['light.hlg'].state === 'on' ? parseFloat(hass.states['input_number.tent_day_temp_target'].state) : parseFloat(hass.states['input_number.tent_night_temp_target'].state)).toFixed(1) + ' \u00b0C'\n"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.36,
+          "y": 1.2,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 14,
+           "color": "#ffd60a"
+          },
+          "text": "$ex parseFloat(hass.states['input_number.tent_humidifier_target_rh'].state).toFixed(0) + ' %'\n"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.64,
+          "y": 1.2,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 14,
+           "color": "#ffd60a"
+          },
+          "text": "$ex parseFloat(hass.states['sensor.active_vpd_target'].state).toFixed(2) + ' kPa'\n"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.92,
+          "y": 1.2,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 14,
+           "color": "#ffd60a"
+          },
+          "text": "$ex '\u00b1 ' + parseFloat(hass.states['input_number.vpd_tolerance'].state).toFixed(2) + ' kPa'\n"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": -0.02,
+          "y": 1.1,
+          "xanchor": "right",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 13,
+           "color": "#32cd32"
+          },
+          "text": "Now"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.08,
+          "y": 1.1,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 14,
+           "color": "#32cd32"
+          },
+          "text": "$ex parseFloat(hass.states['sensor.tent_average_temperature'].state).toFixed(1) + ' \u00b0C'\n"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.36,
+          "y": 1.1,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 14,
+           "color": "#32cd32"
+          },
+          "text": "$ex parseFloat(hass.states['sensor.tent_average_humidity'].state).toFixed(1) + ' %'\n"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.64,
+          "y": 1.1,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 14,
+           "color": "#32cd32"
+          },
+          "text": "$ex parseFloat(hass.states['sensor.grow_tent_vpd'].state).toFixed(2) + ' kPa'\n"
+         },
+         {
+          "xref": "paper",
+          "yref": "paper",
+          "x": 0.92,
+          "y": 1.1,
+          "xanchor": "center",
+          "yanchor": "middle",
+          "showarrow": false,
+          "font": {
+           "size": 14,
+           "color": "#32cd32"
+          },
+          "text": "\u2014"
+         }
+        ]
+       },
+       "entities": [
+        {
+         "entity": "",
+         "name": "Target VPD",
+         "mode": "lines",
+         "line": {
+          "color": "#30d158",
+          "width": 3
+         },
+         "x": "$fn ({hass}) => {\n  const xs = [];\n  for (let t = 15; t <= 35.01; t += 0.25) xs.push(t);\n  return xs;\n}\n",
+         "y": "$fn ({hass}) => {\n  const target = parseFloat(hass.states['sensor.active_vpd_target']?.state);\n  if (isNaN(target)) return [];\n  const ys = [];\n  for (let t = 15; t <= 35.01; t += 0.25) {\n    const svp = 0.61078 * Math.exp((17.27 * t) / (t + 237.3));\n    ys.push(100 * (1 - target / svp));\n  }\n  return ys;\n}\n"
+        },
+        {
+         "entity": "",
+         "name": "+ tol",
+         "mode": "lines",
+         "line": {
+          "color": "#ff9500",
+          "width": 1,
+          "dash": "dash"
+         },
+         "x": "$fn ({hass}) => {\n  const xs = [];\n  for (let t = 15; t <= 35.01; t += 0.25) xs.push(t);\n  return xs;\n}\n",
+         "y": "$fn ({hass}) => {\n  const tgt = parseFloat(hass.states['sensor.active_vpd_target']?.state);\n  const tol = parseFloat(hass.states['input_number.vpd_tolerance']?.state);\n  if (isNaN(tgt) || isNaN(tol)) return [];\n  const v = tgt + tol;\n  const ys = [];\n  for (let t = 15; t <= 35.01; t += 0.25) {\n    const svp = 0.61078 * Math.exp((17.27 * t) / (t + 237.3));\n    ys.push(100 * (1 - v / svp));\n  }\n  return ys;\n}\n"
+        },
+        {
+         "entity": "",
+         "name": "\u2212 tol",
+         "mode": "lines",
+         "line": {
+          "color": "#ff9500",
+          "width": 1,
+          "dash": "dash"
+         },
+         "fill": "tonexty",
+         "fillcolor": "rgba(48,209,88,0.10)",
+         "x": "$fn ({hass}) => {\n  const xs = [];\n  for (let t = 15; t <= 35.01; t += 0.25) xs.push(t);\n  return xs;\n}\n",
+         "y": "$fn ({hass}) => {\n  const tgt = parseFloat(hass.states['sensor.active_vpd_target']?.state);\n  const tol = parseFloat(hass.states['input_number.vpd_tolerance']?.state);\n  if (isNaN(tgt) || isNaN(tol)) return [];\n  const v = Math.max(0.05, tgt - tol);\n  const ys = [];\n  for (let t = 15; t <= 35.01; t += 0.25) {\n    const svp = 0.61078 * Math.exp((17.27 * t) / (t + 237.3));\n    ys.push(100 * (1 - v / svp));\n  }\n  return ys;\n}\n"
+        },
+        {
+         "entity": "",
+         "name": "T",
+         "mode": "lines",
+         "showlegend": false,
+         "line": {
+          "color": "#888",
+          "width": 1,
+          "dash": "dot"
+         },
+         "x": "$fn ({hass}) => {\n  const t = parseFloat(hass.states['sensor.tent_average_temperature']?.state);\n  return isNaN(t) ? [] : [t, t];\n}\n",
+         "y": "$fn ({hass}) => [30, 90]\n"
+        },
+        {
+         "entity": "",
+         "name": "RH",
+         "mode": "lines",
+         "showlegend": false,
+         "line": {
+          "color": "#888",
+          "width": 1,
+          "dash": "dot"
+         },
+         "x": "$fn ({hass}) => [15, 35]\n",
+         "y": "$fn ({hass}) => {\n  const r = parseFloat(hass.states['sensor.tent_average_humidity']?.state);\n  return isNaN(r) ? [] : [r, r];\n}\n"
+        },
+        {
+         "entity": "",
+         "name": "Now",
+         "mode": "markers",
+         "marker": {
+          "color": "#ff3b30",
+          "size": 18,
+          "line": {
+           "color": "#ffffff",
+           "width": 2
+          }
+         },
+         "x": "$fn ({hass}) => {\n  const t = parseFloat(hass.states['sensor.tent_average_temperature']?.state);\n  return isNaN(t) ? [] : [t];\n}\n",
+         "y": "$fn ({hass}) => {\n  const r = parseFloat(hass.states['sensor.tent_average_humidity']?.state);\n  return isNaN(r) ? [] : [r];\n}\n"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "sections",
+   "max_columns": 4,
+   "title": "Tent Adjust",
+   "path": "tent-auto-adjust",
+   "icon": "mdi:tune-variant",
+   "sections": [
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "Temperature Targets",
+       "heading_style": "title"
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.tent_day_temp_target",
+       "name": "Day Temp Target",
+       "icon": "mdi:white-balance-sunny",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.tent_night_temp_target",
+       "name": "Night Temp Target",
+       "icon": "mdi:weather-night",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.grow_tent_target_temp",
+       "name": "General Target Temp",
+       "icon": "mdi:thermometer",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      }
+     ],
+     "column_span": 1
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "Humidity Targets",
+       "heading_style": "title"
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.humidity_day_target",
+       "name": "Day Humidity Target",
+       "icon": "mdi:water-percent",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.humidity_night_target",
+       "name": "Night Humidity Target",
+       "icon": "mdi:water-percent",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.grow_tent_target_humidity",
+       "name": "General Target Humidity",
+       "icon": "mdi:water-percent",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_select.tent_humidity_mode",
+       "name": "Humidity Mode",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.humidifier_target_rh",
+       "name": "Humidifier Target RH",
+       "icon": "mdi:cloud-percent",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.humidifier_hysteresis",
+       "name": "Humidifier Hysteresis",
+       "icon": "mdi:arrow-expand-vertical",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_boolean.humidifier_enabled",
+       "name": "Humidifier Enabled",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_boolean.flower_night_humidifier_block",
+       "name": "Block Humidifier (Flower Nights)",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      }
+     ],
+     "column_span": 1
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "VPD Settings",
+       "heading_style": "title"
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.vpd_day_target",
+       "name": "VPD Day Target",
+       "icon": "mdi:cloud-outline",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.vpd_night_target",
+       "name": "VPD Night Target",
+       "icon": "mdi:cloud-outline",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.vpd_tolerance",
+       "name": "VPD Alert Tolerance",
+       "icon": "mdi:alert-circle-outline",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "sensor.active_vpd_target",
+       "name": "Active VPD Target",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "sensor.vpd_ideal_rh",
+       "name": "VPD Ideal RH",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       }
+      }
+     ],
+     "column_span": 1
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "Stage & Schedule",
+       "heading_style": "title"
+      },
+      {
+       "type": "tile",
+       "entity": "input_select.growth_stage",
+       "name": "Growth Stage",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_boolean.grow_tent_automation_enabled",
+       "name": "Automation Enabled",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_boolean.grow_tent_vacation_mode",
+       "name": "Vacation Mode",
+       "icon": "mdi:airplane",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.grow_tent_light_duration",
+       "name": "Light Duration (DLI)",
+       "icon": "mdi:clock-outline",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.night_delay_minutes",
+       "name": "Night Mode Delay",
+       "icon": "mdi:timer-sand",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      }
+     ],
+     "column_span": 1
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "Light Schedule (Day/Night Trigger)",
+       "heading_style": "title"
+      },
+      {
+       "type": "tile",
+       "entity": "input_datetime.veg_lights_on_time",
+       "name": "Veg Lights On",
+       "icon": "mdi:white-balance-sunny",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_datetime.veg_lights_off_time",
+       "name": "Veg Lights Off",
+       "icon": "mdi:weather-night",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_datetime.flower_lights_on_time",
+       "name": "Flower Lights On",
+       "icon": "mdi:white-balance-sunny",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_datetime.flower_lights_off_time",
+       "name": "Flower Lights Off",
+       "icon": "mdi:weather-night",
+       "grid_options": {
+        "columns": 6,
+        "rows": 1
+       }
+      }
+     ],
+     "column_span": 1
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "Fan Schedule",
+       "heading_style": "title"
+      },
+      {
+       "type": "tile",
+       "entity": "input_boolean.circulation_fans_day",
+       "name": "Circulation Fans - Day",
+       "icon": "mdi:fan",
+       "grid_options": {
+        "columns": 4,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_boolean.circulation_fans_night",
+       "name": "Circulation Fans - Night",
+       "icon": "mdi:fan",
+       "grid_options": {
+        "columns": 4,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_boolean.duct_fan_day",
+       "name": "Duct Fan - Day",
+       "icon": "mdi:fan",
+       "grid_options": {
+        "columns": 4,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_boolean.duct_fan_night",
+       "name": "Duct Fan - Night",
+       "icon": "mdi:fan",
+       "grid_options": {
+        "columns": 4,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_boolean.ac_circ_fan_day",
+       "name": "AC Circ Fan - Day",
+       "icon": "mdi:fan",
+       "grid_options": {
+        "columns": 4,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_boolean.ac_circ_fan_night",
+       "name": "AC Circ Fan - Night",
+       "icon": "mdi:fan",
+       "grid_options": {
+        "columns": 4,
+        "rows": 1
+       }
+      }
+     ],
+     "column_span": 1
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "AC - Day Settings",
+       "heading_style": "title"
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.ac_day_fan_speed",
+       "name": "Fan Speed",
+       "icon": "mdi:fan",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_select.ac_day_vertical",
+       "name": "Vertical Direction",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_select.ac_day_horizontal",
+       "name": "Horizontal Direction",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_select.ac_day_wind_mode",
+       "name": "Wind Mode",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_select.ac_day_power_mode",
+       "name": "Power Mode",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      }
+     ],
+     "column_span": 1
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "AC - Night Settings",
+       "heading_style": "title"
+      },
+      {
+       "type": "tile",
+       "entity": "input_number.ac_night_fan_speed",
+       "name": "Fan Speed",
+       "icon": "mdi:fan",
+       "features": [
+        {
+         "type": "numeric-input",
+         "style": "slider"
+        }
+       ],
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_select.ac_night_vertical",
+       "name": "Vertical Direction",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_select.ac_night_horizontal",
+       "name": "Horizontal Direction",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_select.ac_night_wind_mode",
+       "name": "Wind Mode",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "input_select.ac_night_power_mode",
+       "name": "Power Mode",
+       "grid_options": {
+        "columns": 12,
+        "rows": 1
+       }
+      }
+     ],
+     "column_span": 1
+    },
+    {
+     "type": "grid",
+     "cards": [
+      {
+       "type": "heading",
+       "heading": "Current Readings",
+       "heading_style": "title"
+      },
+      {
+       "type": "tile",
+       "entity": "sensor.tent_temperature",
+       "name": "Tent Temp",
+       "grid_options": {
+        "columns": 4,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "sensor.tent_humidity",
+       "name": "Tent Humidity",
+       "grid_options": {
+        "columns": 4,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "sensor.co2_concentration_tent",
+       "name": "CO2",
+       "grid_options": {
+        "columns": 4,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "sensor.humidifier_on_threshold",
+       "name": "Humidifier On Threshold",
+       "grid_options": {
+        "columns": 4,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "binary_sensor.climate_ok",
+       "name": "Climate OK",
+       "grid_options": {
+        "columns": 4,
+        "rows": 1
+       }
+      },
+      {
+       "type": "tile",
+       "entity": "sensor.indoor_temperature_air_conditioner_tent",
+       "name": "AC Indoor Temp",
+       "grid_options": {
+        "columns": 4,
+        "rows": 1
+       }
+      }
+     ],
+     "column_span": 4
+    }
+   ],
+   "cards": []
+  }
+ ]
+}

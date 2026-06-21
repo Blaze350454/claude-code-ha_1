@@ -4,7 +4,7 @@
       "command": "uv",
       "args": [
         "--directory",
-        "D:\\Claude\\Projects\\Container Home",
+        "D:\\Claude\\Projects\\Grow Home",
         "run",
         "python",
         "-m",

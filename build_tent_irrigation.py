@@ -1,0 +1,166 @@
+import asyncio, json, re, pathlib, datetime, websockets
+
+env = dict(re.findall(r'^(\w+)=(.*)$', pathlib.Path('.env').read_text(), re.M))
+TOKEN = env['HA_TOKEN']
+URL = "ws://192.168.2.151:8123/api/websocket"
+
+md = r"""{% macro rel(ts, future=false) -%}
+{%- set t = state_attr(ts, 'timestamp') -%}
+{%- if t is none -%}—
+{%- else -%}
+{%- set d = t - now().timestamp() -%}
+{%- set a = (d | abs) | int -%}
+{%- if d >= 0 -%}in {{ (a//3600) }}h {{ '%02d' | format((a%3600)//60) }}m
+{%- elif future -%}overdue
+{%- else -%}{{ (a//3600) }}h {{ '%02d' | format((a%3600)//60) }}m ago
+{%- endif -%}
+{%- endif -%}
+{%- endmacro -%}
+{%- set on = states('input_datetime.veg_lights_on_time') -%}
+{%- set off = states('input_datetime.veg_lights_off_time') -%}
+{%- set feeds = states('input_number.feeds_per_day_2') | int(0) -%}
+{%- set on_t = (on[0:2]|int)*60 + (on[3:5]|int) -%}
+{%- set off_t = (off[0:2]|int)*60 + (off[3:5]|int) -%}
+{%- set dur = (off_t - on_t) if off_t > on_t else (1440 - on_t + off_t) -%}
+{%- set iv = (((dur-35)/(feeds-1))|round(0)|int) if feeds > 1 else dur -%}
+{%- set ns = namespace(t=[]) -%}
+{%- for n in range(1, feeds+1) -%}
+  {%- set tot = on_t + 5 + (n-1)*iv -%}
+  {%- set ns.t = ns.t + ['%02d:%02d' | format((tot//60)%24, tot%60)] -%}
+{%- endfor -%}
+### \U0001F331 Irrigation
+
+**Status:** {{ states('input_text.tent_irrigation_status') }}
+
+**Last feed:** {{ rel('input_datetime.last_feed_time') }} ({{ state_attr('input_datetime.last_feed_time','timestamp') | timestamp_custom('%-I:%M %p', true, '—') }})
+
+**Next feed:** {{ rel('input_datetime.next_feed_time', true) }} ({{ state_attr('input_datetime.next_feed_time','timestamp') | timestamp_custom('%-I:%M %p', true, '—') }}) — feed {{ states('input_number.current_feed_number')|int }} of {{ feeds }}
+
+**Today's feeds:** {{ ns.t | join(', ') }}
+
+**Feed** {{ states('input_number.feed_duration_minutes')|int }}m · **Clear** {{ states('input_number.line_clear_minutes')|float }}m · **Lights** {{ on[0:5] }}–{{ off[0:5] }} · **Flush** every {{ states('input_number.flush_day_interval')|int }}d
+"""
+
+def level_tile(ent, name):
+    style = ("ha-card {\n  --tile-color:\n"
+             "  {% if states('" + ent + "')|int(0) >= 75 %} #43a047\n"
+             "  {% elif states('" + ent + "')|int(0) >= 50 %} #fbc02d\n"
+             "  {% else %} #e53935 {% endif %};\n}")
+    return {"type": "tile", "entity": ent, "name": name, "card_mod": {"style": style}}
+
+def float_tile(ent, name):
+    style = ("ha-card {\n  --tile-color: {% if is_state('" + ent + "','on') %} #43a047 "
+             "{% else %} #757575 {% endif %};\n}")
+    return {"type": "tile", "entity": ent, "name": name, "card_mod": {"style": style}}
+
+def gauge(ent, name, mx, sev):
+    return {"type": "gauge", "entity": ent, "name": name, "min": 0, "max": mx, "needle": True, "severity": sev}
+
+stats = {"type": "grid", "column_span": 2, "cards": [
+    {"type": "heading", "heading": "Irrigation"},
+    {"show_name": True, "show_icon": True, "type": "button", "name": "Feed Now", "icon": "mdi:watering-can", "color": "green",
+     "tap_action": {"action": "perform-action", "perform_action": "script.run_feed_cycle",
+       "confirmation": {"text": "Run a manual feed cycle now? Standard pump timing (~8 min); if it's the last feed of the day it also runs the line-clear flush."}}},
+    {"show_name": True, "show_icon": True, "type": "button", "name": "STOP ALL", "icon": "mdi:hand-back-right", "color": "red",
+     "entity": "input_boolean.irrigation_tent_kill", "show_state": True,
+     "tap_action": {"action": "perform-action", "perform_action": "input_boolean.turn_on", "target": {"entity_id": "input_boolean.irrigation_tent_kill"}},
+     "card_mod": {"style": "ha-card { background: rgba(211,47,47,0.28); border: 1px solid #d32f2f; }"}},
+    {"type": "tile", "entity": "input_boolean.irrigation_tent_kill", "name": "Emergency stop (toggle off to resume)", "icon": "mdi:alert-octagon"},
+    {"type": "markdown", "card_mod": {"style": {"ha-markdown$": "h3 { text-align:center; margin-top:0; }\n"}}, "content": md},
+    {"type": "heading", "heading": "Reservoirs", "heading_style": "subtitle"},
+    level_tile("sensor.feed_level_irrigation_tent", "Feed"),
+    level_tile("sensor.flush_level_irrigation_tent", "Flush"),
+    level_tile("sensor.table_drain_level_irrigation_tent", "Table Drain"),
+    {"type": "heading", "heading": "Feed floats", "heading_style": "subtitle"},
+    float_tile("binary_sensor.feed_empty_irrigation_tent", "Empty"),
+    float_tile("binary_sensor.feed_half_irrigation_tent", "Half"),
+    float_tile("binary_sensor.feed_three_quarter_irrigation_tent", "3/4"),
+    float_tile("binary_sensor.feed_full_irrigation_tent", "Full"),
+    {"type": "heading", "heading": "Flush floats", "heading_style": "subtitle"},
+    float_tile("binary_sensor.flush_empty_irrigation_tent", "Empty"),
+    float_tile("binary_sensor.flush_half_irrigation_tent", "Half"),
+    float_tile("binary_sensor.flush_full_irrigation_tent", "Full"),
+    {"type": "heading", "heading": "Table drain floats", "heading_style": "subtitle"},
+    float_tile("binary_sensor.table_drain_empty", "Empty"),
+    float_tile("binary_sensor.table_drain_full", "Full"),
+    {"type": "heading", "heading": "Pressure & flow (last feed)", "heading_style": "subtitle"},
+    gauge("sensor.last_feed_flow", "Feed Flow", 5, {"green": 0.5, "yellow": 0.2, "red": 0}),
+    gauge("sensor.last_feed_pressure_post", "Post-Reg", 30, {"green": 10, "yellow": 5, "red": 0}),
+    gauge("sensor.last_feed_pressure_pre", "Pre-Reg", 60, {"green": 20, "yellow": 10, "red": 0}),
+]}
+
+settings = {"type": "grid", "column_span": 2, "cards": [
+    {"type": "heading", "heading": "Irrigation Settings"},
+    {"type": "entities", "title": "Stage & Light Schedule", "entities": [
+        {"entity": "input_select.grow_tent_growth_stage", "name": "Growth stage"},
+        {"entity": "input_datetime.veg_lights_on_time", "name": "Veg lights on"},
+        {"entity": "input_datetime.veg_lights_off_time", "name": "Veg lights off"},
+        {"entity": "input_datetime.flower_lights_on_time", "name": "Flower lights on"},
+        {"entity": "input_datetime.flower_lights_off_time", "name": "Flower lights off"},
+        {"entity": "input_datetime.daily_setup_time", "name": "Daily setup time"},
+    ]},
+    {"type": "entities", "title": "Feed & Flush", "entities": [
+        {"entity": "input_boolean.tent_irrigation_enabled", "name": "Automation enabled"},
+        {"entity": "input_number.feeds_per_day_2", "name": "Feeds per day"},
+        {"entity": "input_number.feed_duration_minutes", "name": "Feed duration (min)"},
+        {"entity": "input_number.line_clear_minutes", "name": "Line clear (min)"},
+        {"entity": "input_number.flush_duration_minutes", "name": "Flush duration (min)"},
+        {"entity": "input_number.flush_day_interval", "name": "Flush every (days)"},
+        {"entity": "input_number.air_stir_lead_minutes", "name": "Pre-feed air/stir lead (min)"},
+    ]},
+    {"type": "entities", "title": "Maintenance & Timeouts", "entities": [
+        {"entity": "input_number.maintenance_interval_minutes", "name": "Maintenance interval (min)"},
+        {"entity": "input_number.maintenance_stir_minutes", "name": "Maintenance stir (min)"},
+        {"entity": "input_number.maintenance_air_minutes", "name": "Maintenance air (min)"},
+        {"entity": "input_number.air_on_duration_minutes", "name": "Air on duration (min)"},
+        {"entity": "input_number.stir_on_duration_minutes", "name": "Stir on duration (min)"},
+        {"entity": "input_number.feed_fill_timeout_seconds", "name": "Feed fill timeout (s)"},
+        {"entity": "input_number.flush_fill_timeout_seconds", "name": "Flush fill timeout (s)"},
+    ]},
+    {"type": "entities", "title": "Night Pulses", "entities": [
+        {"entity": "input_number.night_pulse_air_minutes", "name": "Air (min)"},
+        {"entity": "input_number.night_pulse_stir_pre_minutes", "name": "Stir pre (min)"},
+        {"entity": "input_number.night_pulse_stir_post_minutes", "name": "Stir post (min)"},
+        {"entity": "input_datetime.night_pulse_veg_1", "name": "Veg pulse 1"},
+        {"entity": "input_datetime.night_pulse_veg_2", "name": "Veg pulse 2"},
+        {"entity": "input_datetime.night_pulse_flower_1", "name": "Flower pulse 1"},
+        {"entity": "input_datetime.night_pulse_flower_2", "name": "Flower pulse 2"},
+        {"entity": "input_datetime.night_pulse_flower_3", "name": "Flower pulse 3"},
+        {"entity": "input_datetime.night_pulse_flower_4", "name": "Flower pulse 4"},
+        {"entity": "input_datetime.night_pulse_flower_5", "name": "Flower pulse 5"},
+    ]},
+]}
+
+
+async def req(ws, msg, _id):
+    msg = dict(msg); msg["id"] = _id
+    await ws.send(json.dumps(msg))
+    while True:
+        m = json.loads(await ws.recv())
+        if m.get("id") == _id:
+            return m
+
+
+async def main():
+    async with websockets.connect(URL, max_size=None) as ws:
+        await ws.recv()
+        await ws.send(json.dumps({"type": "auth", "access_token": TOKEN}))
+        await ws.recv()
+        cfg = (await req(ws, {"type": "lovelace/config", "url_path": "dashboard-tent"}, 1))["result"]
+        ts = datetime.datetime.now(datetime.UTC).strftime("%Y%m%d-%H%M%SZ")
+        pathlib.Path(f"dashboard_tent_backup_{ts}.json").write_text(json.dumps(cfg, indent=1))
+        print("backup:", f"dashboard_tent_backup_{ts}.json")
+        secs = cfg["views"][0]["sections"]
+        s0 = secs[0]["cards"][0]
+        s1head = secs[1]["cards"][0].get("heading") if secs[1]["cards"] else ""
+        assert s0.get("type") == "markdown" and s1head == "Manual Control", \
+            "unexpected layout: %s / %r" % (s0.get("type"), s1head)
+        cfg["views"][0]["sections"] = [stats, settings] + secs[2:]
+        save = await req(ws, {"type": "lovelace/config/save", "url_path": "dashboard-tent", "config": cfg}, 2)
+        print("save success:", save.get("success"), save.get("error", ""))
+        chk = (await req(ws, {"type": "lovelace/config", "url_path": "dashboard-tent"}, 3))["result"]["views"][0]["sections"]
+        print("section count:", len(chk))
+        print("sec0:", chk[0]["cards"][0].get("heading"), "cards:", len(chk[0]["cards"]))
+        print("sec1:", chk[1]["cards"][0].get("heading"), "cards:", len(chk[1]["cards"]))
+
+asyncio.run(main())

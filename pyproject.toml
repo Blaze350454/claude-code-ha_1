@@ -18,5 +18,5 @@ dependencies = [
 
 [dependency-groups]
 crawler = [
-    "crawl4ai>=0.5.0.post8",
+    "crawl4ai>=0.6.0",
 ]

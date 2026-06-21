@@ -1,73 +1,51 @@
-import sys
-from typing import List, Dict, Union
+from typing import Dict, List
 
 from esphome_mcp.app import mcp_server
-from esphome_mcp.data_loader import (
-    get_available_documents,
-    get_document_headings as _get_headings_from_loader,
-)
-from esphome_mcp.search import search_chunks
+from esphome_mcp import dashboard_client
 
 
 @mcp_server.tool()
-def list_documents() -> List[str]:
-    """MCP Tool: Lists available ESPHome documentation markdown files."""
-    return get_available_documents()
+def esphome_list_configs() -> List[str]:
+    """List all ESPHome device configuration files on the dashboard."""
+    return dashboard_client.list_configs()
 
 
 @mcp_server.tool()
-def get_document_headings(filename: str) -> List[Dict[str, Union[int, str]]]:
-    """MCP Tool: Retrieves the heading structure for a specified file.
+def esphome_read_config(configuration: str) -> str:
+    """Read the YAML content of an ESPHome configuration file.
 
     Args:
-        filename: The exact filename from list_documents.
+        configuration: Filename, e.g. 'tent-irrigation-controller.yaml'
     """
-    available_docs = get_available_documents()
-    if filename not in available_docs:
-        print(
-            f"Warning: get_document_headings called for non-existent file: {filename}",
-            file=sys.stderr,
-        )
-        return []
-    return _get_headings_from_loader(filename)
+    return dashboard_client.read_config(configuration)
 
 
 @mcp_server.tool()
-def search_documentation(
-    query: str, filename: str = "", max_results: int = 5
-) -> List[Dict[str, Union[str, float]]]:
-    """
-    MCP Tool: Searches ESPHome documentation chunks based on a query.
-
-    Returns a list of dicts with filename, heading, content snippet, score,
-    and source_url.
+def esphome_write_config(configuration: str, content: str) -> Dict[str, str]:
+    """Write/update an ESPHome YAML config. Creates the file if it doesn't exist.
 
     Args:
-        query: The natural language question or search query.
-        filename: Optional. The specific filename (from list_documents) to
-                  search within. If empty, searches all documents.
-        max_results: Optional. Maximum number of relevant sections to return
-                     (default 5, max 20).
+        configuration: Filename, e.g. 'tent-irrigation-controller.yaml'
+        content: Full YAML content to write
     """
-    if max_results < 1:
-        max_results = 1
-    if max_results > 20:
-        max_results = 20
+    return dashboard_client.write_config(configuration, content)
 
-    effective_filename = filename if filename else None
 
-    search_results = search_chunks(query, effective_filename, max_results)
+@mcp_server.tool()
+def esphome_validate(configuration: str) -> str:
+    """Validate an ESPHome configuration and return the output.
 
-    formatted_results = []
-    for res in search_results:
-        formatted_results.append(
-            {
-                "filename": res["filename"],
-                "heading": res["heading"],
-                "content": res["content"],
-                "score": float(res["score"]),
-                "source_url": res.get("source_url", ""),
-            }
-        )
+    Args:
+        configuration: Filename, e.g. 'tent-irrigation-controller.yaml'
+    """
+    return dashboard_client.run_dashboard_operation("validate", configuration, timeout=60)
 
-    return formatted_results
+
+@mcp_server.tool()
+def esphome_compile(configuration: str) -> str:
+    """Compile ESPHome firmware and return the build output. May take several minutes.
+
+    Args:
+        configuration: Filename, e.g. 'tent-irrigation-controller.yaml'
+    """
+    return dashboard_client.run_dashboard_operation("compile", configuration, timeout=600)

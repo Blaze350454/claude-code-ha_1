@@ -14,13 +14,6 @@ import mcp_server.proxmox_tools  # noqa: F401
 
 # --- Main Execution (for direct run `python -m mcp_server.main`) ---
 if __name__ == "__main__":
-    # Load documents synchronously before starting the server
-    print("Loading documents...", file=sys.stderr)
-    load_and_chunk_documents()
-    # Print status after loading
-    num_chunks = len(get_all_chunks())
-    print(f"Document loading complete. {num_chunks} chunks loaded.", file=sys.stderr)
-
     try:
         print("Starting MCP server on STDIO...", file=sys.stderr)
         # Call run directly on the imported instance
