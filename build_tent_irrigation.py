@@ -41,12 +41,12 @@ md = r"""{% macro rel(ts, future=false) -%}
 **Feed** {{ states('input_number.feed_duration_minutes')|int }}m · **Clear** {{ states('input_number.line_clear_minutes')|float }}m · **Lights** {{ on[0:5] }}–{{ off[0:5] }} · **Flush** every {{ states('input_number.flush_day_interval')|int }}d
 """
 
-def level_tile(ent, name):
-    style = ("ha-card {\n  --tile-color:\n"
-             "  {% if states('" + ent + "')|int(0) >= 75 %} #43a047\n"
-             "  {% elif states('" + ent + "')|int(0) >= 50 %} #fbc02d\n"
-             "  {% else %} #e53935 {% endif %};\n}")
-    return {"type": "tile", "entity": ent, "name": name, "card_mod": {"style": style}}
+def level_gauge(ent, name, severity=None):
+    # Small semicircular gauge; fill color follows level. Default >=75 green, >=50 yellow, else red.
+    # grid_options columns:4 = one third of the section width, so all three sit in a single row.
+    return {"type": "gauge", "entity": ent, "name": name, "min": 0, "max": 100,
+            "severity": severity or {"green": 75, "yellow": 50, "red": 0},
+            "grid_options": {"columns": 4}}
 
 def float_tile(ent, name):
     style = ("ha-card {\n  --tile-color: {% if is_state('" + ent + "','on') %} #43a047 "
@@ -54,23 +54,45 @@ def float_tile(ent, name):
     return {"type": "tile", "entity": ent, "name": name, "card_mod": {"style": style}}
 
 def gauge(ent, name, mx, sev):
-    return {"type": "gauge", "entity": ent, "name": name, "min": 0, "max": mx, "needle": True, "severity": sev}
+    # columns:4 = one third width, matching the reservoir level gauges (three per row).
+    # No needle: the fill color follows the value's severity band.
+    return {"type": "gauge", "entity": ent, "name": name, "min": 0, "max": mx,
+            "severity": sev, "grid_options": {"columns": 4}}
 
 stats = {"type": "grid", "column_span": 2, "cards": [
     {"type": "heading", "heading": "Irrigation"},
     {"show_name": True, "show_icon": True, "type": "button", "name": "Feed Now", "icon": "mdi:watering-can", "color": "green",
      "tap_action": {"action": "perform-action", "perform_action": "script.run_feed_cycle",
        "confirmation": {"text": "Run a manual feed cycle now? Standard pump timing (~8 min); if it's the last feed of the day it also runs the line-clear flush."}}},
-    {"show_name": True, "show_icon": True, "type": "button", "name": "STOP ALL", "icon": "mdi:hand-back-right", "color": "red",
-     "entity": "input_boolean.irrigation_tent_kill", "show_state": True,
-     "tap_action": {"action": "perform-action", "perform_action": "input_boolean.turn_on", "target": {"entity_id": "input_boolean.irrigation_tent_kill"}},
-     "card_mod": {"style": "ha-card { background: rgba(211,47,47,0.28); border: 1px solid #d32f2f; }"}},
-    {"type": "tile", "entity": "input_boolean.irrigation_tent_kill", "name": "Emergency stop (toggle off to resume)", "icon": "mdi:alert-octagon"},
+    {"show_name": True, "show_icon": True, "show_state": False, "type": "button", "name": "STOP ALL",
+     "icon": "mdi:hand-back-right", "entity": "input_boolean.irrigation_tent_kill",
+     "tap_action": {"action": "toggle",
+       "confirmation": {"text": "Toggle STOP ALL? Engaging halts ALL tent irrigation immediately; disengaging resumes automation."}},
+     "card_mod": {"style":
+       "ha-card {\n"
+       "  color: #ffffff;\n"
+       "  {% if is_state('input_boolean.irrigation_tent_kill','on') %}\n"
+       "  background: #b71c1c; border: 2px solid #ff5252;\n"
+       "  {% else %}\n"
+       "  background: #1b5e20; border: 1px solid #66bb6a;\n"
+       "  {% endif %}\n"
+       "}\n"
+       "ha-state-icon, ha-icon {\n"
+       "  {% if is_state('input_boolean.irrigation_tent_kill','on') %}\n"
+       "  animation: kill-pulse 1s ease-in-out infinite;\n"
+       "  {% else %}\n"
+       "  color: #d32f2f !important; --mdc-icon-color: #d32f2f !important;\n"
+       "  {% endif %}\n"
+       "}\n"
+       "@keyframes kill-pulse {\n"
+       "  0%, 100% { color: #ff1744; }\n"
+       "  50% { color: #000000; }\n"
+       "}\n"}},
     {"type": "markdown", "card_mod": {"style": {"ha-markdown$": "h3 { text-align:center; margin-top:0; }\n"}}, "content": md},
     {"type": "heading", "heading": "Reservoirs", "heading_style": "subtitle"},
-    level_tile("sensor.feed_level_irrigation_tent", "Feed"),
-    level_tile("sensor.flush_level_irrigation_tent", "Flush"),
-    level_tile("sensor.table_drain_level_irrigation_tent", "Table Drain"),
+    level_gauge("sensor.feed_level_irrigation_tent", "Feed"),
+    level_gauge("sensor.flush_level_irrigation_tent", "Flush"),
+    level_gauge("sensor.table_drain_level_irrigation_tent", "Table Drain", {"green": 0, "red": 100}),
     {"type": "heading", "heading": "Feed floats", "heading_style": "subtitle"},
     float_tile("binary_sensor.feed_empty_irrigation_tent", "Empty"),
     float_tile("binary_sensor.feed_half_irrigation_tent", "Half"),
@@ -152,9 +174,12 @@ async def main():
         print("backup:", f"dashboard_tent_backup_{ts}.json")
         secs = cfg["views"][0]["sections"]
         s0 = secs[0]["cards"][0]
+        s0head = s0.get("heading")
         s1head = secs[1]["cards"][0].get("heading") if secs[1]["cards"] else ""
-        assert s0.get("type") == "markdown" and s1head == "Manual Control", \
-            "unexpected layout: %s / %r" % (s0.get("type"), s1head)
+        original = s0.get("type") == "markdown" and s1head == "Manual Control"
+        rebuilt = s0head == "Irrigation" and s1head == "Irrigation Settings"
+        assert original or rebuilt, \
+            "unexpected layout: %s / %r / %r" % (s0.get("type"), s0head, s1head)
         cfg["views"][0]["sections"] = [stats, settings] + secs[2:]
         save = await req(ws, {"type": "lovelace/config/save", "url_path": "dashboard-tent", "config": cfg}, 2)
         print("save success:", save.get("success"), save.get("error", ""))
