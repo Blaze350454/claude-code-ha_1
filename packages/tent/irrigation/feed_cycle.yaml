@@ -47,3 +47,39 @@ tent_irrigation_feed_cycle:
       actions:
         - action: script.stop_alternating
       mode: single
+
+    - id: oneshot_feed_check_20260619
+      alias: Oneshot Feed Check 20260619
+      description: >-
+        Temporary one-shot. Fires at 18:25 local tonight (2026-06-19), reports
+        whether today 18:05 feed ran (feed trigger + flow total), pushes a phone
+        notification, then disables itself. Safe to delete after tonight.
+      mode: single
+      triggers:
+        - trigger: time
+          at: "18:25:00"
+      conditions:
+        - condition: template
+          value_template: "{{ now().date() | string == '2026-06-19' }}"
+      actions:
+        - variables:
+            last_fed: "{{ state_attr('automation.tent_irrigation_feed_trigger','last_triggered') }}"
+            fed_today: "{{ last_fed is not none and as_local(last_fed).date() == now().date() }}"
+            flow: "{{ states('sensor.flow_total_irrigation_tent') | float(0) }}"
+            status: "{{ states('input_text.tent_irrigation_status') }}"
+            nextfeed: "{{ states('input_datetime.next_feed_time') }}"
+            verdict: "{{ 'ran' if (fed_today and flow > 0) else ('attempted_no_flow' if fed_today else 'no_trigger') }}"
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: "{{ 'Tent feed ran (' ~ flow ~ ' L)' if verdict == 'ran' else ('Tent feed attempted - NO FLOW' if verdict == 'attempted_no_flow' else 'Tent feed did NOT run') }}"
+            message: >-
+              {% if verdict == 'ran' %}18:05 feed fired at {{ as_local(last_fed).strftime('%H:%M') }}. Flow total {{ flow }} L. Status: {{ status }}. Next feed: {{ nextfeed }}.{% elif verdict == 'attempted_no_flow' %}Feed trigger fired at {{ as_local(last_fed).strftime('%H:%M') }} but flow total is {{ flow }} L - possible dry reservoir, blockage, or pump issue. Status: {{ status }}.{% else %}No feed trigger today as of 18:25. Status: {{ status }}, flow {{ flow }} L, next feed still {{ nextfeed }}. Check the system.{% endif %}
+        - action: persistent_notification.create
+          data:
+            notification_id: oneshot_feed_check_20260619
+            title: Tent feed check (18:25)
+            message: >-
+              Verdict: {{ verdict }}. Feed trigger last_triggered: {{ last_fed }}. Flow total: {{ flow }} L. Status: {{ status }}. Next feed: {{ nextfeed }}.
+        - action: automation.turn_off
+          target:
+            entity_id: automation.oneshot_feed_check_20260619

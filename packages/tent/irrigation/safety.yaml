@@ -7,7 +7,7 @@ tent_irrigation_safety:
         than its expected max. State-based triggers — fires regardless of how
         the pump/valve was activated. Tiered thresholds:
           PUMPS:
-          - feed/flush 10 min (covers feed_duration_minutes typical ≤8 min;
+          - feed/flush 16 min (covers feed_duration_minutes capped at 13 min;
             low-flow safety also catches abnormal feed/flush at 2 min mark)
           - stir 65 min (5 min buffer over stir_on_duration_minutes max 60,
             also covers maintenance_stir/night_pulse_stir maxes)
@@ -30,7 +30,7 @@ tent_irrigation_safety:
             - switch.flush_pump_irrigation_tent
           to: 'on'
           for:
-            minutes: 10
+            minutes: 16
         - trigger: state
           entity_id:
             - switch.feed_stir_pump_irrigation_tent
