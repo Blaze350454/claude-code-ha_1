@@ -1,28 +1,14 @@
 tent_irrigation_schedule:
-  automation:
-    - id: automation.irrigation_daily_setup
-      alias: Tent Irrigation — Daily Setup at Lights On
-      description: >
-        Resets daily counters, calculates feed schedule, sets next_feed_time to
-        the **next future feed in today's window** (not just the first one).
-        Normally fires at input_datetime.daily_setup_time (~17:00) when all of
-        today's feeds are in the future, so the chosen feed = feed 1.
-        When fired mid-day via automation.tent_irrigation_re_enable_maintenance_on_enable
-        (user re-enabled irrigation after some of today's feeds already passed),
-        iterates today's planned feeds, picks the first one still in the future,
-        and sets current_feed_number = (chosen_n - 1) so feed_trigger increments
-        cleanly. Falls back to tomorrow's first feed if all of today's are past.
-      triggers:
-        - platform: time
-          at: input_datetime.daily_setup_time
-      conditions:
-        - condition: state
-          entity_id: input_boolean.tent_irrigation_enabled
-          state: 'on'
-      actions:
-        - action: automation.turn_on
-          target:
-            entity_id: automation.tent_irrigation_maintenance_cycle
+  script:
+    tent_irrigation_rebuild_feed_schedule:
+      alias: Tent Irrigation — Rebuild Feed Schedule
+      description: >-
+        Recomputes today's feed slots from feeds_per_day_2 and the light window,
+        then points next_feed_time, current_feed_number and the pre-feed window at
+        the next FUTURE feed. Pure schedule math with no day-counter, maintenance
+        or status side effects. Shared by Daily Setup and the
+        Rebuild-on-Feeds-Change automation.
+      sequence:
         - variables:
             feeds_per_day: '{{ states(''input_number.feeds_per_day_2'') | int }}'
             lead_min: '{{ states(''input_number.air_stir_lead_minutes'') | int }}'
@@ -94,6 +80,32 @@ tent_irrigation_schedule:
             entity_id: input_datetime.next_pre_feed_stop
           data:
             datetime: '{{ chosen_pre_stop_dt }}'
+  automation:
+    - id: automation.irrigation_daily_setup
+      alias: Tent Irrigation — Daily Setup at Lights On
+      description: >
+        Resets daily counters, calculates feed schedule, sets next_feed_time to
+        the **next future feed in today's window** (not just the first one).
+        Normally fires at input_datetime.daily_setup_time (~17:00) when all of
+        today's feeds are in the future, so the chosen feed = feed 1.
+        When fired mid-day via automation.tent_irrigation_re_enable_maintenance_on_enable
+        (user re-enabled irrigation after some of today's feeds already passed),
+        iterates today's planned feeds, picks the first one still in the future,
+        and sets current_feed_number = (chosen_n - 1) so feed_trigger increments
+        cleanly. Falls back to tomorrow's first feed if all of today's are past.
+      triggers:
+        - platform: time
+          at: input_datetime.daily_setup_time
+      conditions:
+        - condition: state
+          entity_id: input_boolean.tent_irrigation_enabled
+          state: 'on'
+      actions:
+        - action: automation.turn_on
+          target:
+            entity_id: automation.tent_irrigation_maintenance_cycle
+        # Feed-slot math is shared with script.tent_irrigation_rebuild_feed_schedule.
+        - action: script.tent_irrigation_rebuild_feed_schedule
         - variables:
             current_day: '{{ states(''input_number.tent_irrigation_day_counter'') | int }}'
             interval: '{{ states(''input_number.flush_day_interval'') | int }}'
@@ -125,6 +137,25 @@ tent_irrigation_schedule:
             entity_id: input_text.tent_irrigation_status
           data:
             value: Idle
+      mode: single
+    - id: automation.irrigation_rebuild_on_feeds_change
+      alias: Tent Irrigation — Rebuild Schedule on Feeds/Day Change
+      description: >-
+        Re-spaces the remaining feeds the moment feeds_per_day_2 changes (dashboard
+        edit, per-stage profile, etc.) so a mid-cycle change applies immediately
+        instead of waiting for the next daily setup. Uses the shared rebuild script,
+        so no day-counter or maintenance side effects.
+      triggers:
+        - trigger: state
+          entity_id: input_number.feeds_per_day_2
+      conditions:
+        - condition: state
+          entity_id: input_boolean.tent_irrigation_enabled
+          state: 'on'
+        - condition: template
+          value_template: "{{ trigger.from_state is not none and trigger.from_state.state not in ['unknown', 'unavailable'] }}"
+      actions:
+        - action: script.tent_irrigation_rebuild_feed_schedule
       mode: single
     - id: automation.irrigation_lights_off_stop
       alias: Tent Irrigation — Lights Off Cleanup
