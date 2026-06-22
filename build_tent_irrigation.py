@@ -145,6 +145,35 @@ settings_sections = [
         {"entity": "input_datetime.night_pulse_flower_4", "name": "Flower pulse 4"},
         {"entity": "input_datetime.night_pulse_flower_5", "name": "Flower pulse 5"},
     ]),
+    # Per-stage feed profile, fully editable from the dashboard. Pick the active stage;
+    # the "now" values are applied from the selected stage by the Apply Feed Stage Profile
+    # automation. Edit a stage's rows here to retune that stage's feeding.
+    {"type": "grid", "column_span": 1, "cards": [
+        {"type": "heading", "heading": "Feed Profile by Stage"},
+        {"type": "entities", "entities": [
+            {"entity": "input_select.feed_stage", "name": "Active stage"},
+            {"entity": "input_number.feed_duration_minutes", "name": "→ Feed duration now (min)"},
+            {"entity": "input_number.feeds_per_day_2", "name": "→ Feeds/day now"},
+        ]},
+        {"type": "entities", "title": "Feed duration per stage (min)", "entities": [
+            {"entity": "input_number.feed_dur_seedling", "name": "Seedling"},
+            {"entity": "input_number.feed_dur_early_veg", "name": "Early Veg"},
+            {"entity": "input_number.feed_dur_medium_veg", "name": "Medium Veg"},
+            {"entity": "input_number.feed_dur_late_veg", "name": "Late Veg"},
+            {"entity": "input_number.feed_dur_early_flower", "name": "Early Flower"},
+            {"entity": "input_number.feed_dur_mid_flower", "name": "Mid Flower"},
+            {"entity": "input_number.feed_dur_late_flower", "name": "Late Flower"},
+        ]},
+        {"type": "entities", "title": "Feeds per day per stage", "entities": [
+            {"entity": "input_number.feeds_seedling", "name": "Seedling"},
+            {"entity": "input_number.feeds_early_veg", "name": "Early Veg"},
+            {"entity": "input_number.feeds_medium_veg", "name": "Medium Veg"},
+            {"entity": "input_number.feeds_late_veg", "name": "Late Veg"},
+            {"entity": "input_number.feeds_early_flower", "name": "Early Flower"},
+            {"entity": "input_number.feeds_mid_flower", "name": "Mid Flower"},
+            {"entity": "input_number.feeds_late_flower", "name": "Late Flower"},
+        ]},
+    ]},
 ]
 
 # Headings of the sections this script owns and rebuilds every run. Every other section on
@@ -154,6 +183,7 @@ MANAGED_HEADINGS = {
     "Irrigation", "Irrigation Settings",
     "Stage & Light Schedule", "Feed & Flush",
     "Maintenance & Timeouts", "Night Pulses",
+    "Feed Profile by Stage",
 }
 
 def first_heading(sec):
