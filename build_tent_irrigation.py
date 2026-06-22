@@ -176,6 +176,19 @@ settings_sections = [
     ]},
 ]
 
+# Blink camera (still image only — no live stream, no motion). Tap the image for a
+# full-screen view (more-info); the Take Photo button triggers a fresh Blink snapshot.
+camera_section = {"type": "grid", "column_span": 1, "cards": [
+    {"type": "heading", "heading": "Tent Camera"},
+    {"type": "picture-entity", "entity": "camera.tent", "name": "Tent",
+     "show_name": True, "show_state": False, "camera_view": "auto",
+     "tap_action": {"action": "more-info"}, "hold_action": {"action": "more-info"}},
+    {"show_name": True, "show_icon": True, "type": "button", "name": "Take Photo",
+     "icon": "mdi:camera-iris",
+     "tap_action": {"action": "perform-action", "perform_action": "blink.trigger_camera",
+       "target": {"entity_id": "camera.tent"}}},
+]}
+
 # Headings of the sections this script owns and rebuilds every run. Every other section on
 # the dashboard is preserved untouched. "Irrigation Settings" is the legacy single settings
 # section we split apart — listed so the migration run drops it instead of orphaning it.
@@ -183,7 +196,7 @@ MANAGED_HEADINGS = {
     "Irrigation", "Irrigation Settings",
     "Stage & Light Schedule", "Feed & Flush",
     "Maintenance & Timeouts", "Night Pulses",
-    "Feed Profile by Stage",
+    "Feed Profile by Stage", "Tent Camera",
 }
 
 def first_heading(sec):
@@ -216,7 +229,7 @@ async def main():
         assert any(first_heading(s) == "Irrigation" for s in secs), \
             "no 'Irrigation' section found — wrong dashboard or unexpected layout?"
         # Rebuild every managed section; keep all other (manually-built) sections as-is.
-        managed = [stats] + settings_sections
+        managed = [stats, camera_section] + settings_sections
         manual = [s for s in secs if first_heading(s) not in MANAGED_HEADINGS]
         cfg["views"][0]["sections"] = managed + manual
         save = await req(ws, {"type": "lovelace/config/save", "url_path": "dashboard-tent", "config": cfg}, 2)
