@@ -260,7 +260,6 @@ grow_tent:
         - Early Flower
         - Flower
         - Late Flower
-      initial: Veg
       icon: mdi:sprout
 
     tent_humidity_mode:

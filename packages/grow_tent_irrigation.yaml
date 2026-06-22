@@ -10,7 +10,6 @@ grow_tent_irrigation:
       name: Daily Setup Time
       has_date: false
       has_time: true
-      initial: "17:00:00"
       icon: mdi:calendar-clock
 
     last_feed_time:
@@ -23,49 +22,42 @@ grow_tent_irrigation:
       name: Night Pulse Veg 1
       has_date: false
       has_time: true
-      initial: "14:00:00"
       icon: mdi:weather-night
 
     night_pulse_veg_2:
       name: Night Pulse Veg 2
       has_date: false
       has_time: true
-      initial: "16:00:00"
       icon: mdi:weather-night
 
     night_pulse_flower_1:
       name: Night Pulse Flower 1
       has_date: false
       has_time: true
-      initial: "08:00:00"
       icon: mdi:weather-night
 
     night_pulse_flower_2:
       name: Night Pulse Flower 2
       has_date: false
       has_time: true
-      initial: "10:00:00"
       icon: mdi:weather-night
 
     night_pulse_flower_3:
       name: Night Pulse Flower 3
       has_date: false
       has_time: true
-      initial: "12:00:00"
       icon: mdi:weather-night
 
     night_pulse_flower_4:
       name: Night Pulse Flower 4
       has_date: false
       has_time: true
-      initial: "14:00:00"
       icon: mdi:weather-night
 
     night_pulse_flower_5:
       name: Night Pulse Flower 5
       has_date: false
       has_time: true
-      initial: "16:00:00"
       icon: mdi:weather-night
 
   input_number:
@@ -77,7 +69,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:rotate-3d-variant
-      initial: 7
 
     night_pulse_air_minutes:
       name: Night Pulse Air Duration
@@ -87,7 +78,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:air-purifier
-      initial: 45
 
     night_pulse_stir_post_minutes:
       name: Night Pulse Stir Post Duration
@@ -97,7 +87,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:rotate-3d-variant
-      initial: 5
 
     feed_fill_timeout_seconds:
       name: Feed Fill Timeout
@@ -107,7 +96,6 @@ grow_tent_irrigation:
       unit_of_measurement: s
       mode: box
       icon: mdi:timer-sand
-      initial: 230
 
     flush_fill_timeout_seconds:
       name: Flush Fill Timeout
@@ -117,7 +105,6 @@ grow_tent_irrigation:
       unit_of_measurement: s
       mode: box
       icon: mdi:timer-sand
-      initial: 170
 
     maintenance_interval_minutes:
       name: Maintenance Interval
@@ -127,7 +114,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:timer-sync
-      initial: 120
     maintenance_stir_minutes:
       name: Maintenance Stir Duration
       min: 1
@@ -136,7 +122,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:rotate-3d-variant
-      initial: 5
     maintenance_air_minutes:
       name: Maintenance Air Duration
       min: 1
@@ -145,7 +130,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:air-purifier
-      initial: 20
 
     line_clear_minutes:
       name: Line Clear Duration
@@ -155,7 +139,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:water-sync
-      initial: 6
 
     flush_day_interval:
       name: Flush Day Interval
@@ -165,7 +148,6 @@ grow_tent_irrigation:
       unit_of_measurement: days
       mode: box
       icon: mdi:calendar-sync
-      initial: 3
 
     tent_irrigation_day_counter:
       name: Tent Irrigation Day Counter
@@ -191,7 +173,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:timer
-      initial: 2
     feed_dur_early_veg:
       name: "Feed Duration — Early Veg"
       min: 0.5
@@ -200,7 +181,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:timer
-      initial: 3
     feed_dur_medium_veg:
       name: "Feed Duration — Medium Veg"
       min: 0.5
@@ -209,7 +189,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:timer
-      initial: 4
     feed_dur_late_veg:
       name: "Feed Duration — Late Veg"
       min: 0.5
@@ -218,7 +197,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:timer
-      initial: 6
     feed_dur_early_flower:
       name: "Feed Duration — Early Flower"
       min: 0.5
@@ -227,7 +205,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:timer
-      initial: 7
     feed_dur_mid_flower:
       name: "Feed Duration — Mid Flower"
       min: 0.5
@@ -236,7 +213,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:timer
-      initial: 8
     feed_dur_late_flower:
       name: "Feed Duration — Late Flower"
       min: 0.5
@@ -245,7 +221,6 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:timer
-      initial: 8
     feeds_seedling:
       name: "Feeds/Day — Seedling"
       min: 2
@@ -254,7 +229,6 @@ grow_tent_irrigation:
       unit_of_measurement: feeds
       mode: box
       icon: mdi:counter
-      initial: 2
     feeds_early_veg:
       name: "Feeds/Day — Early Veg"
       min: 2
@@ -263,7 +237,6 @@ grow_tent_irrigation:
       unit_of_measurement: feeds
       mode: box
       icon: mdi:counter
-      initial: 2
     feeds_medium_veg:
       name: "Feeds/Day — Medium Veg"
       min: 2
@@ -272,7 +245,6 @@ grow_tent_irrigation:
       unit_of_measurement: feeds
       mode: box
       icon: mdi:counter
-      initial: 3
     feeds_late_veg:
       name: "Feeds/Day — Late Veg"
       min: 2
@@ -281,7 +253,6 @@ grow_tent_irrigation:
       unit_of_measurement: feeds
       mode: box
       icon: mdi:counter
-      initial: 3
     feeds_early_flower:
       name: "Feeds/Day — Early Flower"
       min: 2
@@ -290,7 +261,6 @@ grow_tent_irrigation:
       unit_of_measurement: feeds
       mode: box
       icon: mdi:counter
-      initial: 3
     feeds_mid_flower:
       name: "Feeds/Day — Mid Flower"
       min: 2
@@ -299,7 +269,6 @@ grow_tent_irrigation:
       unit_of_measurement: feeds
       mode: box
       icon: mdi:counter
-      initial: 3
     feeds_late_flower:
       name: "Feeds/Day — Late Flower"
       min: 2
@@ -308,7 +277,6 @@ grow_tent_irrigation:
       unit_of_measurement: feeds
       mode: box
       icon: mdi:counter
-      initial: 4
 
   input_select:
     feed_stage:
@@ -321,7 +289,6 @@ grow_tent_irrigation:
         - Early Flower
         - Mid Flower
         - Late Flower
-      initial: Seedling
       icon: mdi:sprout
 
   input_boolean:
