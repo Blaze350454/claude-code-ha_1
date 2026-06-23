@@ -357,9 +357,33 @@ tent_irrigation_advance_to_next_feed:
 # dashboard button. Independent of the automated in-feed line clear (line_clear_minutes).
 run_manual_flush:
   alias: Run Manual Flush
-  mode: single
+  # restart mode = the Flush Now button toggles: a second press while flushing
+  # restarts the script, which hits the cancel branch below and shuts off.
+  mode: restart
   icon: mdi:water-sync
   sequence:
+  # --- Toggle OFF: already flushing -> stop pump, close valve, cancel timer ---
+  - if:
+    - condition: state
+      entity_id: input_boolean.manual_flush_running
+      state: 'on'
+    then:
+    - action: switch.turn_off
+      target:
+        entity_id: switch.flush_pump_irrigation_tent
+    - action: valve.close_valve
+      target:
+        entity_id: valve.flush_valve_irrigation_tent
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.manual_flush_running
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.tent_irrigation_status
+      data:
+        value: Idle
+    - stop: "Flush cancelled by user"
+  # --- Start guards ---
   - if:
     - condition: state
       entity_id: script.run_feed_cycle
@@ -380,6 +404,10 @@ run_manual_flush:
         title: Flush Blocked — Reservoir Dry
         message: Flush reservoir is empty. Refill before flushing.
     - stop: "Flush reservoir dry"
+  # --- Run the flush ---
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.manual_flush_running
   - action: input_text.set_value
     target:
       entity_id: input_text.tent_irrigation_status
@@ -401,6 +429,9 @@ run_manual_flush:
   - action: valve.close_valve
     target:
       entity_id: valve.flush_valve_irrigation_tent
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.manual_flush_running
   - action: input_text.set_value
     target:
       entity_id: input_text.tent_irrigation_status
