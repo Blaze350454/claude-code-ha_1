@@ -152,7 +152,7 @@ run_feed_cycle:
            >= states('input_number.feeds_per_day_2') | int }}
       is_flush_day: >
         {{ states('input_number.tent_irrigation_day_counter') | int
-           >= states('input_number.flush_day_interval') | int }}
+           >= states('input_number.daily_flush_day_interval') | int }}
       flush_dry: "{{ is_state('binary_sensor.flush_empty_irrigation_tent', 'off') }}"
       feed_minutes: "{{ states('input_number.feed_duration_minutes') | float }}"
       clear_minutes: "{{ states('input_number.daily_flush_minutes') | float }}"
@@ -257,7 +257,7 @@ run_feed_cycle:
         target:
           entity_id: input_number.tent_irrigation_day_counter
         data:
-          value: "{{ (states('input_number.flush_day_interval') | int) - 1 }}"
+          value: "{{ (states('input_number.daily_flush_day_interval') | int) - 1 }}"
     default:
     - action: input_text.set_value
       target:

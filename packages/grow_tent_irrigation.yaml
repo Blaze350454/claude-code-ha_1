@@ -142,8 +142,8 @@ grow_tent_irrigation:
       mode: box
       icon: mdi:water-sync
 
-    flush_day_interval:
-      name: Flush Day Interval
+    daily_flush_day_interval:
+      name: Daily Flush Interval
       min: 1
       max: 14
       step: 1

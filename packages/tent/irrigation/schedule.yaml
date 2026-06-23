@@ -140,7 +140,7 @@ tent_irrigation_schedule:
         - action: script.tent_irrigation_rebuild_feed_schedule
         - variables:
             current_day: '{{ states(''input_number.tent_irrigation_day_counter'') | int }}'
-            interval: '{{ states(''input_number.flush_day_interval'') | int }}'
+            interval: '{{ states(''input_number.daily_flush_day_interval'') | int }}'
         - choose:
             - conditions:
                 - condition: template
