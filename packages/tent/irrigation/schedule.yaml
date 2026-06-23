@@ -25,9 +25,12 @@ tent_irrigation_schedule:
             min_gap_min: >-
               {{ (states('input_number.pre_feed_lead_minutes') | float(7)
                   + states('input_number.feed_duration_minutes') | float(1) + 2) | round(0) | int }}
+            # Geometric ceiling, floored at 1 and capped at 48 (the helper's max /
+            # a sane practical limit — nobody feeds >48x/day).
             max_feeds: >-
               {% set mg = [min_gap_min | int, 1] | max %}
-              {{ [ ((lights_on_duration_min | int - 35) / mg) | round(0, 'floor') | int + 1, 1] | max }}
+              {% set geo = ((lights_on_duration_min | int - 35) / mg) | round(0, 'floor') | int + 1 %}
+              {{ [ [geo, 1] | max, 48 ] | min }}
             feeds_per_day: "{{ [feeds_requested | int, max_feeds | int] | min }}"
             interval_min: >-
               {% set dur = lights_on_duration_min | int - 35 %}
