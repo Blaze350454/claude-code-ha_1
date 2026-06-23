@@ -155,7 +155,7 @@ run_feed_cycle:
            >= states('input_number.daily_flush_day_interval') | int }}
       flush_dry: "{{ is_state('binary_sensor.flush_empty_irrigation_tent', 'off') }}"
       feed_minutes: "{{ states('input_number.feed_duration_minutes') | float }}"
-      clear_minutes: "{{ states('input_number.daily_flush_minutes') | float }}"
+      clear_minutes: "{{ states('input_number.daily_flush_duration') | float }}"
   - choose:
     - conditions:
       - condition: template
@@ -352,9 +352,9 @@ tent_irrigation_advance_to_next_feed:
   icon: mdi:skip-next
 
 # Manual end-of-day plant flush: pushes flush-reservoir water through the lines to
-# the plants for "Flush Now Duration" (input_number.flush_now_minutes) minutes, OR until
+# the plants for "Flush Now Duration" (input_number.flush_now_duration) minutes, OR until
 # the flush reservoir runs dry, whichever comes first. Triggered by the "Flush Now"
-# dashboard button. Independent of the automated in-feed daily flush (daily_flush_minutes).
+# dashboard button. Independent of the automated in-feed daily flush (daily_flush_duration).
 run_flush_now:
   alias: Run Flush Now
   # restart mode = the Flush Now button toggles: a second press while flushing
@@ -421,7 +421,7 @@ run_flush_now:
       entity_id: switch.flush_pump_irrigation_tent
   # Run until the flush reservoir empties (float reads dry) or the duration elapses.
   - wait_template: "{{ is_state('binary_sensor.flush_empty_irrigation_tent', 'off') }}"
-    timeout: "{{ (states('input_number.flush_now_minutes') | float(15) * 60) | round | int }}"
+    timeout: "{{ (states('input_number.flush_now_duration') | float(15) * 60) | round | int }}"
     continue_on_timeout: true
   - action: switch.turn_off
     target:
