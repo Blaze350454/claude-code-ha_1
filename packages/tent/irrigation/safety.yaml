@@ -504,7 +504,13 @@ tent_irrigation_safety:
 
     - id: automation.irrigation_maintenance_cycle
       alias: Tent Irrigation — Maintenance Cycle
-      description: Runs stir then air every maintenance_interval_minutes. Skips if feed is within 60 min or a feed/pre-feed is running.
+      description: >-
+        Baseline reservoir service (deficit/credit). Every 5 min: stirs a tank only if
+        it hasn't been serviced within baseline_service_interval_minutes, tracked PER
+        TANK (last_feed_service / last_flush_service). Pre-feed/pre-flush bursts stamp
+        those anchors, so frequent feeds suppress the feed-tank baseline while the FLUSH
+        tank still gets its periodic stir (pH Down stratifies). Flush stir is independent
+        of feed timing (separate pump); feed-stir + interim air respect the feed window.
       triggers:
         - trigger: time_pattern
           minutes: /5
@@ -512,49 +518,66 @@ tent_irrigation_safety:
         - condition: state
           entity_id: input_boolean.tent_irrigation_enabled
           state: "on"
-        - condition: state
-          entity_id: input_boolean.alternating_active
-          state: "off"
         - condition: not
           conditions:
             - condition: state
               entity_id: script.run_feed_cycle
               state: "on"
+        # At least one tank is due for service
         - condition: template
           value_template: >
-            {% set next_feed = states("input_datetime.next_feed_time") %}
-            {% if next_feed in ["unknown", "unavailable"] %}true
-            {% else %}
-              {{ (as_timestamp(next_feed) - as_timestamp(now())) > 3600 }}
-            {% endif %}
-        - condition: template
-          value_template: >
-            {% set last = state_attr("automation.tent_irrigation_maintenance_cycle", "last_triggered") %}
-            {% if last is none %}true
-            {% else %}
-              {{ (as_timestamp(now()) - as_timestamp(last)) >= (states("input_number.maintenance_interval_minutes") | int * 60) }}
-            {% endif %}
+            {% set iv = states('input_number.baseline_service_interval_minutes') | float(75) * 60 %}
+            {% set lf = states('input_datetime.last_feed_service') %}
+            {% set lu = states('input_datetime.last_flush_service') %}
+            {% set feed_due = lf in ['unknown','unavailable'] or (as_timestamp(now()) - as_timestamp(lf)) >= iv %}
+            {% set flush_due = lu in ['unknown','unavailable'] or (as_timestamp(now()) - as_timestamp(lu)) >= iv %}
+            {{ feed_due or flush_due }}
       actions:
-        - action: switch.turn_on
-          target:
-            entity_id:
-              - switch.feed_stir_pump_irrigation_tent
-              - switch.flush_stir_pump_irrigation_tent
-        - delay:
-            minutes: "{{ states('input_number.maintenance_stir_minutes') | int }}"
-        - action: switch.turn_off
-          target:
-            entity_id:
-              - switch.feed_stir_pump_irrigation_tent
-              - switch.flush_stir_pump_irrigation_tent
-        - delay:
-            milliseconds: 500
-        - action: switch.turn_on
-          target:
-            entity_id: switch.air_pump_irrigation_tent
-        - delay:
-            minutes: "{{ states('input_number.maintenance_air_minutes') | int }}"
-        - action: switch.turn_off
-          target:
-            entity_id: switch.air_pump_irrigation_tent
+        - variables:
+            iv: "{{ states('input_number.baseline_service_interval_minutes') | float(75) * 60 }}"
+            turn: "{{ states('input_number.stir_turnover_baseline') | float(1) }}"
+            feed_imminent: >
+              {% set nf = states('input_datetime.next_feed_time') %}
+              {% if nf in ['unknown','unavailable'] %}false
+              {% else %}
+                {% set guard = (states('input_number.pre_feed_lead_minutes') | float(7)
+                                + states('input_number.feed_settle_minutes') | float(3) + 15) * 60 %}
+                {{ (as_timestamp(nf) - as_timestamp(now())) <= guard }}
+              {% endif %}
+        # Feed tank: stir only if due AND no feed imminent (pre-feed handles it otherwise)
+        - if:
+            - condition: template
+              value_template: >
+                {% set lf = states('input_datetime.last_feed_service') %}
+                {{ not feed_imminent and (lf in ['unknown','unavailable'] or (as_timestamp(now()) - as_timestamp(lf)) >= iv) }}
+          then:
+            - action: script.tent_stir_burst
+              data:
+                tank: feed
+                turnover: "{{ turn }}"
+        # Flush tank: independent of feed timing (separate pump) — stir whenever due
+        - if:
+            - condition: template
+              value_template: >
+                {% set lu = states('input_datetime.last_flush_service') %}
+                {{ lu in ['unknown','unavailable'] or (as_timestamp(now()) - as_timestamp(lu)) >= iv }}
+          then:
+            - action: script.tent_stir_burst
+              data:
+                tank: flush
+                turnover: "{{ turn }}"
+        # Interim Phase-1 air (single on/off; Phase 2 = alternating feed/flush duty).
+        # Skipped near a feed so it never fights the settle window.
+        - if:
+            - condition: template
+              value_template: "{{ not feed_imminent }}"
+          then:
+            - action: switch.turn_on
+              target:
+                entity_id: switch.air_pump_irrigation_tent
+            - delay:
+                minutes: "{{ states('input_number.maintenance_air_minutes') | int(5) }}"
+            - action: switch.turn_off
+              target:
+                entity_id: switch.air_pump_irrigation_tent
       mode: single

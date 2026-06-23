@@ -117,6 +117,67 @@ run_night_pulse:
   mode: single
   icon: mdi:weather-night
 
+# Level-sized stir for one reservoir. Duration scales with the float level
+# (rounded UP to the next float) so a fuller tank gets a longer stir:
+#   minutes = (rounded_volume_L / stir_pump_lpm) * turnover  [floored 0.5, capped 15]
+# Stamps that tank's last_*_service anchor for the baseline deficit/credit logic.
+tent_stir_burst:
+  alias: Tent Stir Burst (level-sized)
+  mode: parallel
+  max: 2
+  fields:
+    tank:
+      description: "Which reservoir: feed or flush"
+      required: true
+      example: feed
+      selector:
+        select:
+          options:
+            - feed
+            - flush
+    turnover:
+      description: Tank turnovers to deliver
+      required: false
+      default: 1
+      selector:
+        number:
+          min: 0.25
+          max: 3
+          step: 0.25
+          mode: box
+  sequence:
+    - variables:
+        stir_entity: "{{ 'switch.flush_stir_pump_irrigation_tent' if tank == 'flush' else 'switch.feed_stir_pump_irrigation_tent' }}"
+        service_dt_entity: "{{ 'input_datetime.last_flush_service' if tank == 'flush' else 'input_datetime.last_feed_service' }}"
+        stir_minutes: >-
+          {% if tank == 'flush' %}
+            {% set lvl = states('sensor.flush_level_irrigation_tent') | int(0) %}
+            {% set frac = 0.25 if lvl < 25 else (0.5 if lvl < 50 else 1.0) %}
+            {% set cap = states('input_number.flush_reservoir_liters') | float(76) %}
+          {% else %}
+            {% set lvl = states('sensor.feed_level_irrigation_tent') | int(0) %}
+            {% set frac = 0.25 if lvl < 25 else (0.5 if lvl < 50 else (0.75 if lvl < 75 else 1.0)) %}
+            {% set cap = states('input_number.feed_reservoir_liters') | float(95) %}
+          {% endif %}
+          {% set lpm = states('input_number.stir_pump_lpm') | float(25) %}
+          {% set turn = turnover | float(1) %}
+          {% set mins = (frac * cap / lpm) * turn %}
+          {{ [[mins, 0.5] | max, 15] | min | round(2) }}
+    - action: switch.turn_on
+      target:
+        entity_id: "{{ stir_entity }}"
+    - delay:
+        seconds: "{{ (stir_minutes | float * 60) | round | int }}"
+    - action: switch.turn_off
+      target:
+        entity_id: "{{ stir_entity }}"
+    - action: input_datetime.set_datetime
+      target:
+        entity_id: "{{ service_dt_entity }}"
+      data:
+        datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+  icon: mdi:rotate-3d-variant
+
 run_feed_cycle:
   alias: Run Feed Cycle
   sequence:
@@ -174,6 +235,11 @@ run_feed_cycle:
         - action: valve.close_valve
           target:
             entity_id: valve.feed_valve_irrigation_tent
+      # Homogenize the flush reservoir (pH Down stratifies) right before line clear
+      - action: script.tent_stir_burst
+        data:
+          tank: flush
+          turnover: "{{ states('input_number.stir_turnover_prefeed') | float(0.5) }}"
       - action: valve.open_valve
         target:
           entity_id: valve.flush_valve_irrigation_tent
@@ -277,7 +343,7 @@ tent_irrigation_advance_to_next_feed:
   - variables:
       feeds_per_day: '{{ states(''input_number.feeds_per_day_2'') | int }}'
       current_feed: '{{ states(''input_number.current_feed_number'') | int }}'
-      lead_minutes: '{{ states(''input_number.air_stir_lead_minutes'') | int }}'
+      lead_minutes: '{{ states(''input_number.pre_feed_lead_minutes'') | int(7) }}'
       lights_off_hour: '{{ states(''input_datetime.veg_lights_off_time'')[0:2] | int }}'
       lights_off_min: '{{ states(''input_datetime.veg_lights_off_time'')[3:5] | int }}'
       lights_on_hour: '{{ states(''input_datetime.veg_lights_on_time'')[0:2] | int }}'
@@ -322,7 +388,7 @@ tent_irrigation_advance_to_next_feed:
       target:
         entity_id: input_datetime.next_pre_feed_stop
       data:
-        datetime: '{{ (strptime(next_feed_dt, ''%Y-%m-%d %H:%M:%S'') - timedelta(minutes=5)) | string }}'
+        datetime: '{{ (strptime(next_feed_dt, ''%Y-%m-%d %H:%M:%S'') - timedelta(minutes=states(''input_number.feed_settle_minutes'') | float(3))) | string }}'
     else:
     - action: input_datetime.set_datetime
       target:

@@ -18,6 +18,22 @@ grow_tent_irrigation:
       has_time: true
       icon: mdi:history
 
+    # Deficit/credit anchors: tent_stir_burst stamps the per-tank anchor each time
+    # it stirs that tank (pre-feed/pre-flush/baseline). The baseline top-up stirs a
+    # tank only when now - its anchor >= baseline interval. Tracked PER TANK so that
+    # frequent feeds (which only stir feed) still let the flush tank get its periodic
+    # baseline stir — flush carries pH Down and must not go unstirred/stale.
+    last_feed_service:
+      name: Last Feed-Reservoir Service
+      has_date: true
+      has_time: true
+      icon: mdi:water-sync
+    last_flush_service:
+      name: Last Flush-Reservoir Service
+      has_date: true
+      has_time: true
+      icon: mdi:water-sync
+
     night_pulse_veg_1:
       name: Night Pulse Veg 1
       has_date: false
@@ -277,6 +293,82 @@ grow_tent_irrigation:
       unit_of_measurement: feeds
       mode: box
       icon: mdi:counter
+
+    # --- Air/Stir ↔ Feed coordination (added 2026-06-23) ---
+    # Stir is sized by reservoir level: minutes = (rounded_vol_L / stir_pump_lpm)
+    #   * turnover.  Volume uses the float level ROUNDED UP to the next float.
+    stir_pump_lpm:
+      name: "Stir Pump Flow"
+      min: 5
+      max: 60
+      step: 1
+      unit_of_measurement: "L/min"
+      mode: box
+      icon: mdi:pump
+    feed_reservoir_liters:
+      name: "Feed Reservoir Volume"
+      min: 10
+      max: 200
+      step: 1
+      unit_of_measurement: "L"
+      mode: box
+      icon: mdi:cup-water
+    flush_reservoir_liters:
+      name: "Flush Reservoir Volume"
+      min: 10
+      max: 200
+      step: 1
+      unit_of_measurement: "L"
+      mode: box
+      icon: mdi:cup-water
+    stir_turnover_prefeed:
+      name: "Stir Turnover — Pre-Feed"
+      min: 0.25
+      max: 3
+      step: 0.25
+      unit_of_measurement: "x"
+      mode: box
+      icon: mdi:rotate-3d-variant
+    stir_turnover_baseline:
+      name: "Stir Turnover — Baseline"
+      min: 0.25
+      max: 3
+      step: 0.25
+      unit_of_measurement: "x"
+      mode: box
+      icon: mdi:rotate-3d-variant
+    feed_settle_minutes:
+      name: "Feed Settle (stir/air off before feed)"
+      min: 0
+      max: 10
+      step: 0.5
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:timer-pause
+    pre_feed_lead_minutes:
+      name: "Pre-Feed Lead (stir window before feed)"
+      min: 2
+      max: 20
+      step: 1
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:clock-start
+    baseline_service_interval_minutes:
+      name: "Baseline Service Interval"
+      min: 20
+      max: 240
+      step: 5
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:timer-sync
+    feeds_per_day_max:
+      name: "Feeds/Day Max (auto, per stage)"
+      min: 1
+      max: 48
+      step: 1
+      unit_of_measurement: feeds
+      mode: box
+      icon: mdi:car-speed-limiter
 
   input_select:
     feed_stage:

@@ -10,8 +10,8 @@ tent_irrigation_schedule:
         Rebuild-on-Feeds-Change automation.
       sequence:
         - variables:
-            feeds_per_day: '{{ states(''input_number.feeds_per_day_2'') | int }}'
-            lead_min: '{{ states(''input_number.air_stir_lead_minutes'') | int }}'
+            feeds_requested: '{{ states(''input_number.feeds_per_day_2'') | int }}'
+            lead_min: '{{ states(''input_number.pre_feed_lead_minutes'') | int(7) }}'
             lights_on_h: '{{ states(''input_datetime.veg_lights_on_time'')[0:2] | int }}'
             lights_on_m: '{{ states(''input_datetime.veg_lights_on_time'')[3:5] | int }}'
             lights_off_h: '{{ states(''input_datetime.veg_lights_off_time'')[0:2] | int }}'
@@ -21,6 +21,14 @@ tent_irrigation_schedule:
             off_total_min: '{{ lights_off_h * 60 + lights_off_m }}'
             lights_on_duration_min: >-
               {% if off_total_min | int > on_total_min | int %}{{ off_total_min | int - on_total_min | int }}{% else %}{{ (24 * 60 - on_total_min | int) + off_total_min | int }}{% endif %}
+            # Max feeds/day = how many (pre-feed lead + feed + margin) gaps fit the window.
+            min_gap_min: >-
+              {{ (states('input_number.pre_feed_lead_minutes') | float(7)
+                  + states('input_number.feed_duration_minutes') | float(1) + 2) | round(0) | int }}
+            max_feeds: >-
+              {% set mg = [min_gap_min | int, 1] | max %}
+              {{ [ ((lights_on_duration_min | int - 35) / mg) | round(0, 'floor') | int + 1, 1] | max }}
+            feeds_per_day: "{{ [feeds_requested | int, max_feeds | int] | min }}"
             interval_min: >-
               {% set dur = lights_on_duration_min | int - 35 %}
               {% if feeds_per_day > 1 %}{{ (dur / (feeds_per_day - 1)) | round(0) | int }}{% else %}{{ dur | int }}{% endif %}
@@ -59,7 +67,7 @@ tent_irrigation_schedule:
               {{ (f - timedelta(minutes=lead_min)).strftime('%Y-%m-%d %H:%M:%S') }}
             chosen_pre_stop_dt: >-
               {% set f = strptime(chosen_feed_dt, '%Y-%m-%d %H:%M:%S') %}
-              {{ (f - timedelta(minutes=5)).strftime('%Y-%m-%d %H:%M:%S') }}
+              {{ (f - timedelta(minutes=states('input_number.feed_settle_minutes') | float(3))).strftime('%Y-%m-%d %H:%M:%S') }}
         - action: input_number.set_value
           target:
             entity_id: input_number.current_feed_number
@@ -80,6 +88,27 @@ tent_irrigation_schedule:
             entity_id: input_datetime.next_pre_feed_stop
           data:
             datetime: '{{ chosen_pre_stop_dt }}'
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.feeds_per_day_max
+          data:
+            value: '{{ max_feeds | int }}'
+        # Clamp the request down to the per-stage max (one-shot; converges next rebuild)
+        - if:
+            - condition: template
+              value_template: '{{ feeds_requested | int > max_feeds | int }}'
+          then:
+            - action: input_number.set_value
+              target:
+                entity_id: input_number.feeds_per_day_2
+              data:
+                value: '{{ max_feeds | int }}'
+            - action: notify.mobile_app_sm_a166w
+              data:
+                title: Feeds/Day Clamped
+                message: >-
+                  Requested {{ feeds_requested }} feeds/day exceeds the max {{ max_feeds }}
+                  for this light window (min gap {{ min_gap_min }} min). Set to {{ max_feeds }}.
   automation:
     - id: automation.irrigation_daily_setup
       alias: Tent Irrigation — Daily Setup at Lights On

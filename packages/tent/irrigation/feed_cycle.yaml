@@ -20,8 +20,11 @@ tent_irrigation_feed_cycle:
         - action: script.tent_irrigation_advance_to_next_feed
       mode: single
     - id: automation.irrigation_pre_feed_start
-      alias: Tent Irrigation — Pre-Feed Air/Stir Start
-      description: Starts air/stir alternating at lead time before next feed
+      alias: Tent Irrigation — Pre-Feed Stir
+      description: >-
+        Level-sized stir of the FEED reservoir in the lead window before each feed
+        (homogenize right before the draw). Self-sizes from the float level, so it
+        finishes well before the settle window.
       triggers:
         - platform: time
           at: input_datetime.next_pre_feed_start
@@ -32,11 +35,17 @@ tent_irrigation_feed_cycle:
         - condition: template
           value_template: '{{ states(''input_number.current_feed_number'') | int < states(''input_number.feeds_per_day_2'') | int }}'
       actions:
-        - action: script.run_alternating
+        - action: script.tent_stir_burst
+          data:
+            tank: feed
+            turnover: "{{ states('input_number.stir_turnover_prefeed') | float(0.5) }}"
       mode: single
     - id: automation.irrigation_pre_feed_stop
-      alias: Tent Irrigation — Pre-Feed Air/Stir Stop
-      description: Stops air/stir alternating 5 minutes before next feed
+      alias: Tent Irrigation — Pre-Feed Settle
+      description: >-
+        Settle window: turns stir + air off (via stop_alternating) feed_settle_minutes
+        before the feed so the vortex calms and entrained bubbles clear, giving the
+        feed pump a clean prime.
       triggers:
         - platform: time
           at: input_datetime.next_pre_feed_stop
