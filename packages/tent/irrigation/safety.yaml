@@ -527,29 +527,29 @@ tent_irrigation_safety:
         - condition: template
           value_template: >
             {% set iv = states('input_number.baseline_service_interval_minutes') | float(75) * 60 %}
-            {% set lf = states('input_datetime.last_feed_service') %}
-            {% set lu = states('input_datetime.last_flush_service') %}
-            {% set feed_due = lf in ['unknown','unavailable'] or (as_timestamp(now()) - as_timestamp(lf)) >= iv %}
-            {% set flush_due = lu in ['unknown','unavailable'] or (as_timestamp(now()) - as_timestamp(lu)) >= iv %}
+            {% set lf = state_attr('input_datetime.last_feed_service','timestamp') %}
+            {% set lu = state_attr('input_datetime.last_flush_service','timestamp') %}
+            {% set feed_due = lf is none or (now().timestamp() - lf) >= iv %}
+            {% set flush_due = lu is none or (now().timestamp() - lu) >= iv %}
             {{ feed_due or flush_due }}
       actions:
         - variables:
             iv: "{{ states('input_number.baseline_service_interval_minutes') | float(75) * 60 }}"
             turn: "{{ states('input_number.stir_turnover_baseline') | float(1) }}"
             feed_imminent: >
-              {% set nf = states('input_datetime.next_feed_time') %}
-              {% if nf in ['unknown','unavailable'] %}false
+              {% set nf = state_attr('input_datetime.next_feed_time','timestamp') %}
+              {% if nf is none %}false
               {% else %}
                 {% set guard = (states('input_number.pre_feed_lead_minutes') | float(7)
                                 + states('input_number.feed_settle_minutes') | float(3) + 15) * 60 %}
-                {{ (as_timestamp(nf) - as_timestamp(now())) <= guard }}
+                {{ (nf - now().timestamp()) <= guard }}
               {% endif %}
         # Feed tank: stir only if due AND no feed imminent (pre-feed handles it otherwise)
         - if:
             - condition: template
               value_template: >
-                {% set lf = states('input_datetime.last_feed_service') %}
-                {{ not feed_imminent and (lf in ['unknown','unavailable'] or (as_timestamp(now()) - as_timestamp(lf)) >= iv) }}
+                {% set lf = state_attr('input_datetime.last_feed_service','timestamp') %}
+                {{ not feed_imminent and (lf is none or (now().timestamp() - lf) >= iv) }}
           then:
             - action: script.tent_stir_burst
               data:
@@ -559,8 +559,8 @@ tent_irrigation_safety:
         - if:
             - condition: template
               value_template: >
-                {% set lu = states('input_datetime.last_flush_service') %}
-                {{ lu in ['unknown','unavailable'] or (as_timestamp(now()) - as_timestamp(lu)) >= iv }}
+                {% set lu = state_attr('input_datetime.last_flush_service','timestamp') %}
+                {{ lu is none or (now().timestamp() - lu) >= iv }}
           then:
             - action: script.tent_stir_burst
               data:
