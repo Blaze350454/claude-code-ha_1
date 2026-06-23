@@ -115,7 +115,7 @@ grow_tent_irrigation:
       mode: box
       icon: mdi:rotate-3d-variant
 
-    feed_fill_timeout_seconds:
+    feed_fill_timeout_duration:
       name: Feed Fill Timeout
       min: 60
       max: 600
@@ -124,7 +124,7 @@ grow_tent_irrigation:
       mode: box
       icon: mdi:timer-sand
 
-    flush_fill_timeout_seconds:
+    flush_fill_timeout_duration:
       name: Flush Fill Timeout
       min: 60
       max: 600

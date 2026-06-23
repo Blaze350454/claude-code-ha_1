@@ -5,7 +5,7 @@ tent_irrigation_reservoirs:
       description: >
         Whenever the feed fill valve opens (manually or scripted), waits for
         the reservoir-full float to trip and then closes the valve. If the
-        float never trips within input_number.feed_fill_timeout_seconds,
+        float never trips within input_number.feed_fill_timeout_duration,
         closes the valve as a safety timeout. Adjust the helper if you
         change reservoir size, line size, or supply pressure.
       triggers:
@@ -18,7 +18,7 @@ tent_irrigation_reservoirs:
               entity_id: binary_sensor.feed_full_irrigation_tent
               to: 'on'
           timeout:
-            seconds: "{{ states('input_number.feed_fill_timeout_seconds') | int }}"
+            seconds: "{{ states('input_number.feed_fill_timeout_duration') | int }}"
         - action: valve.close_valve
           target:
             entity_id: valve.feed_fill_valve_irrigation_tent
@@ -31,7 +31,7 @@ tent_irrigation_reservoirs:
                 title: Feed Fill Timeout
                 message: >
                   Feed fill valve was open for
-                  {{ states('input_number.feed_fill_timeout_seconds') | int }} sec
+                  {{ states('input_number.feed_fill_timeout_duration') | int }} sec
                   without the full float tripping — auto-closed. Verify
                   reservoir level and float sensor.
       mode: single
@@ -40,7 +40,7 @@ tent_irrigation_reservoirs:
       description: >
         Whenever the flush fill valve opens (manually or scripted), waits for
         the reservoir-full float to trip and then closes the valve. If the
-        float never trips within input_number.flush_fill_timeout_seconds,
+        float never trips within input_number.flush_fill_timeout_duration,
         closes the valve as a safety timeout. Adjust the helper if you
         change reservoir size, line size, or supply pressure.
       triggers:
@@ -53,7 +53,7 @@ tent_irrigation_reservoirs:
               entity_id: binary_sensor.flush_full_irrigation_tent
               to: 'on'
           timeout:
-            seconds: "{{ states('input_number.flush_fill_timeout_seconds') | int }}"
+            seconds: "{{ states('input_number.flush_fill_timeout_duration') | int }}"
         - action: valve.close_valve
           target:
             entity_id: valve.flush_fill_valve_irrigation_tent
@@ -66,7 +66,7 @@ tent_irrigation_reservoirs:
                 title: Flush Fill Timeout
                 message: >
                   Flush fill valve was open for
-                  {{ states('input_number.flush_fill_timeout_seconds') | int }} sec
+                  {{ states('input_number.flush_fill_timeout_duration') | int }} sec
                   without the full float tripping — auto-closed. Verify
                   reservoir level and float sensor.
       mode: single
