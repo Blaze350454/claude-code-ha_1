@@ -4,7 +4,7 @@ tent_irrigation_feed_stage:
       alias: Tent Irrigation — Apply Feed Stage Profile
       description: >
         Copies the selected feed stage's baseline feed-duration and feeds-per-day
-        into the active helpers (input_number.feed_duration_minutes and
+        into the active helpers (input_number.feed_duration and
         input_number.feeds_per_day_2), which the feed cycle and schedule already
         read. Fires when the stage changes and when any per-stage baseline is
         edited (idempotent — it always re-applies the currently selected stage).
@@ -42,7 +42,7 @@ tent_irrigation_feed_stage:
                  }.get(states('input_select.feed_stage'), 'seedling') }}
         - action: input_number.set_value
           target:
-            entity_id: input_number.feed_duration_minutes
+            entity_id: input_number.feed_duration
           data:
             value: "{{ states('input_number.feed_dur_' ~ suffix) | float(8) }}"
         - action: input_number.set_value

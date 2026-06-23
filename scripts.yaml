@@ -30,7 +30,7 @@ run_night_pulse:
       - switch.feed_stir_pump_irrigation_tent
       - switch.flush_stir_pump_irrigation_tent
   - delay:
-      minutes: "{{ states('input_number.night_pulse_stir_pre_minutes') | int }}"
+      minutes: "{{ states('input_number.night_pulse_stir_pre_duration') | int }}"
   - action: switch.turn_off
     target:
       entity_id:
@@ -42,7 +42,7 @@ run_night_pulse:
     target:
       entity_id: switch.air_pump_irrigation_tent
   - delay:
-      minutes: "{{ states('input_number.night_pulse_air_minutes') | int }}"
+      minutes: "{{ states('input_number.night_pulse_air_duration') | int }}"
   - action: switch.turn_off
     target:
       entity_id: switch.air_pump_irrigation_tent
@@ -54,7 +54,7 @@ run_night_pulse:
       - switch.feed_stir_pump_irrigation_tent
       - switch.flush_stir_pump_irrigation_tent
   - delay:
-      minutes: "{{ states('input_number.night_pulse_stir_post_minutes') | int }}"
+      minutes: "{{ states('input_number.night_pulse_stir_post_duration') | int }}"
   - action: switch.turn_off
     target:
       entity_id:
@@ -154,7 +154,7 @@ run_feed_cycle:
         {{ states('input_number.tent_irrigation_day_counter') | int
            >= states('input_number.daily_flush_day_interval') | int }}
       flush_dry: "{{ is_state('binary_sensor.flush_empty_irrigation_tent', 'off') }}"
-      feed_minutes: "{{ states('input_number.feed_duration_minutes') | float }}"
+      feed_minutes: "{{ states('input_number.feed_duration') | float }}"
       clear_minutes: "{{ states('input_number.daily_flush_duration') | float }}"
   - choose:
     - conditions:

@@ -77,7 +77,18 @@ grow_tent_irrigation:
       icon: mdi:weather-night
 
   input_number:
-    night_pulse_stir_pre_minutes:
+    # Active feed length (copied from the per-stage feed_dur_* helpers by the
+    # feed-stage profile automation). Read by the feed cycle + schedule.
+    feed_duration:
+      name: Feed Duration
+      min: 0.5
+      max: 13
+      step: 0.5
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:timer
+
+    night_pulse_stir_pre_duration:
       name: Night Pulse Stir Pre Duration
       min: 1
       max: 30
@@ -86,7 +97,7 @@ grow_tent_irrigation:
       mode: box
       icon: mdi:rotate-3d-variant
 
-    night_pulse_air_minutes:
+    night_pulse_air_duration:
       name: Night Pulse Air Duration
       min: 5
       max: 55
@@ -95,7 +106,7 @@ grow_tent_irrigation:
       mode: box
       icon: mdi:air-purifier
 
-    night_pulse_stir_post_minutes:
+    night_pulse_stir_post_duration:
       name: Night Pulse Stir Post Duration
       min: 1
       max: 30
@@ -164,7 +175,7 @@ grow_tent_irrigation:
     # Baseline feed-duration + feeds-per-day for each growth stage.
     # input_select.feed_stage selects which is active; the
     # "Apply Feed Stage Profile" automation copies the selected stage's values
-    # into feed_duration_minutes + feeds_per_day_2 (which the feed cycle and
+    # into feed_duration + feeds_per_day_2 (which the feed cycle and
     # schedule already read). input_number state persists, so baselines carry
     # over to the next crop. Flush timing is intentionally NOT staged.
     feed_dur_seedling:

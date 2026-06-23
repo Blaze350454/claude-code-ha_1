@@ -24,7 +24,7 @@ tent_irrigation_schedule:
             # Max feeds/day = how many (pre-feed lead + feed + margin) gaps fit the window.
             min_gap_min: >-
               {{ (states('input_number.pre_feed_lead_duration') | float(7)
-                  + states('input_number.feed_duration_minutes') | float(1) + 2) | round(0) | int }}
+                  + states('input_number.feed_duration') | float(1) + 2) | round(0) | int }}
             # Geometric ceiling, floored at 1 and capped at 48 (the helper's max /
             # a sane practical limit — nobody feeds >48x/day).
             max_feeds: >-
