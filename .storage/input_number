@@ -34,36 +34,6 @@
         "icon": "mdi:timer"
       },
       {
-        "id": "air_stir_lead_minutes",
-        "name": "Air/Stir Lead Time",
-        "min": 5.0,
-        "max": 120.0,
-        "step": 5.0,
-        "mode": "box",
-        "unit_of_measurement": "min",
-        "icon": "mdi:clock-start"
-      },
-      {
-        "id": "air_on_duration_minutes",
-        "name": "Air Pump On Duration",
-        "min": 5.0,
-        "max": 60.0,
-        "step": 5.0,
-        "mode": "box",
-        "unit_of_measurement": "min",
-        "icon": "mdi:air-purifier"
-      },
-      {
-        "id": "stir_on_duration_minutes",
-        "name": "Stir Pump On Duration",
-        "min": 5.0,
-        "max": 60.0,
-        "step": 5.0,
-        "mode": "box",
-        "unit_of_measurement": "min",
-        "icon": "mdi:rotate-3d-variant"
-      },
-      {
         "id": "night_delay_minutes",
         "name": "Night Cycle Delay After Lights Off",
         "min": 0.0,
