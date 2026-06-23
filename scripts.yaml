@@ -352,10 +352,9 @@ tent_irrigation_advance_to_next_feed:
   icon: mdi:skip-next
 
 # Manual end-of-day plant flush: pushes flush-reservoir water through the lines to
-# the plants for "Flush Duration" (input_number.line_clear_minutes) minutes, OR until
+# the plants for "Flush Duration" (input_number.manual_flush_minutes) minutes, OR until
 # the flush reservoir runs dry, whichever comes first. Triggered by the "Flush Now"
-# dashboard button. Separate from the automated in-feed line clear (which uses the
-# same Flush Duration value).
+# dashboard button. Independent of the automated in-feed line clear (line_clear_minutes).
 run_manual_flush:
   alias: Run Manual Flush
   mode: single
@@ -394,7 +393,7 @@ run_manual_flush:
       entity_id: switch.flush_pump_irrigation_tent
   # Run until the flush reservoir empties (float reads dry) or the duration elapses.
   - wait_template: "{{ is_state('binary_sensor.flush_empty_irrigation_tent', 'off') }}"
-    timeout: "{{ (states('input_number.line_clear_minutes') | float(6) * 60) | round | int }}"
+    timeout: "{{ (states('input_number.manual_flush_minutes') | float(15) * 60) | round | int }}"
     continue_on_timeout: true
   - action: switch.turn_off
     target:
