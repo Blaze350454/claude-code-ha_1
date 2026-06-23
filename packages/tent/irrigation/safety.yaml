@@ -117,7 +117,6 @@ tent_irrigation_safety:
           target:
             entity_id:
               - script.run_feed_cycle
-              - script.run_alternating
           data: {}
         - action: input_boolean.turn_off
           target:
@@ -455,7 +454,6 @@ tent_irrigation_safety:
                   target:
                     entity_id:
                       - script.tent_irrigation_advance_to_next_feed
-                      - script.run_alternating
                       - script.run_feed_cycle
                       - script.stop_alternating
                 - action: switch.turn_off

@@ -18,57 +18,6 @@ stop_alternating:
   mode: single
   icon: mdi:stop
 
-run_alternating:
-  alias: Run Air/Stir Alternating
-  sequence:
-  - action: input_boolean.turn_on
-    target:
-      entity_id: input_boolean.alternating_active
-  - repeat:
-      while:
-      - condition: state
-        entity_id: input_boolean.alternating_active
-        state: 'on'
-      sequence:
-      - action: switch.turn_on
-        target:
-          entity_id:
-          - switch.feed_stir_pump_irrigation_tent
-          - switch.flush_stir_pump_irrigation_tent
-      - action: switch.turn_off
-        target:
-          entity_id: switch.air_pump_irrigation_tent
-        data: {}
-      - delay:
-          minutes: '{{ states(''input_number.stir_on_duration_minutes'') | int }}'
-      - condition: state
-        entity_id: input_boolean.alternating_active
-        state: 'on'
-      - action: switch.turn_off
-        target:
-          entity_id:
-          - switch.feed_stir_pump_irrigation_tent
-          - switch.flush_stir_pump_irrigation_tent
-        data: {}
-      - delay:
-          milliseconds: 500
-      - action: switch.turn_on
-        target:
-          entity_id: switch.air_pump_irrigation_tent
-      - delay:
-          minutes: '{{ states(''input_number.air_on_duration_minutes'') | int }}'
-      - condition: state
-        entity_id: input_boolean.alternating_active
-        state: 'on'
-      - action: switch.turn_off
-        target:
-          entity_id: switch.air_pump_irrigation_tent
-        data: {}
-      - delay:
-          milliseconds: 500
-  mode: restart
-  icon: mdi:sync
-
 run_night_pulse:
   alias: Run Night Pulse Sequence
   sequence:
