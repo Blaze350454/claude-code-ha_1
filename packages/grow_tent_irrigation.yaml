@@ -122,15 +122,6 @@ grow_tent_irrigation:
       mode: box
       icon: mdi:timer-sand
 
-    maintenance_interval_minutes:
-      name: Maintenance Interval
-      min: 30
-      max: 480
-      step: 10
-      unit_of_measurement: min
-      mode: box
-      icon: mdi:timer-sync
-
     line_clear_minutes:
       name: Line Clear Duration
       min: 0.5
