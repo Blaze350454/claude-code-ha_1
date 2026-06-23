@@ -510,7 +510,8 @@ tent_irrigation_safety:
         TANK (last_feed_service / last_flush_service). Pre-feed/pre-flush bursts stamp
         those anchors, so frequent feeds suppress the feed-tank baseline while the FLUSH
         tank still gets its periodic stir (pH Down stratifies). Flush stir is independent
-        of feed timing (separate pump); feed-stir + interim air respect the feed window.
+        of feed timing (separate pump); feed-stir respects the feed window. Air is no
+        longer handled here — see the Air Alternation automation (air.yaml).
       triggers:
         - trigger: time_pattern
           minutes: /5
@@ -566,18 +567,4 @@ tent_irrigation_safety:
               data:
                 tank: flush
                 turnover: "{{ turn }}"
-        # Interim Phase-1 air (single on/off; Phase 2 = alternating feed/flush duty).
-        # Skipped near a feed so it never fights the settle window.
-        - if:
-            - condition: template
-              value_template: "{{ not feed_imminent }}"
-          then:
-            - action: switch.turn_on
-              target:
-                entity_id: switch.air_pump_irrigation_tent
-            - delay:
-                minutes: "{{ states('input_number.maintenance_air_minutes') | int(5) }}"
-            - action: switch.turn_off
-              target:
-                entity_id: switch.air_pump_irrigation_tent
       mode: single
