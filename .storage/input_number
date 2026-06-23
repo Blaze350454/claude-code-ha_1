@@ -24,16 +24,6 @@
         "icon": "mdi:numeric"
       },
       {
-        "id": "feed_duration_minutes",
-        "name": "Feed Duration",
-        "min": 0.5,
-        "max": 13,
-        "step": 0.5,
-        "mode": "box",
-        "unit_of_measurement": "min",
-        "icon": "mdi:timer"
-      },
-      {
         "id": "night_delay_minutes",
         "name": "Night Cycle Delay After Lights Off",
         "min": 0.0,
