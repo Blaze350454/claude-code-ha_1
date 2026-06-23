@@ -438,5 +438,92 @@ run_flush_now:
     data:
       value: Idle
 
+# Manual feed: pushes feed-reservoir nutrient to the plants for "Feed Now Duration"
+# (input_number.feed_now_duration) minutes, OR until the feed reservoir runs dry,
+# whichever comes first. Toggle via the "Feed Now" dashboard button. Mirrors
+# run_flush_now. Separate from the automated scheduled feed cycle (run_feed_cycle).
+run_feed_now:
+  alias: Run Feed Now
+  # restart mode = the Feed Now button toggles: a second press while feeding
+  # restarts the script, which hits the cancel branch below and shuts off.
+  mode: restart
+  icon: mdi:watering-can
+  sequence:
+  # --- Toggle OFF: already feeding -> stop pump, close valve, cancel timer ---
+  - if:
+    - condition: state
+      entity_id: input_boolean.feed_now_running
+      state: 'on'
+    then:
+    - action: switch.turn_off
+      target:
+        entity_id: switch.feed_pump_irrigation_tent
+    - action: valve.close_valve
+      target:
+        entity_id: valve.feed_valve_irrigation_tent
+    - action: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.feed_now_running
+    - action: input_text.set_value
+      target:
+        entity_id: input_text.tent_irrigation_status
+      data:
+        value: Idle
+    - stop: "Feed cancelled by user"
+  # --- Start guards ---
+  - if:
+    - condition: state
+      entity_id: script.run_feed_cycle
+      state: 'on'
+    then:
+    - action: notify.mobile_app_sm_a166w
+      data:
+        title: Feed Blocked — Feed Cycle Running
+        message: A scheduled feed cycle is in progress. Wait for it to finish.
+    - stop: "Feed cycle in progress"
+  - if:
+    - condition: state
+      entity_id: binary_sensor.feed_empty_irrigation_tent
+      state: 'off'
+    then:
+    - action: notify.mobile_app_sm_a166w
+      data:
+        title: Feed Blocked — Reservoir Dry
+        message: Feed reservoir is empty. Refill before feeding.
+    - stop: "Feed reservoir dry"
+  # --- Run the feed ---
+  - action: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.feed_now_running
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.tent_irrigation_status
+    data:
+      value: Feeding
+  - action: valve.open_valve
+    target:
+      entity_id: valve.feed_valve_irrigation_tent
+  - action: switch.turn_on
+    target:
+      entity_id: switch.feed_pump_irrigation_tent
+  # Run until the feed reservoir empties (float reads dry) or the duration elapses.
+  - wait_template: "{{ is_state('binary_sensor.feed_empty_irrigation_tent', 'off') }}"
+    timeout: "{{ (states('input_number.feed_now_duration') | float(15) * 60) | round | int }}"
+    continue_on_timeout: true
+  - action: switch.turn_off
+    target:
+      entity_id: switch.feed_pump_irrigation_tent
+  - action: valve.close_valve
+    target:
+      entity_id: valve.feed_valve_irrigation_tent
+  - action: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.feed_now_running
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.tent_irrigation_status
+    data:
+      value: Idle
+
 # --- AUTOMATIONS ---
 

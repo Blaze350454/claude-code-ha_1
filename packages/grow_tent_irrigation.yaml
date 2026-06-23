@@ -142,6 +142,17 @@ grow_tent_irrigation:
       mode: box
       icon: mdi:water-sync
 
+    # Manual feed length (script.run_feed_now / "Feed Now"). Separate from the
+    # automated scheduled feed cycle.
+    feed_now_duration:
+      name: Feed Now Duration
+      min: 1
+      max: 60
+      step: 1
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:watering-can
+
     # Manual end-of-day plant flush length (script.run_flush_now / "Flush Now").
     # Separate from the automated in-feed daily flush above.
     flush_now_duration:
@@ -388,6 +399,12 @@ grow_tent_irrigation:
     irrigation_tent_kill:
       name: "Irrigation Tent — All Off"
       icon: mdi:power-off
+
+    # On while a Feed Now is running; lets the Feed Now button act as a
+    # toggle (second press cancels). Set/cleared by script.run_feed_now.
+    feed_now_running:
+      name: "Feed Now Running"
+      icon: mdi:watering-can
 
     # On while a Flush Now is running; lets the Flush Now button act as a
     # toggle (second press cancels). Set/cleared by script.run_flush_now.
