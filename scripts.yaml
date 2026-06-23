@@ -292,7 +292,7 @@ tent_irrigation_advance_to_next_feed:
   - variables:
       feeds_per_day: '{{ states(''input_number.feeds_per_day_2'') | int }}'
       current_feed: '{{ states(''input_number.current_feed_number'') | int }}'
-      lead_minutes: '{{ states(''input_number.pre_feed_lead_minutes'') | int(7) }}'
+      lead_minutes: '{{ states(''input_number.pre_feed_lead_duration'') | int(7) }}'
       lights_off_hour: '{{ states(''input_datetime.veg_lights_off_time'')[0:2] | int }}'
       lights_off_min: '{{ states(''input_datetime.veg_lights_off_time'')[3:5] | int }}'
       lights_on_hour: '{{ states(''input_datetime.veg_lights_on_time'')[0:2] | int }}'
@@ -337,7 +337,7 @@ tent_irrigation_advance_to_next_feed:
       target:
         entity_id: input_datetime.next_pre_feed_stop
       data:
-        datetime: '{{ (strptime(next_feed_dt, ''%Y-%m-%d %H:%M:%S'') - timedelta(minutes=states(''input_number.feed_settle_minutes'') | float(3))) | string }}'
+        datetime: '{{ (strptime(next_feed_dt, ''%Y-%m-%d %H:%M:%S'') - timedelta(minutes=states(''input_number.feed_settle_duration'') | float(3))) | string }}'
     else:
     - action: input_datetime.set_datetime
       target:

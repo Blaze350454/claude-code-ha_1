@@ -504,7 +504,7 @@ tent_irrigation_safety:
       alias: Tent Irrigation — Maintenance Cycle
       description: >-
         Baseline reservoir service (deficit/credit). Every 5 min: stirs a tank only if
-        it hasn't been serviced within baseline_service_interval_minutes, tracked PER
+        it hasn't been serviced within baseline_service_interval_duration, tracked PER
         TANK (last_feed_service / last_flush_service). Pre-feed/pre-flush bursts stamp
         those anchors, so frequent feeds suppress the feed-tank baseline while the FLUSH
         tank still gets its periodic stir (pH Down stratifies). Flush stir is independent
@@ -525,7 +525,7 @@ tent_irrigation_safety:
         # At least one tank is due for service
         - condition: template
           value_template: >
-            {% set iv = states('input_number.baseline_service_interval_minutes') | float(75) * 60 %}
+            {% set iv = states('input_number.baseline_service_interval_duration') | float(75) * 60 %}
             {% set lf = state_attr('input_datetime.last_feed_service','timestamp') %}
             {% set lu = state_attr('input_datetime.last_flush_service','timestamp') %}
             {% set feed_due = lf is none or (now().timestamp() - lf) >= iv %}
@@ -533,14 +533,14 @@ tent_irrigation_safety:
             {{ feed_due or flush_due }}
       actions:
         - variables:
-            iv: "{{ states('input_number.baseline_service_interval_minutes') | float(75) * 60 }}"
+            iv: "{{ states('input_number.baseline_service_interval_duration') | float(75) * 60 }}"
             turn: "{{ states('input_number.stir_turnover_baseline') | float(1) }}"
             feed_imminent: >
               {% set nf = state_attr('input_datetime.next_feed_time','timestamp') %}
               {% if nf is none %}false
               {% else %}
-                {% set guard = (states('input_number.pre_feed_lead_minutes') | float(7)
-                                + states('input_number.feed_settle_minutes') | float(3) + 15) * 60 %}
+                {% set guard = (states('input_number.pre_feed_lead_duration') | float(7)
+                                + states('input_number.feed_settle_duration') | float(3) + 15) * 60 %}
                 {{ (nf - now().timestamp()) <= guard }}
               {% endif %}
         # Feed tank: stir only if due AND no feed imminent (pre-feed handles it otherwise)

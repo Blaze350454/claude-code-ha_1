@@ -43,7 +43,7 @@ tent_irrigation_feed_cycle:
     - id: automation.irrigation_pre_feed_stop
       alias: Tent Irrigation — Pre-Feed Settle
       description: >-
-        Settle window: turns stir + air off (via stop_alternating) feed_settle_minutes
+        Settle window: turns stir + air off (via stop_alternating) feed_settle_duration
         before the feed so the vortex calms and entrained bubbles clear, giving the
         feed pump a clean prime.
       triggers:

@@ -323,7 +323,7 @@ grow_tent_irrigation:
       unit_of_measurement: "x"
       mode: box
       icon: mdi:rotate-3d-variant
-    feed_settle_minutes:
+    feed_settle_duration:
       name: "Feed Settle (stir/air off before feed)"
       min: 0
       max: 10
@@ -331,7 +331,7 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:timer-pause
-    pre_feed_lead_minutes:
+    pre_feed_lead_duration:
       name: "Pre-Feed Lead (stir window before feed)"
       min: 2
       max: 20
@@ -339,7 +339,7 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:clock-start
-    baseline_service_interval_minutes:
+    baseline_service_interval_duration:
       name: "Baseline Service Interval"
       min: 20
       max: 240
