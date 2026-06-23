@@ -22,16 +22,6 @@
         "step": 1.0,
         "mode": "box",
         "icon": "mdi:numeric"
-      },
-      {
-        "id": "night_delay_minutes",
-        "name": "Night Cycle Delay After Lights Off",
-        "min": 0.0,
-        "max": 120.0,
-        "step": 5.0,
-        "mode": "box",
-        "unit_of_measurement": "min",
-        "icon": "mdi:weather-night"
       }
     ]
   }
