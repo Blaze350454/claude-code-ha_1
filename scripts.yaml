@@ -351,5 +351,62 @@ tent_irrigation_advance_to_next_feed:
   mode: single
   icon: mdi:skip-next
 
+# Manual end-of-day plant flush: pushes flush-reservoir water through the lines to
+# the plants for "Flush Duration" (input_number.line_clear_minutes) minutes, OR until
+# the flush reservoir runs dry, whichever comes first. Triggered by the "Flush Now"
+# dashboard button. Separate from the automated in-feed line clear (which uses the
+# same Flush Duration value).
+run_manual_flush:
+  alias: Run Manual Flush
+  mode: single
+  icon: mdi:water-sync
+  sequence:
+  - if:
+    - condition: state
+      entity_id: script.run_feed_cycle
+      state: 'on'
+    then:
+    - action: notify.mobile_app_sm_a166w
+      data:
+        title: Flush Blocked — Feed Running
+        message: A feed cycle is in progress. Wait for it to finish before flushing.
+    - stop: "Feed in progress"
+  - if:
+    - condition: state
+      entity_id: binary_sensor.flush_empty_irrigation_tent
+      state: 'off'
+    then:
+    - action: notify.mobile_app_sm_a166w
+      data:
+        title: Flush Blocked — Reservoir Dry
+        message: Flush reservoir is empty. Refill before flushing.
+    - stop: "Flush reservoir dry"
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.tent_irrigation_status
+    data:
+      value: Flushing
+  - action: valve.open_valve
+    target:
+      entity_id: valve.flush_valve_irrigation_tent
+  - action: switch.turn_on
+    target:
+      entity_id: switch.flush_pump_irrigation_tent
+  # Run until the flush reservoir empties (float reads dry) or the duration elapses.
+  - wait_template: "{{ is_state('binary_sensor.flush_empty_irrigation_tent', 'off') }}"
+    timeout: "{{ (states('input_number.line_clear_minutes') | float(6) * 60) | round | int }}"
+    continue_on_timeout: true
+  - action: switch.turn_off
+    target:
+      entity_id: switch.flush_pump_irrigation_tent
+  - action: valve.close_valve
+    target:
+      entity_id: valve.flush_valve_irrigation_tent
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.tent_irrigation_status
+    data:
+      value: Idle
+
 # --- AUTOMATIONS ---
 

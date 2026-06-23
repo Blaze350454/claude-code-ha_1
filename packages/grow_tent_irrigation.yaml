@@ -123,9 +123,9 @@ grow_tent_irrigation:
       icon: mdi:timer-sand
 
     line_clear_minutes:
-      name: Line Clear Duration
+      name: Flush Duration
       min: 0.5
-      max: 10
+      max: 60
       step: 0.5
       unit_of_measurement: min
       mode: box
