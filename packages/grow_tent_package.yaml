@@ -165,8 +165,8 @@ grow_tent:
       icon: mdi:counter
 
   # --- Lights Transition Pre-Shift ---
-    lights_transition_offset_minutes:
-      name: "Lights Transition Offset (minutes)"
+    lights_transition_offset:
+      name: "Lights Transition Offset"
       min: 0
       max: 30
       step: 1
@@ -175,6 +175,16 @@ grow_tent:
       icon: mdi:timer-cog-outline
     # Climate day mode flips this many minutes before lights actually toggle,
     # so AC + VPD target pre-shift and the tent isn't slammed at the transition.
+
+    # Delay after lights-off before the night cycle begins.
+    night_delay:
+      name: "Night Cycle Delay After Lights Off"
+      min: 0
+      max: 120
+      step: 5
+      unit_of_measurement: "min"
+      mode: box
+      icon: mdi:weather-night
 
   # --- Sensor Divergence Thresholds ---
     tent_temp_divergence_threshold:
@@ -642,7 +652,7 @@ grow_tent:
               false
             {% endif %}
 
-    # Climate day mode — flips ON `lights_transition_offset_minutes` BEFORE the
+    # Climate day mode — flips ON `lights_transition_offset` BEFORE the
     # scheduled lights-on (and OFF that many minutes before lights-off). Stage-
     # aware: uses veg schedule for Seedling/Veg/Transition, flower schedule for
     # Early Flower/Flower/Late Flower. AC + VPD target read this instead of
@@ -657,7 +667,7 @@ grow_tent:
             - input_datetime.veg_lights_off_time
             - input_datetime.flower_lights_on_time
             - input_datetime.flower_lights_off_time
-            - input_number.lights_transition_offset_minutes
+            - input_number.lights_transition_offset
       binary_sensor:
         - name: "Tent Climate Day Mode"
           unique_id: tent_climate_day_mode
@@ -671,7 +681,7 @@ grow_tent:
               {%- set on_t = states('input_datetime.flower_lights_on_time') -%}
               {%- set off_t = states('input_datetime.flower_lights_off_time') -%}
             {%- endif -%}
-            {%- set offset = states('input_number.lights_transition_offset_minutes') | int(5) -%}
+            {%- set offset = states('input_number.lights_transition_offset') | int(5) -%}
             {%- set on_m = ((on_t.split(':')[0]|int * 60) + on_t.split(':')[1]|int - offset + 1440) % 1440 -%}
             {%- set off_m = ((off_t.split(':')[0]|int * 60) + off_t.split(':')[1]|int - offset + 1440) % 1440 -%}
             {%- set now_m = now().hour * 60 + now().minute -%}
