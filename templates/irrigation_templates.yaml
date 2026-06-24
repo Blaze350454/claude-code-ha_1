@@ -1,35 +1,4 @@
 - sensor:
-    - name: "Feed Level Irrigation Tent"
-      unique_id: feed_level_irrigation_tent
-      unit_of_measurement: "%"
-      state_class: measurement
-      icon: mdi:gauge
-      state: >
-        {% if is_state('binary_sensor.feed_full_irrigation_tent', 'on') %}
-          100
-        {% elif is_state('binary_sensor.feed_three_quarter_irrigation_tent', 'on') %}
-          75
-        {% elif is_state('binary_sensor.feed_half_irrigation_tent', 'on') %}
-          50
-        {% elif is_state('binary_sensor.feed_empty_irrigation_tent', 'on') %}
-          25
-        {% else %}
-          0
-        {% endif %}
-      attributes:
-        level_text: >
-          {% if is_state('binary_sensor.feed_full_irrigation_tent', 'on') %}
-            Full
-          {% elif is_state('binary_sensor.feed_three_quarter_irrigation_tent', 'on') %}
-            3/4
-          {% elif is_state('binary_sensor.feed_half_irrigation_tent', 'on') %}
-            1/2
-          {% elif is_state('binary_sensor.feed_empty_irrigation_tent', 'on') %}
-            Low
-          {% else %}
-            Empty
-          {% endif %}
-
     - name: "Table Drain Level Irrigation Tent"
       unique_id: table_drain_level_irrigation_tent
       unit_of_measurement: "%"
@@ -56,7 +25,7 @@
 # --- Latched feed-time readings (added 2026-06-20) ---
 # Flow/pressure sensors read ~0 when pumps are idle. These trigger-based
 # template sensors update ONLY while a feed/flush pump is on, so they HOLD the
-# last active feed reading at idle — lets the dashboard show the last
+# last active feed reading at idle -- lets the dashboard show the last
 # good/low/high color at a glance even when nothing is running.
 - trigger:
     - trigger: state
@@ -106,20 +75,67 @@
       icon: mdi:gauge
       state: "{{ states('sensor.pressure_pre_regulator_irrigation_tent') | float(0) | round(1) }}"
 
+# --- Reservoir levels: aeration freeze + full-float latch (2026-06-24) ---
+# Air-stone aeration agitates the reservoir surface and bounces the float
+# switches mid-burst. Rule for both tanks:
+#   - rising is trusted immediately (a full-float trip can raise to 100, even
+#     mid-burst -- the only time a full-but-high-tripping float confirms full);
+#   - while the air pump is ON, a FALLING reading is frozen (hold last value);
+#   - while the air pump is OFF, step down only as each lower float goes dry
+#     (hold the current level until the next float below it dries).
+- trigger:
+    - trigger: state
+      entity_id:
+        - binary_sensor.feed_full_irrigation_tent
+        - binary_sensor.feed_three_quarter_irrigation_tent
+        - binary_sensor.feed_half_irrigation_tent
+        - binary_sensor.feed_empty_irrigation_tent
+        - switch.air_pump_irrigation_tent
+    - trigger: homeassistant
+      event: start
+  sensor:
+    - name: "Feed Level Irrigation Tent"
+      unique_id: feed_level_irrigation_tent
+      unit_of_measurement: "%"
+      state_class: measurement
+      icon: mdi:gauge
+      state: >
+        {% set prev = this.state | int(0) %}
+        {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
+        {% set full = is_state('binary_sensor.feed_full_irrigation_tent', 'on') %}
+        {% set tq = is_state('binary_sensor.feed_three_quarter_irrigation_tent', 'on') %}
+        {% set half = is_state('binary_sensor.feed_half_irrigation_tent', 'on') %}
+        {% set empty = is_state('binary_sensor.feed_empty_irrigation_tent', 'on') %}
+        {% set raw = 100 if full else (75 if tq else (50 if half else (25 if empty else 0))) %}
+        {% if raw >= prev %}{{ raw }}
+        {% elif air %}{{ prev }}
+        {% elif prev == 100 %}{{ 100 if tq else 75 }}
+        {% elif prev == 75 %}{{ 75 if half else 50 }}
+        {% elif prev == 50 %}{{ 50 if empty else 25 }}
+        {% elif prev == 25 %}{{ 25 if empty else 0 }}
+        {% else %}{{ raw }}{% endif %}
+      attributes:
+        level_text: >
+          {% set prev = this.state | int(0) %}
+          {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
+          {% set full = is_state('binary_sensor.feed_full_irrigation_tent', 'on') %}
+          {% set tq = is_state('binary_sensor.feed_three_quarter_irrigation_tent', 'on') %}
+          {% set half = is_state('binary_sensor.feed_half_irrigation_tent', 'on') %}
+          {% set empty = is_state('binary_sensor.feed_empty_irrigation_tent', 'on') %}
+          {% set raw = 100 if full else (75 if tq else (50 if half else (25 if empty else 0))) %}
+          {% set lvl = raw if raw >= prev else (prev if air else ((100 if tq else 75) if prev == 100 else ((75 if half else 50) if prev == 75 else ((50 if empty else 25) if prev == 50 else ((25 if empty else 0) if prev == 25 else raw))))) %}
+          {{ 'Full' if lvl >= 100 else ('3/4' if lvl >= 75 else ('1/2' if lvl >= 50 else ('Low' if lvl >= 25 else 'Empty'))) }}
+
 - trigger:
     - trigger: state
       entity_id:
         - binary_sensor.flush_full_irrigation_tent
         - binary_sensor.flush_half_irrigation_tent
         - binary_sensor.flush_empty_irrigation_tent
+        - switch.air_pump_irrigation_tent
     - trigger: homeassistant
       event: start
   sensor:
-    # Latched flush level. Air-stone aeration agitates the surface and bounces the
-    # FULL float on/off during every air burst. Hold the reading at Full while the
-    # HALF float is still wet (ignore the bounce); only step DOWN when the float
-    # below the current level actually goes dry. Drain ladder: 100 -> (half dry) 50
-    # -> (empty dry) 0. Rising levels are trusted immediately.
     - name: "Flush Level Irrigation Tent"
       unique_id: flush_level_irrigation_tent
       unit_of_measurement: "%"
@@ -127,11 +143,13 @@
       icon: mdi:gauge
       state: >
         {% set prev = this.state | int(0) %}
+        {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
         {% set full = is_state('binary_sensor.flush_full_irrigation_tent', 'on') %}
         {% set half = is_state('binary_sensor.flush_half_irrigation_tent', 'on') %}
         {% set empty = is_state('binary_sensor.flush_empty_irrigation_tent', 'on') %}
         {% set raw = 100 if full else (50 if half else (25 if empty else 0)) %}
         {% if raw >= prev %}{{ raw }}
+        {% elif air %}{{ prev }}
         {% elif prev == 100 %}{{ 100 if half else 50 }}
         {% elif prev == 50 %}{{ 50 if empty else 0 }}
         {% elif prev == 25 %}{{ 25 if empty else 0 }}
@@ -139,9 +157,10 @@
       attributes:
         level_text: >
           {% set prev = this.state | int(0) %}
+          {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
           {% set full = is_state('binary_sensor.flush_full_irrigation_tent', 'on') %}
           {% set half = is_state('binary_sensor.flush_half_irrigation_tent', 'on') %}
           {% set empty = is_state('binary_sensor.flush_empty_irrigation_tent', 'on') %}
           {% set raw = 100 if full else (50 if half else (25 if empty else 0)) %}
-          {% set lvl = raw if raw >= prev else ((100 if half else 50) if prev == 100 else ((50 if empty else 0) if prev == 50 else ((25 if empty else 0) if prev == 25 else raw))) %}
+          {% set lvl = raw if raw >= prev else (prev if air else ((100 if half else 50) if prev == 100 else ((50 if empty else 0) if prev == 50 else ((25 if empty else 0) if prev == 25 else raw)))) %}
           {{ 'Full' if lvl >= 100 else ('1/2' if lvl >= 50 else ('Low' if lvl >= 25 else 'Empty')) }}
