@@ -525,5 +525,24 @@ run_feed_now:
     data:
       value: Idle
 
+tent_camera_snapshot:
+  alias: Tent Camera — Take Photo
+  icon: mdi:camera-iris
+  # Blink quirk: trigger_camera only tells the camera to capture a fresh still
+  # into Blink's cloud. HA keeps showing the cached thumbnail until its data
+  # polls again, so the picture looks unchanged. This script does the full
+  # sequence: trigger -> wait for the cloud upload -> force a refresh so the
+  # dashboard picture-entity card shows the new frame.
+  mode: restart
+  sequence:
+  - action: blink.trigger_camera
+    target:
+      entity_id: camera.tent
+  - delay:
+      seconds: 8
+  - action: homeassistant.update_entity
+    target:
+      entity_id: camera.tent
+
 # --- AUTOMATIONS ---
 
