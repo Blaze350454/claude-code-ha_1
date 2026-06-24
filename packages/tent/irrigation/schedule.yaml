@@ -40,6 +40,7 @@ tent_irrigation_schedule:
             # (input was valid JSON per error display). Cheaper to just iterate twice.
             chosen_feed_n: >-
               {% set base = today_at('%02d:%02d:00' | format(lights_on_h, lights_on_m)) %}
+              {% if base > now() %}{% set base = base - timedelta(days=1) %}{% endif %}
               {% set ns = namespace(n=0) %}
               {% for n in range(1, feeds_per_day + 1) %}
                 {% set offset = 5 + (n - 1) * (interval_min | int) %}
@@ -51,6 +52,7 @@ tent_irrigation_schedule:
               {{ ns.n if ns.n > 0 else 1 }}
             chosen_feed_dt: >-
               {% set base = today_at('%02d:%02d:00' | format(lights_on_h, lights_on_m)) %}
+              {% if base > now() %}{% set base = base - timedelta(days=1) %}{% endif %}
               {% set ns = namespace(n=0, dt=none) %}
               {% for n in range(1, feeds_per_day + 1) %}
                 {% set offset = 5 + (n - 1) * (interval_min | int) %}

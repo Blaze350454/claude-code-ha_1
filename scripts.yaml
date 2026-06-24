@@ -307,18 +307,9 @@ tent_irrigation_advance_to_next_feed:
       next_feed_num: '{{ current_feed + 1 }}'
       next_feed_offset: '{{ 5 + (next_feed_num - 1) * interval_minutes | int }}'
       next_feed_dt: >
-        {% set base_date = now().date() | string %}
-        {% set on_h = lights_on_hour | int %}
-        {% set on_m_val = lights_on_min | int %}
-        {% set total_min = on_h * 60 + on_m_val + next_feed_offset | int %}
-        {% set h = (total_min // 60) % 24 %}
-        {% set m = total_min % 60 %}
-        {% if total_min >= 24 * 60 %}
-          {% set next_date = (now().date() + timedelta(days=1)) | string %}
-          {{ next_date ~ ' ' ~ '%02d:%02d:00' | format(h, m) }}
-        {% else %}
-          {{ base_date ~ ' ' ~ '%02d:%02d:00' | format(h, m) }}
-        {% endif %}
+        {% set base = today_at('%02d:%02d:00' | format(lights_on_hour | int, lights_on_min | int)) %}
+        {% if base > now() %}{% set base = base - timedelta(days=1) %}{% endif %}
+        {{ (base + timedelta(minutes=next_feed_offset | int)).strftime('%Y-%m-%d %H:%M:%S') }}
   - if:
     - condition: template
       value_template: '{{ next_feed_num <= feeds_per_day }}'
