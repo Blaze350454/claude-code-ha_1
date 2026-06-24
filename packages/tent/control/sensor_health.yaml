@@ -29,7 +29,7 @@ tent_control_sensor_health:
               Canopy: {{ states('sensor.canopy_temperature_tent') }}°C,
               Flower: {{ states('sensor.flower_temperature_tent') }}°C,
               AC: {{ states('sensor.indoor_temperature_air_conditioner_tent') }}°C,
-              Camera: {{ states('sensor.temperature_camera_tent') }}°C.
+              Camera: {{ states('sensor.temperature_camera_tent_1') }}°C.
               Average: {{ states('sensor.tent_average_temperature') }}°C.
               One sensor may be stuck or failing.
       mode: single

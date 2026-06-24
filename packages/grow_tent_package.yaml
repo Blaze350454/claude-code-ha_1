@@ -501,7 +501,7 @@ grow_tent:
               states('sensor.canopy_temperature_tent'),
               states('sensor.flower_temperature_tent'),
               states('sensor.indoor_temperature_air_conditioner_tent'),
-              states('sensor.temperature_camera_tent')
+              states('sensor.temperature_camera_tent_1')
             ] %}
             {% set readings = sensors
               | reject('in', ['unavailable', 'unknown'])
@@ -539,7 +539,7 @@ grow_tent:
               states('sensor.canopy_temperature_tent'),
               states('sensor.flower_temperature_tent'),
               states('sensor.indoor_temperature_air_conditioner_tent'),
-              states('sensor.temperature_camera_tent')
+              states('sensor.temperature_camera_tent_1')
             ] | reject('in', ['unavailable', 'unknown']) | list | length > 0 }}
 
         - name: "Tent Average Pressure"
@@ -619,7 +619,7 @@ grow_tent:
               states('sensor.canopy_temperature_tent'),
               states('sensor.flower_temperature_tent'),
               states('sensor.indoor_temperature_air_conditioner_tent'),
-              states('sensor.temperature_camera_tent')
+              states('sensor.temperature_camera_tent_1')
             ] %}
             {% set readings = raw
               | reject('in', ['unavailable', 'unknown', 'none', 'None', ''])
