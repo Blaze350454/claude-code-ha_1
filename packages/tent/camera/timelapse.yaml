@@ -1,8 +1,9 @@
 tent_camera_timelapse:
   # ================================================
-  # Tent camera hourly timelapse
+  # Tent camera timelapse
   # ------------------------------------------------
-  # Every hour, snapshot each camera.tent_* into /config/www/timelapse as
+  # input_select.tent_timelapse controls it: "Off" disables, any interval sets
+  # the gap between pics. Snapshots each camera.tent_* into /config/www/timelapse as
   # <shortname>_<YYYYmmdd_HHMM>.jpg (e.g. tent_1_20260624_1500.jpg). Flat
   # folder so adding tent_2 / tent_3 needs zero changes — the capture script
   # auto-discovers anything matching camera.tent_<n>. Files are served at
@@ -21,6 +22,31 @@ tent_camera_timelapse:
     # BusyBox find supports -delete (verified on the container).
     timelapse_cleanup: >-
       find /config/www/timelapse -type f -name '*.jpg' -mtime +30 -delete
+
+  # Single control for the whole feature: "Off" disables it (button shows red),
+  # any interval enables it (green) and sets the gap between pics. No `initial:`
+  # so the choice persists across restarts (set once via service on first boot).
+  input_select:
+    tent_timelapse:
+      name: Tent Timelapse
+      icon: mdi:camera-timer
+      options:
+        - "Off"
+        - Every 15 min
+        - Every 30 min
+        - Every 1 hour
+        - Every 2 hours
+        - Every 3 hours
+        - Every 6 hours
+        - Every 12 hours
+        - Every 24 hours
+
+  input_datetime:
+    tent_timelapse_last_capture:
+      name: Tent Timelapse Last Capture
+      icon: mdi:camera-timer
+      has_date: true
+      has_time: true
 
   script:
     camera_timelapse_capture:
@@ -63,14 +89,35 @@ tent_camera_timelapse:
                   filename: "/config/www/timelapse/{{ shortname }}_{{ stamp }}.jpg"
 
   automation:
-    - id: camera_timelapse_hourly
-      alias: Camera Timelapse — Hourly Capture
-      description: Snapshots every camera.tent_* once an hour into /config/www/timelapse.
+    - id: camera_timelapse_scheduler
+      alias: Camera Timelapse — Scheduler
+      description: >-
+        Checks every minute; captures when input_select.tent_timelapse is not Off
+        and the chosen interval has elapsed since the last capture.
       triggers:
         - trigger: time_pattern
-          minutes: 0
+          minutes: "/1"
+      conditions:
+        - condition: template
+          value_template: >
+            {% set sel = states('input_select.tent_timelapse') %}
+            {% if sel in ['Off', 'unknown', 'unavailable'] %}
+              false
+            {% else %}
+              {% set m = {'Every 15 min':15,'Every 30 min':30,'Every 1 hour':60,
+                          'Every 2 hours':120,'Every 3 hours':180,'Every 6 hours':360,
+                          'Every 12 hours':720,'Every 24 hours':1440} %}
+              {% set iv = m.get(sel, 60) %}
+              {% set last = state_attr('input_datetime.tent_timelapse_last_capture','timestamp') %}
+              {{ last is none or (now().timestamp() - last) >= (iv * 60 - 30) }}
+            {% endif %}
       actions:
         - action: script.camera_timelapse_capture
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.tent_timelapse_last_capture
+          data:
+            timestamp: "{{ now().timestamp() }}"
       mode: single
 
     - id: camera_timelapse_cleanup
