@@ -3,6 +3,9 @@ default_config:
 
 homeassistant:
   packages: !include_dir_merge_named packages
+  # camera.snapshot is path-restricted; allow the tent timelapse folder.
+  allowlist_external_dirs:
+    - /config/www/timelapse
 
 # Load frontend themes from the themes folder
 frontend:

@@ -1,0 +1,84 @@
+tent_camera_timelapse:
+  # ================================================
+  # Tent camera hourly timelapse
+  # ------------------------------------------------
+  # Every hour, snapshot each camera.tent_* into /config/www/timelapse as
+  # <shortname>_<YYYYmmdd_HHMM>.jpg (e.g. tent_1_20260624_1500.jpg). Flat
+  # folder so adding tent_2 / tent_3 needs zero changes — the capture script
+  # auto-discovers anything matching camera.tent_<n>. Files are served at
+  # http://192.168.2.151:8123/local/timelapse/ and survive restarts.
+  #
+  # Requires `allowlist_external_dirs: [/config/www/timelapse]` in
+  # configuration.yaml (camera.snapshot is path-restricted). The folder is
+  # gitignored (www/ in .gitignore) so the VM checkout stays clean.
+  #
+  # Compile a timelapse later, e.g.:
+  #   ffmpeg -pattern_type glob -i '/config/www/timelapse/tent_1_*.jpg' \
+  #          -r 24 -vf scale=1280:-2 tent_1_timelapse.mp4
+  # ================================================
+
+  shell_command:
+    # BusyBox find supports -delete (verified on the container).
+    timelapse_cleanup: >-
+      find /config/www/timelapse -type f -name '*.jpg' -mtime +30 -delete
+
+  script:
+    camera_timelapse_capture:
+      alias: Camera Timelapse — Capture
+      icon: mdi:camera-timer
+      mode: single
+      sequence:
+        - variables:
+            cams: >
+              {{ states.camera | map(attribute='entity_id')
+                 | select('match', 'camera.tent_[0-9]+$') | list }}
+            stamp: "{{ now().strftime('%Y%m%d_%H%M') }}"
+        - repeat:
+            for_each: "{{ cams }}"
+            sequence:
+              - variables:
+                  cam: "{{ repeat.item }}"
+                  shortname: "{{ repeat.item.split('.')[1] }}"
+                  is_blink: "{{ state_attr(repeat.item, 'brand') == 'Blink' }}"
+              # Blink quirk: trigger_camera only captures into Blink's cloud and
+              # HA shows the cached thumbnail until refreshed — so trigger, wait
+              # for the upload, then update_entity before snapshotting. Non-Blink
+              # (streaming) cams skip straight to the snapshot.
+              - if:
+                  - condition: template
+                    value_template: "{{ is_blink }}"
+                then:
+                  - action: blink.trigger_camera
+                    target:
+                      entity_id: "{{ cam }}"
+                  - delay:
+                      seconds: 8
+                  - action: homeassistant.update_entity
+                    target:
+                      entity_id: "{{ cam }}"
+              - action: camera.snapshot
+                target:
+                  entity_id: "{{ cam }}"
+                data:
+                  filename: "/config/www/timelapse/{{ shortname }}_{{ stamp }}.jpg"
+
+  automation:
+    - id: camera_timelapse_hourly
+      alias: Camera Timelapse — Hourly Capture
+      description: Snapshots every camera.tent_* once an hour into /config/www/timelapse.
+      triggers:
+        - trigger: time_pattern
+          minutes: 0
+      actions:
+        - action: script.camera_timelapse_capture
+      mode: single
+
+    - id: camera_timelapse_cleanup
+      alias: Camera Timelapse — Daily Cleanup (>30d)
+      description: Deletes timelapse JPGs older than 30 days.
+      triggers:
+        - trigger: time
+          at: "03:30:00"
+      actions:
+        - action: shell_command.timelapse_cleanup
+      mode: single
