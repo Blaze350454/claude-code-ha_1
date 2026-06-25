@@ -13,10 +13,14 @@ tent_camera_timelapse:
   # overall. Adding tent_2 / tent_overhead needs ZERO changes here.
   #
   # Each cam stores into its own folder /config/www/timelapse/<shortname>/ as
-  # <shortname>_<YYYYmmdd_HHMM>.jpg, and also overwrites <shortname>/latest.jpg
-  # (served by camera.<shortname>_last_capture — see last_capture.yaml). The
-  # per-camera folders must pre-exist (camera.snapshot does not mkdir): tent_1,
-  # tent_2, tent_overhead are created on the host.
+  # <shortname>_<YYYYmmdd_HHMM>.jpg, and also overwrites <shortname>/latest.jpg.
+  # That latest.jpg is shown on the dashboard via a per-camera "last capture"
+  # local_file camera (camera.<shortname>_last_capture). NOTE: local_file is a
+  # CONFIG-ENTRY integration now (no YAML); add one per camera via Settings ->
+  # Devices & Services -> Add Integration -> Local File (file_path =
+  # /config/www/timelapse/<shortname>/latest.jpg), or via the REST config-flow.
+  # The per-camera folders must pre-exist (camera.snapshot does not mkdir):
+  # tent_1, tent_2, tent_overhead are created on the host.
   #
   # Retention: JPGs older than 30 days are MOVED (not deleted) nightly into
   # /archive/<shortname>/ (host ~/timelapse_archive/<shortname>/, bind-mounted),
