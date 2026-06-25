@@ -520,12 +520,12 @@ tent_irrigation_safety:
       alias: Tent Irrigation — Maintenance Cycle
       description: >-
         Baseline reservoir service (deficit/credit). Every 5 min: stirs a tank only if
-        it hasn't been serviced within baseline_service_interval_duration, tracked PER
-        TANK (last_feed_service / last_flush_service). Pre-feed/pre-flush bursts stamp
-        those anchors, so frequent feeds suppress the feed-tank baseline while the FLUSH
-        tank still gets its periodic stir (pH Down stratifies). Flush stir is independent
-        of feed timing (separate pump); feed-stir respects the feed window. Air is no
-        longer handled here — see the Air Alternation automation (air.yaml).
+        it hasn't been serviced within its interval, tracked PER TANK
+        (last_feed_service / last_flush_service). FEED uses baseline_service_interval_duration
+        at stir_turnover_baseline; FLUSH uses its own longer flush_service_interval_duration
+        at flush_stir_turnover (clean water, end-of-day use — much lighter cadence).
+        Pre-feed/pre-flush bursts stamp those anchors. Feed-stir respects the feed window;
+        flush is independent (separate pump). Air is handled in the Air Alternation automation.
       triggers:
         - trigger: time_pattern
           minutes: /5
@@ -542,15 +542,18 @@ tent_irrigation_safety:
         - condition: template
           value_template: >
             {% set iv = states('input_number.baseline_service_interval_duration') | float(75) * 60 %}
+            {% set fiv = states('input_number.flush_service_interval_duration') | float(360) * 60 %}
             {% set lf = state_attr('input_datetime.last_feed_service','timestamp') %}
             {% set lu = state_attr('input_datetime.last_flush_service','timestamp') %}
             {% set feed_due = lf is none or (now().timestamp() - lf) >= iv %}
-            {% set flush_due = lu is none or (now().timestamp() - lu) >= iv %}
+            {% set flush_due = lu is none or (now().timestamp() - lu) >= fiv %}
             {{ feed_due or flush_due }}
       actions:
         - variables:
             iv: "{{ states('input_number.baseline_service_interval_duration') | float(75) * 60 }}"
             turn: "{{ states('input_number.stir_turnover_baseline') | float(1) }}"
+            fiv: "{{ states('input_number.flush_service_interval_duration') | float(360) * 60 }}"
+            fturn: "{{ states('input_number.flush_stir_turnover') | float(0.5) }}"
             feed_imminent: >
               {% set nf = state_attr('input_datetime.next_feed_time','timestamp') %}
               {% if nf is none %}false
@@ -570,15 +573,15 @@ tent_irrigation_safety:
               data:
                 tank: feed
                 turnover: "{{ turn }}"
-        # Flush tank: independent of feed timing (separate pump) — stir whenever due
+        # Flush tank: own light interval (clean water, end-of-day use) — quick stir when due
         - if:
             - condition: template
               value_template: >
                 {% set lu = state_attr('input_datetime.last_flush_service','timestamp') %}
-                {{ lu is none or (now().timestamp() - lu) >= iv }}
+                {{ lu is none or (now().timestamp() - lu) >= fiv }}
           then:
             - action: script.tent_stir_burst
               data:
                 tank: flush
-                turnover: "{{ turn }}"
+                turnover: "{{ fturn }}"
       mode: single

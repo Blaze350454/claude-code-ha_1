@@ -24,18 +24,18 @@ run_night_pulse:
   - action: input_boolean.turn_on
     target:
       entity_id: input_boolean.alternating_active
+  # Night pulse mixes/aerates the FEED reservoir during dark; flush (clean water,
+  # end-of-day use) is no longer stirred overnight.
   - action: switch.turn_on
     target:
       entity_id:
       - switch.feed_stir_pump_irrigation_tent
-      - switch.flush_stir_pump_irrigation_tent
   - delay:
       minutes: "{{ states('input_number.night_pulse_stir_pre_duration') | int }}"
   - action: switch.turn_off
     target:
       entity_id:
       - switch.feed_stir_pump_irrigation_tent
-      - switch.flush_stir_pump_irrigation_tent
   - delay:
       milliseconds: 500
   - action: switch.turn_on
@@ -52,14 +52,12 @@ run_night_pulse:
     target:
       entity_id:
       - switch.feed_stir_pump_irrigation_tent
-      - switch.flush_stir_pump_irrigation_tent
   - delay:
       minutes: "{{ states('input_number.night_pulse_stir_post_duration') | int }}"
   - action: switch.turn_off
     target:
       entity_id:
       - switch.feed_stir_pump_irrigation_tent
-      - switch.flush_stir_pump_irrigation_tent
   - action: input_boolean.turn_off
     target:
       entity_id: input_boolean.alternating_active
@@ -184,7 +182,12 @@ run_feed_cycle:
         - action: valve.close_valve
           target:
             entity_id: valve.feed_valve_irrigation_tent
-      # Homogenize the flush reservoir (pH Down stratifies) right before line clear
+      # Fully aerate the flush reservoir, then homogenize (pH Down stratifies),
+      # right before the line clear — oxygenate, then mix, then draw.
+      - action: script.tent_air_burst
+        data:
+          tank: flush
+          minutes: "{{ states('input_number.flush_pre_use_air_duration') | float(5) }}"
       - action: script.tent_stir_burst
         data:
           tank: flush
@@ -399,6 +402,20 @@ run_flush_now:
   - action: input_boolean.turn_on
     target:
       entity_id: input_boolean.flush_now_running
+  # Fully aerate + homogenize the flush reservoir before flushing
+  - action: input_text.set_value
+    target:
+      entity_id: input_text.tent_irrigation_status
+    data:
+      value: Prepping Flush (aerate + stir)
+  - action: script.tent_air_burst
+    data:
+      tank: flush
+      minutes: "{{ states('input_number.flush_pre_use_air_duration') | float(5) }}"
+  - action: script.tent_stir_burst
+    data:
+      tank: flush
+      turnover: "{{ states('input_number.stir_turnover_prefeed') | float(0.5) }}"
   - action: input_text.set_value
     target:
       entity_id: input_text.tent_irrigation_status

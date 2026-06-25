@@ -77,9 +77,22 @@ tent_irrigation_air:
               options:
                 - feed
                 - flush
+        minutes:
+          description: "Optional burst length override (min). Defaults to air_burst_<tank>_duration."
+          required: false
+          example: 5
+          selector:
+            number:
+              min: 0
+              max: 30
+              step: 1
+              mode: box
       sequence:
         - variables:
-            air_seconds: "{{ (states('input_number.air_burst_' ~ tank ~ '_duration') | float(4) * 60) | round | int }}"
+            air_seconds: >-
+              {% set m = (minutes | float(0)) if (minutes is defined and minutes is not none) else 0 %}
+              {% if m <= 0 %}{% set m = states('input_number.air_burst_' ~ tank ~ '_duration') | float(4) %}{% endif %}
+              {{ (m * 60) | round | int }}
             air_dt_entity: "{{ 'input_datetime.last_' ~ tank ~ '_air' }}"
         # Move the (dummy) servo: route air to this tank, away from the other.
         - action: input_select.select_option
@@ -118,10 +131,11 @@ tent_irrigation_air:
       alias: Tent Irrigation — Air Alternation
       description: >-
         Deficit-based air "level": every 5 min, airs whichever tank is furthest past
-        air_refresh_interval_duration, ONE tank at a time (never both — the dummy
-        air_route enforces it; Phase-2 real = DS3225 pinch servos). Stamps last_*_air.
-        Skips while feeding, in the feed settle window, or while a night pulse runs
-        (night pulses own the dark period).
+        its air interval (FEED = air_refresh_interval_duration; FLUSH =
+        flush_service_interval_duration, much longer — clean water, end-of-day use),
+        ONE tank at a time (never both — the dummy air_route enforces it; Phase-2 real
+        = DS3225 pinch servos). Stamps last_*_air. Skips while feeding, in the feed
+        settle window, or while a night pulse runs (night pulses own the dark period).
       triggers:
         - trigger: time_pattern
           minutes: /5
@@ -154,18 +168,20 @@ tent_irrigation_air:
         - condition: template
           value_template: >
             {% set iv = states('input_number.air_refresh_interval_duration') | float(35) * 60 %}
+            {% set fiv = states('input_number.flush_service_interval_duration') | float(360) * 60 %}
             {% set ff = state_attr('input_datetime.last_feed_air','timestamp') %}
             {% set lu = state_attr('input_datetime.last_flush_air','timestamp') %}
-            {{ (ff is none or (now().timestamp() - ff) >= iv) or (lu is none or (now().timestamp() - lu) >= iv) }}
+            {{ (ff is none or (now().timestamp() - ff) >= iv) or (lu is none or (now().timestamp() - lu) >= fiv) }}
       actions:
         - variables:
             iv: "{{ states('input_number.air_refresh_interval_duration') | float(35) * 60 }}"
+            fiv: "{{ states('input_number.flush_service_interval_duration') | float(360) * 60 }}"
             ff: "{{ state_attr('input_datetime.last_feed_air','timestamp') }}"
             lu: "{{ state_attr('input_datetime.last_flush_air','timestamp') }}"
             feed_age: "{{ 9e9 if ff is none else (now().timestamp() - ff) }}"
             flush_age: "{{ 9e9 if lu is none else (now().timestamp() - lu) }}"
             feed_due: "{{ feed_age | float >= iv | float }}"
-            flush_due: "{{ flush_age | float >= iv | float }}"
+            flush_due: "{{ flush_age | float >= fiv | float }}"
             # Pick the most-overdue due tank
             tank: >-
               {% if feed_due and flush_due %}{{ 'feed' if (feed_age | float) >= (flush_age | float) else 'flush' }}
