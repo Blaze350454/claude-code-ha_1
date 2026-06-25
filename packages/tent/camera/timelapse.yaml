@@ -1,31 +1,50 @@
 tent_camera_timelapse:
   # ================================================
-  # Tent camera timelapse
+  # Tent camera timelapse  (multi-camera, round-robin)
   # ------------------------------------------------
-  # input_select.tent_timelapse controls it: "Off" disables, any interval sets
-  # the gap between pics. Snapshots each camera.tent_* into /config/www/timelapse as
-  # <shortname>_<YYYYmmdd_HHMM>.jpg (e.g. tent_1_20260624_1500.jpg). Flat
-  # folder so adding tent_2 / tent_3 needs zero changes — the capture script
-  # auto-discovers anything matching camera.tent_<n>. Files are served at
-  # http://192.168.2.151:8123/local/timelapse/ and survive restarts.
+  # input_select.tent_timelapse is the single Start/Stop + cadence control:
+  # "Off" disables; any interval sets the COMBINED gap between pics.
   #
-  # Requires `allowlist_external_dirs: [/config/www/timelapse]` in
-  # configuration.yaml (camera.snapshot is path-restricted). The folder is
-  # gitignored (www/ in .gitignore) so the VM checkout stays clean.
+  # Capture is ROUND-ROBIN: each scheduler fire snapshots ONE camera — the next
+  # in rotation across all discovered camera.tent_* cams (the *_last_capture
+  # local_file tiles and any unavailable cam are excluded). With N cams and a
+  # combined interval I, each camera is shot every I*N, staggered I apart.
+  # N=3 + "Every 30 min" => each cam every 90 min, 30 min apart = 1 pic / 30 min
+  # overall. Adding tent_2 / tent_overhead needs ZERO changes here.
   #
-  # Compile a timelapse later, e.g.:
-  #   ffmpeg -pattern_type glob -i '/config/www/timelapse/tent_1_*.jpg' \
-  #          -r 24 -vf scale=1280:-2 tent_1_timelapse.mp4
+  # Each cam stores into its own folder /config/www/timelapse/<shortname>/ as
+  # <shortname>_<YYYYmmdd_HHMM>.jpg, and also overwrites <shortname>/latest.jpg
+  # (served by camera.<shortname>_last_capture — see last_capture.yaml). The
+  # per-camera folders must pre-exist (camera.snapshot does not mkdir): tent_1,
+  # tent_2, tent_overhead are created on the host.
+  #
+  # Retention: JPGs older than 30 days are MOVED (not deleted) nightly into
+  # /archive/<shortname>/ (host ~/timelapse_archive/<shortname>/, bind-mounted),
+  # so www keeps a rolling 30-day window while the archive accumulates the whole
+  # grow. Served at http://192.168.2.151:8123/local/timelapse/<shortname>/.
+  #
+  # Requires `allowlist_external_dirs: [/config/www/timelapse]` (covers subdirs).
+  # www/ is gitignored. Rotation persists in input_number.timelapse_rotation_index.
+  #
+  # Compile one camera's lapse later, e.g.:
+  #   ffmpeg -framerate 24 -pattern_type glob \
+  #          -i '/archive/tent_1/tent_1_*.jpg' -pix_fmt yuv420p \
+  #          -vf scale=1280:-2 tent_1_timelapse.mp4
   # ================================================
 
   shell_command:
-    # BusyBox find supports -delete (verified on the container).
-    timelapse_cleanup: >-
-      find /config/www/timelapse -type f -name '*.jpg' -mtime +30 -delete
+    # Move JPGs older than 30 days into the per-camera archive (bind-mounted at
+    # /archive). BusyBox sh/find. The latest.jpg pointer is skipped (it doesn't
+    # match <name>_*.jpg).
+    timelapse_archive: >-
+      sh -c 'for d in /config/www/timelapse/tent_*; do [ -d "$d" ] || continue;
+      n=$(basename "$d"); mkdir -p "/archive/$n";
+      find "$d" -type f -name "${n}_*.jpg" -mtime +30 -exec mv {} "/archive/$n/" \; ;
+      done'
 
   # Single control for the whole feature: "Off" disables it (button shows red),
-  # any interval enables it (green) and sets the gap between pics. No `initial:`
-  # so the choice persists across restarts (set once via service on first boot).
+  # any interval enables it (green) and sets the COMBINED gap between pics. No
+  # `initial:` so the choice persists across restarts.
   input_select:
     tent_timelapse:
       name: Tent Timelapse
@@ -48,52 +67,87 @@ tent_camera_timelapse:
       has_date: true
       has_time: true
 
+  # Persistent round-robin pointer: which camera the next capture targets
+  # (cams[idx % N]). No `initial:` so it survives restarts. Grows unbounded;
+  # max is decades of captures away.
+  input_number:
+    timelapse_rotation_index:
+      name: Timelapse Rotation Index
+      icon: mdi:rotate-3d-variant
+      min: 0
+      max: 1000000
+      step: 1
+      mode: box
+
   script:
     camera_timelapse_capture:
       alias: Camera Timelapse — Capture
       icon: mdi:camera-timer
       mode: single
       sequence:
+        # Discover tent cameras (exclude the *_last_capture local_file tiles and
+        # any unavailable/unknown cam); sort for a stable rotation order
+        # (tent_1, tent_2, tent_overhead).
         - variables:
             cams: >
               {{ states.camera | map(attribute='entity_id')
-                 | select('match', 'camera.tent_[0-9]+$') | list }}
+                 | select('match', 'camera.tent_')
+                 | reject('search', '_last_capture')
+                 | reject('is_state', 'unavailable')
+                 | reject('is_state', 'unknown')
+                 | list | sort }}
+        # Nothing online -> stop quietly.
+        - condition: template
+          value_template: "{{ cams | length > 0 }}"
+        - variables:
+            idx: "{{ states('input_number.timelapse_rotation_index') | int(0) }}"
+            cam: "{{ cams[idx % (cams | length)] }}"
+            shortname: "{{ cams[idx % (cams | length)].split('.')[1] }}"
             stamp: "{{ now().strftime('%Y%m%d_%H%M') }}"
-        - repeat:
-            for_each: "{{ cams }}"
-            sequence:
-              - variables:
-                  cam: "{{ repeat.item }}"
-                  shortname: "{{ repeat.item.split('.')[1] }}"
-                  is_blink: "{{ state_attr(repeat.item, 'brand') == 'Blink' }}"
-              # Blink quirk: trigger_camera only captures into Blink's cloud and
-              # HA shows the cached thumbnail until refreshed — so trigger, wait
-              # for the upload, then update_entity before snapshotting. Non-Blink
-              # (streaming) cams skip straight to the snapshot.
-              - if:
-                  - condition: template
-                    value_template: "{{ is_blink }}"
-                then:
-                  - action: blink.trigger_camera
-                    target:
-                      entity_id: "{{ cam }}"
-                  - delay:
-                      seconds: 8
-                  - action: homeassistant.update_entity
-                    target:
-                      entity_id: "{{ cam }}"
-              - action: camera.snapshot
-                target:
-                  entity_id: "{{ cam }}"
-                data:
-                  filename: "/config/www/timelapse/{{ shortname }}_{{ stamp }}.jpg"
+            is_blink: "{{ state_attr(cams[idx % (cams | length)], 'brand') == 'Blink' }}"
+        # Blink quirk: trigger_camera only captures into Blink's cloud and HA
+        # shows the cached thumbnail until refreshed — so trigger, wait for the
+        # upload, then update_entity before snapshotting. Non-Blink (streaming)
+        # cams skip straight to the snapshot.
+        - if:
+            - condition: template
+              value_template: "{{ is_blink }}"
+          then:
+            - action: blink.trigger_camera
+              target:
+                entity_id: "{{ cam }}"
+            - delay:
+                seconds: 8
+            - action: homeassistant.update_entity
+              target:
+                entity_id: "{{ cam }}"
+        # Timestamped frame for the lapse sequence...
+        - action: camera.snapshot
+          target:
+            entity_id: "{{ cam }}"
+          data:
+            filename: "/config/www/timelapse/{{ shortname }}/{{ shortname }}_{{ stamp }}.jpg"
+        # ...and overwrite the per-cam latest.jpg (dashboard tile) — same frame,
+        # no extra Blink trigger.
+        - action: camera.snapshot
+          target:
+            entity_id: "{{ cam }}"
+          data:
+            filename: "/config/www/timelapse/{{ shortname }}/latest.jpg"
+        # Advance the rotation pointer.
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.timelapse_rotation_index
+          data:
+            value: "{{ idx + 1 }}"
 
   automation:
     - id: camera_timelapse_scheduler
       alias: Camera Timelapse — Scheduler
       description: >-
-        Checks every minute; captures when input_select.tent_timelapse is not Off
-        and the chosen interval has elapsed since the last capture.
+        Checks every minute; captures the next camera in rotation when
+        input_select.tent_timelapse is not Off and the combined interval has
+        elapsed since the last capture.
       triggers:
         - trigger: time_pattern
           minutes: "/1"
@@ -121,11 +175,13 @@ tent_camera_timelapse:
       mode: single
 
     - id: camera_timelapse_cleanup
-      alias: Camera Timelapse — Daily Cleanup (>30d)
-      description: Deletes timelapse JPGs older than 30 days.
+      alias: Camera Timelapse — Daily Archive (>30d)
+      description: >-
+        Moves timelapse JPGs older than 30 days into the per-camera archive
+        (bind-mounted /archive), keeping a rolling 30-day window in www.
       triggers:
         - trigger: time
           at: "03:30:00"
       actions:
-        - action: shell_command.timelapse_cleanup
+        - action: shell_command.timelapse_archive
       mode: single

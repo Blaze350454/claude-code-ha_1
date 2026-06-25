@@ -1,0 +1,18 @@
+tent_camera_last_capture:
+  # ================================================
+  # "Last capture" dashboard tiles
+  # ------------------------------------------------
+  # One local_file camera per physical camera, each serving that camera's
+  # <shortname>/latest.jpg — the most recent frame actually saved, whether by the
+  # timelapse capture (packages/tent/camera/timelapse.yaml) or a manual "Take
+  # Photo" (script.tent_camera_snapshot). local_file re-reads the file on every
+  # refresh, so overwriting latest.jpg updates the tile deterministically — it
+  # shows the last picture you took, NOT Blink's live cloud thumbnail.
+  #
+  # latest.jpg must exist for the entity to load (seeded on the host). Add one
+  # block per camera as tent_2 / tent_overhead come online.
+  # ================================================
+  camera:
+    - platform: local_file
+      name: Tent 1 Last Capture
+      file_path: /config/www/timelapse/tent_1/latest.jpg

@@ -539,18 +539,33 @@ tent_camera_snapshot:
   # Blink quirk: trigger_camera only tells the camera to capture a fresh still
   # into Blink's cloud. HA keeps showing the cached thumbnail until its data
   # polls again, so the picture looks unchanged. This script does the full
-  # sequence: trigger -> wait for the cloud upload -> force a refresh so the
-  # dashboard picture-entity card shows the new frame.
+  # sequence: trigger -> wait for the cloud upload -> force a refresh -> save the
+  # frame as the camera's <shortname>/latest.jpg, which the dashboard tile
+  # (camera.<shortname>_last_capture) serves. So a manual photo updates the shown
+  # picture too, regardless of the timelapse. Defaults to camera.tent_1; pass
+  # `cam` to target another camera.
   mode: restart
+  fields:
+    cam:
+      description: Camera entity to photograph
+      example: camera.tent_1
   sequence:
+  - variables:
+      cam: "{{ cam | default('camera.tent_1') }}"
+      shortname: "{{ (cam | default('camera.tent_1')).split('.')[1] }}"
   - action: blink.trigger_camera
     target:
-      entity_id: camera.tent_1
+      entity_id: "{{ cam }}"
   - delay:
       seconds: 8
   - action: homeassistant.update_entity
     target:
-      entity_id: camera.tent_1
+      entity_id: "{{ cam }}"
+  - action: camera.snapshot
+    target:
+      entity_id: "{{ cam }}"
+    data:
+      filename: "/config/www/timelapse/{{ shortname }}/latest.jpg"
 
 # --- AUTOMATIONS ---
 
