@@ -102,7 +102,8 @@
       "PowerShell(Get-Content *)",
       "PowerShell(cd *)",
       "PowerShell($py = \\(Get-Command python3, python, py -ErrorAction SilentlyContinue | Select-Object -First 1\\).Source; if \\(-not $py\\) { \"NO_PYTHON\" } else { $py })",
-      "PowerShell($ErrorActionPreference='SilentlyContinue'; gh run list --limit 1 --json status,conclusion,name 2>$null; if \\($LASTEXITCODE -ne 0\\) { \"gh unavailable\" })"
+      "PowerShell($ErrorActionPreference='SilentlyContinue'; gh run list --limit 1 --json status,conclusion,name 2>$null; if \\($LASTEXITCODE -ne 0\\) { \"gh unavailable\" })",
+      "PowerShell(try { $l = New-Item -ItemType SymbolicLink -Path \"D:\\\\Claude\\\\Projects\\\\Grow Home\\\\.claude\\\\skills\\\\caveman\" -Target \"D:\\\\Claude\\\\Projects\\\\Grow Home\\\\.agents\\\\skills\\\\caveman\" -ErrorAction Stop; \"created: $\\($l.FullName\\) -> $\\($l.Target\\)\" } catch { \"FAILED: $\\($_.Exception.Message\\)\" })"
     ]
   },
   "enabledMcpjsonServers": [

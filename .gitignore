@@ -20,3 +20,6 @@ dashboard_tent_backup_*.json
 
 # Claude temp files
 tmpclaude-*
+
+# Local skill symlinks (point to in-repo .agents/skills/)
+.claude/skills/caveman
