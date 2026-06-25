@@ -75,13 +75,16 @@
       icon: mdi:gauge
       state: "{{ states('sensor.pressure_pre_regulator_irrigation_tent') | float(0) | round(1) }}"
 
-# --- Reservoir levels: aeration freeze + full-float latch (2026-06-24) ---
-# Air-stone aeration agitates the reservoir surface and bounces the float
-# switches mid-burst. Rule for both tanks:
+# --- Reservoir levels: agitation freeze + full-float latch
+#     (2026-06-24; stir pumps added as a freeze source 2026-06-25) ---
+# Air-stone aeration AND the stir pumps agitate the reservoir surface and bounce
+# the float switches mid-burst. A tank is "agitated" while its own stir pump runs,
+# or the air pump runs and is routed to it (in dummy-servo mode air reaches BOTH
+# tanks, so either tank counts air as agitation). Rule for both tanks:
 #   - rising is trusted immediately (a full-float trip can raise to 100, even
 #     mid-burst -- the only time a full-but-high-tripping float confirms full);
-#   - while the air pump is ON, a FALLING reading is frozen (hold last value);
-#   - while the air pump is OFF, step down only as each lower float goes dry
+#   - while the tank is agitated, a FALLING reading is frozen (hold last value);
+#   - while it is not agitated, step down only as each lower float goes dry
 #     (hold the current level until the next float below it dries).
 - trigger:
     - trigger: state
@@ -91,6 +94,9 @@
         - binary_sensor.feed_half_irrigation_tent
         - binary_sensor.feed_empty_irrigation_tent
         - switch.air_pump_irrigation_tent
+        - switch.feed_stir_pump_irrigation_tent
+        - input_select.air_route
+        - input_boolean.air_real_servos
     - trigger: homeassistant
       event: start
   sensor:
@@ -102,13 +108,15 @@
       state: >
         {% set prev = this.state | int(0) %}
         {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
+        {% set air_here = air and (is_state('input_boolean.air_real_servos', 'off') or is_state('input_select.air_route', 'feed')) %}
+        {% set agit = air_here or is_state('switch.feed_stir_pump_irrigation_tent', 'on') %}
         {% set full = is_state('binary_sensor.feed_full_irrigation_tent', 'on') %}
         {% set tq = is_state('binary_sensor.feed_three_quarter_irrigation_tent', 'on') %}
         {% set half = is_state('binary_sensor.feed_half_irrigation_tent', 'on') %}
         {% set empty = is_state('binary_sensor.feed_empty_irrigation_tent', 'on') %}
         {% set raw = 100 if full else (75 if tq else (50 if half else (25 if empty else 0))) %}
         {% if raw >= prev %}{{ raw }}
-        {% elif air %}{{ prev }}
+        {% elif agit %}{{ prev }}
         {% elif prev == 100 %}{{ 100 if tq else 75 }}
         {% elif prev == 75 %}{{ 75 if half else 50 }}
         {% elif prev == 50 %}{{ 50 if empty else 25 }}
@@ -118,12 +126,14 @@
         level_text: >
           {% set prev = this.state | int(0) %}
           {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
+          {% set air_here = air and (is_state('input_boolean.air_real_servos', 'off') or is_state('input_select.air_route', 'feed')) %}
+          {% set agit = air_here or is_state('switch.feed_stir_pump_irrigation_tent', 'on') %}
           {% set full = is_state('binary_sensor.feed_full_irrigation_tent', 'on') %}
           {% set tq = is_state('binary_sensor.feed_three_quarter_irrigation_tent', 'on') %}
           {% set half = is_state('binary_sensor.feed_half_irrigation_tent', 'on') %}
           {% set empty = is_state('binary_sensor.feed_empty_irrigation_tent', 'on') %}
           {% set raw = 100 if full else (75 if tq else (50 if half else (25 if empty else 0))) %}
-          {% set lvl = raw if raw >= prev else (prev if air else ((100 if tq else 75) if prev == 100 else ((75 if half else 50) if prev == 75 else ((50 if empty else 25) if prev == 50 else ((25 if empty else 0) if prev == 25 else raw))))) %}
+          {% set lvl = raw if raw >= prev else (prev if agit else ((100 if tq else 75) if prev == 100 else ((75 if half else 50) if prev == 75 else ((50 if empty else 25) if prev == 50 else ((25 if empty else 0) if prev == 25 else raw))))) %}
           {{ 'Full' if lvl >= 100 else ('3/4' if lvl >= 75 else ('1/2' if lvl >= 50 else ('Low' if lvl >= 25 else 'Empty'))) }}
 
 - trigger:
@@ -133,6 +143,9 @@
         - binary_sensor.flush_half_irrigation_tent
         - binary_sensor.flush_empty_irrigation_tent
         - switch.air_pump_irrigation_tent
+        - switch.flush_stir_pump_irrigation_tent
+        - input_select.air_route
+        - input_boolean.air_real_servos
     - trigger: homeassistant
       event: start
   sensor:
@@ -144,12 +157,14 @@
       state: >
         {% set prev = this.state | int(0) %}
         {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
+        {% set air_here = air and (is_state('input_boolean.air_real_servos', 'off') or is_state('input_select.air_route', 'flush')) %}
+        {% set agit = air_here or is_state('switch.flush_stir_pump_irrigation_tent', 'on') %}
         {% set full = is_state('binary_sensor.flush_full_irrigation_tent', 'on') %}
         {% set half = is_state('binary_sensor.flush_half_irrigation_tent', 'on') %}
         {% set empty = is_state('binary_sensor.flush_empty_irrigation_tent', 'on') %}
         {% set raw = 100 if full else (50 if half else (25 if empty else 0)) %}
         {% if raw >= prev %}{{ raw }}
-        {% elif air %}{{ prev }}
+        {% elif agit %}{{ prev }}
         {% elif prev == 100 %}{{ 100 if half else 50 }}
         {% elif prev == 50 %}{{ 50 if empty else 0 }}
         {% elif prev == 25 %}{{ 25 if empty else 0 }}
@@ -158,9 +173,11 @@
         level_text: >
           {% set prev = this.state | int(0) %}
           {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
+          {% set air_here = air and (is_state('input_boolean.air_real_servos', 'off') or is_state('input_select.air_route', 'flush')) %}
+          {% set agit = air_here or is_state('switch.flush_stir_pump_irrigation_tent', 'on') %}
           {% set full = is_state('binary_sensor.flush_full_irrigation_tent', 'on') %}
           {% set half = is_state('binary_sensor.flush_half_irrigation_tent', 'on') %}
           {% set empty = is_state('binary_sensor.flush_empty_irrigation_tent', 'on') %}
           {% set raw = 100 if full else (50 if half else (25 if empty else 0)) %}
-          {% set lvl = raw if raw >= prev else (prev if air else ((100 if half else 50) if prev == 100 else ((50 if empty else 0) if prev == 50 else ((25 if empty else 0) if prev == 25 else raw)))) %}
+          {% set lvl = raw if raw >= prev else (prev if agit else ((100 if half else 50) if prev == 100 else ((50 if empty else 0) if prev == 50 else ((25 if empty else 0) if prev == 25 else raw)))) %}
           {{ 'Full' if lvl >= 100 else ('1/2' if lvl >= 50 else ('Low' if lvl >= 25 else 'Empty')) }}

@@ -14,9 +14,9 @@ tent_irrigation_reservoirs:
           to: 'open'
       actions:
         - wait_for_trigger:
-            - platform: state
-              entity_id: binary_sensor.feed_full_irrigation_tent
-              to: 'on'
+            - platform: numeric_state
+              entity_id: sensor.feed_level_irrigation_tent
+              above: 99
           timeout:
             seconds: "{{ states('input_number.feed_fill_timeout_duration') | int }}"
         - action: valve.close_valve
@@ -49,9 +49,9 @@ tent_irrigation_reservoirs:
           to: 'open'
       actions:
         - wait_for_trigger:
-            - platform: state
-              entity_id: binary_sensor.flush_full_irrigation_tent
-              to: 'on'
+            - platform: numeric_state
+              entity_id: sensor.flush_level_irrigation_tent
+              above: 99
           timeout:
             seconds: "{{ states('input_number.flush_fill_timeout_duration') | int }}"
         - action: valve.close_valve
@@ -74,9 +74,9 @@ tent_irrigation_reservoirs:
       alias: Alert — Feed Reservoir Dry
       description: Immediate push notification when feed reservoir goes dry
       triggers:
-        - trigger: state
-          entity_id: binary_sensor.feed_empty_irrigation_tent
-          to: 'off'
+        - trigger: numeric_state
+          entity_id: sensor.feed_level_irrigation_tent
+          below: 1
           for:
             minutes: 1
       actions:
@@ -92,9 +92,9 @@ tent_irrigation_reservoirs:
         - trigger: time_pattern
           minutes: /30
       conditions:
-        - condition: state
-          entity_id: binary_sensor.feed_empty_irrigation_tent
-          state: 'off'
+        - condition: numeric_state
+          entity_id: sensor.feed_level_irrigation_tent
+          below: 1
       actions:
         - action: notify.mobile_app_sm_a166w
           data:
@@ -105,9 +105,9 @@ tent_irrigation_reservoirs:
       alias: Alert — Flush Reservoir Dry
       description: Immediate push notification when flush reservoir goes dry
       triggers:
-        - trigger: state
-          entity_id: binary_sensor.flush_empty_irrigation_tent
-          to: 'off'
+        - trigger: numeric_state
+          entity_id: sensor.flush_level_irrigation_tent
+          below: 1
           for:
             minutes: 1
       actions:
@@ -123,9 +123,9 @@ tent_irrigation_reservoirs:
         - trigger: time_pattern
           minutes: /30
       conditions:
-        - condition: state
-          entity_id: binary_sensor.flush_empty_irrigation_tent
-          state: 'off'
+        - condition: numeric_state
+          entity_id: sensor.flush_level_irrigation_tent
+          below: 1
       actions:
         - action: notify.mobile_app_sm_a166w
           data:
