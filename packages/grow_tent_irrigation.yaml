@@ -370,11 +370,12 @@ grow_tent_irrigation:
       mode: box
       icon: mdi:timer-sync
     # --- Flush reservoir light schedule (added 2026-06-25) ---
-    # Flush is clean water used only at end-of-day, so it gets a much lighter
-    # cadence than feed: one interval drives BOTH its periodic stir and periodic
-    # air. Plus a full aeration + homogenize stir right before each flush use.
+    # Flush is clean water used only at end-of-day. Periodic STIR runs on its own
+    # interval below (24/7, incl. overnight, via the maintenance cycle). Flush is
+    # NOT periodically aired — it gets a full aeration only right before each flush
+    # (flush_pre_use_air_duration), plus a homogenize stir, then the draw.
     flush_service_interval_duration:
-      name: "Flush Service Interval (stir + air)"
+      name: "Flush Stir Interval"
       min: 30
       max: 1440
       step: 15
