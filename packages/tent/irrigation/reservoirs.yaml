@@ -1,6 +1,6 @@
 tent_irrigation_reservoirs:
   automation:
-    - id: automation.fill_feed_reservoir
+    - id: fill_feed_reservoir
       alias: Fill — Feed Reservoir
       description: >
         Whenever the feed fill valve opens (manually or scripted), waits for
@@ -35,7 +35,7 @@ tent_irrigation_reservoirs:
                   without the full float tripping — auto-closed. Verify
                   reservoir level and float sensor.
       mode: single
-    - id: automation.fill_flush_reservoir
+    - id: fill_flush_reservoir
       alias: Fill — Flush Reservoir
       description: >
         Whenever the flush fill valve opens (manually or scripted), waits for
@@ -70,7 +70,7 @@ tent_irrigation_reservoirs:
                   without the full float tripping — auto-closed. Verify
                   reservoir level and float sensor.
       mode: single
-    - id: automation.feed_reservoir_empty_alert
+    - id: alert_feed_reservoir_dry
       alias: Alert — Feed Reservoir Dry
       description: Immediate push notification when feed reservoir goes dry
       triggers:
@@ -85,7 +85,7 @@ tent_irrigation_reservoirs:
             title: Feed Reservoir Empty
             message: Feed reservoir is dry — refill needed.
       mode: single
-    - id: automation.feed_reservoir_empty_repeat
+    - id: alert_feed_reservoir_dry_repeat
       alias: Alert — Feed Reservoir Dry (Repeat)
       description: Repeats push notification every 30 minutes while feed reservoir stays dry
       triggers:
@@ -101,7 +101,7 @@ tent_irrigation_reservoirs:
             title: Feed Reservoir Still Empty
             message: Feed reservoir is still dry — refill needed.
       mode: single
-    - id: automation.flush_reservoir_empty_alert
+    - id: alert_flush_reservoir_dry
       alias: Alert — Flush Reservoir Dry
       description: Immediate push notification when flush reservoir goes dry
       triggers:
@@ -116,7 +116,7 @@ tent_irrigation_reservoirs:
             title: Flush Reservoir Empty
             message: Flush reservoir is dry — refill needed.
       mode: single
-    - id: automation.flush_reservoir_empty_repeat
+    - id: alert_flush_reservoir_dry_repeat
       alias: Alert — Flush Reservoir Dry (Repeat)
       description: Repeats push notification every 30 minutes while flush reservoir stays dry
       triggers:

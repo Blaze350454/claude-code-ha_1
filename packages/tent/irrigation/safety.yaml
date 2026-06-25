@@ -1,6 +1,6 @@
 tent_irrigation_safety:
   automation:
-    - id: automation.irrigation_watchdog
+    - id: tent_irrigation_watchdog
       alias: Tent Irrigation — Watchdog
       description: >
         Forces all pumps and valves off if any pump or valve stays active longer
@@ -106,7 +106,7 @@ tent_irrigation_safety:
               threshold ({{ trigger.for }}). All pumps and valves forced off
               — check system.
       mode: single
-    - id: automation.irrigation_startup_recovery
+    - id: tent_irrigation_startup_recovery
       alias: Tent Irrigation — Startup Recovery
       description: Forces all pumps and valves off immediately on HA start or restart
       triggers:
@@ -145,7 +145,7 @@ tent_irrigation_safety:
           data:
             value: Idle
       mode: single
-    - id: automation.irrigation_feed_empty_block
+    - id: tent_irrigation_block_feed_when_reservoir_dry
       alias: Tent Irrigation — Block Feed When Reservoir Dry
       description: >
         Turns off feed pump, stir pump, and valve when feed reservoir is dry —
@@ -196,7 +196,7 @@ tent_irrigation_safety:
             title: Feed Blocked — Reservoir Dry
             message: Feed pump, stir pump, or valve turned off. Feed reservoir is dry.
       mode: single
-    - id: automation.irrigation_flush_empty_block
+    - id: tent_irrigation_block_flush_when_reservoir_dry
       alias: Tent Irrigation — Block Flush When Reservoir Dry
       description: >
         Turns off flush pump, stir pump, and valve when flush reservoir is dry —
@@ -247,7 +247,7 @@ tent_irrigation_safety:
             title: Flush Blocked — Reservoir Dry
             message: Flush pump, stir pump, or valve turned off. Flush reservoir is dry.
       mode: single
-    - id: automation.irrigation_block_feed_fill_when_reservoir_full
+    - id: tent_irrigation_block_feed_fill_when_reservoir_full
       alias: Tent Irrigation — Block Feed Fill When Reservoir Full
       description: >
         Closes feed fill valve immediately if open while feed reservoir is full.
@@ -277,7 +277,7 @@ tent_irrigation_safety:
             title: Feed Fill Blocked — Reservoir Full
             message: Feed fill valve closed. Feed reservoir is full.
       mode: single
-    - id: automation.irrigation_block_flush_fill_when_reservoir_full
+    - id: tent_irrigation_block_flush_fill_when_reservoir_full
       alias: Tent Irrigation — Block Flush Fill When Reservoir Full
       description: >
         Closes flush fill valve immediately if open while flush reservoir is full.
@@ -307,7 +307,7 @@ tent_irrigation_safety:
             title: Flush Fill Blocked — Reservoir Full
             message: Flush fill valve closed. Flush reservoir is full.
       mode: single
-    - id: automation.irrigation_table_drain_empty_block
+    - id: tent_irrigation_block_table_drain_pump_when_dry
       alias: Tent Irrigation — Block Table Drain Pump When Dry
       description: >
         Turns off the table-drain pump when the drain reservoir reports empty —
@@ -339,7 +339,7 @@ tent_irrigation_safety:
             title: Table Drain Blocked — Dry
             message: Table drain pump turned off. Table drain is empty.
       mode: single
-    - id: automation.irrigation_enabled_resync
+    - id: tent_irrigation_re_enable_maintenance_on_enable
       alias: Tent Irrigation — Re-enable Maintenance on Enable
       description: >
         When input_boolean.tent_irrigation_enabled flips off→on:
@@ -373,7 +373,7 @@ tent_irrigation_safety:
       mode: single
 
     - alias: Toggle — Kill Tent Irrigation Automations
-      id: toggle_irrigation_kill_automations
+      id: toggle_kill_tent_irrigation_automations
       trigger:
         - platform: state
           entity_id: input_boolean.tent_irrigation_kill_automations
@@ -433,7 +433,7 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_maintenance_cycle
                       - automation.tent_irrigation_watchdog
     - alias: Toggle — Irrigation Tent All Off
-      id: toggle_irrigation_tent_kill
+      id: toggle_irrigation_tent_all_off
       trigger:
         - platform: state
           entity_id: input_boolean.irrigation_tent_kill
@@ -516,7 +516,7 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_maintenance_cycle
                       - automation.tent_irrigation_watchdog
 
-    - id: automation.irrigation_maintenance_cycle
+    - id: tent_irrigation_maintenance_cycle
       alias: Tent Irrigation — Maintenance Cycle
       description: >-
         Baseline reservoir service (deficit/credit). Every 5 min: stirs a tank only if
