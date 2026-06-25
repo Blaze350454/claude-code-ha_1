@@ -165,7 +165,7 @@
         {% set raw = 100 if full else (50 if half else (25 if empty else 0)) %}
         {% if raw >= prev %}{{ raw }}
         {% elif agit %}{{ prev }}
-        {% elif prev == 100 %}{{ 100 if half else 50 }}
+        {% elif prev == 100 %}{{ 50 if half else (25 if empty else 0) }}
         {% elif prev == 50 %}{{ 50 if empty else 0 }}
         {% elif prev == 25 %}{{ 25 if empty else 0 }}
         {% else %}{{ raw }}{% endif %}
@@ -179,5 +179,5 @@
           {% set half = is_state('binary_sensor.flush_half_irrigation_tent', 'on') %}
           {% set empty = is_state('binary_sensor.flush_empty_irrigation_tent', 'on') %}
           {% set raw = 100 if full else (50 if half else (25 if empty else 0)) %}
-          {% set lvl = raw if raw >= prev else (prev if agit else ((100 if half else 50) if prev == 100 else ((50 if empty else 0) if prev == 50 else ((25 if empty else 0) if prev == 25 else raw)))) %}
+          {% set lvl = raw if raw >= prev else (prev if agit else ((50 if half else (25 if empty else 0)) if prev == 100 else ((50 if empty else 0) if prev == 50 else ((25 if empty else 0) if prev == 25 else raw)))) %}
           {{ 'Full' if lvl >= 100 else ('1/2' if lvl >= 50 else ('Low' if lvl >= 25 else 'Empty')) }}
