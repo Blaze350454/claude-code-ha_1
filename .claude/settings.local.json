@@ -99,7 +99,10 @@
       "mcp__esphome__esphome_write_config",
       "mcp__esphome__esphome_compile",
       "Skill(schedule)",
-      "PowerShell(Get-Content *)"
+      "PowerShell(Get-Content *)",
+      "PowerShell(cd *)",
+      "PowerShell($py = \\(Get-Command python3, python, py -ErrorAction SilentlyContinue | Select-Object -First 1\\).Source; if \\(-not $py\\) { \"NO_PYTHON\" } else { $py })",
+      "PowerShell($ErrorActionPreference='SilentlyContinue'; gh run list --limit 1 --json status,conclusion,name 2>$null; if \\($LASTEXITCODE -ne 0\\) { \"gh unavailable\" })"
     ]
   },
   "enabledMcpjsonServers": [
