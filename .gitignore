@@ -16,6 +16,7 @@ Pics/Backups Encryption Key.jpg
 # Backups
 *.tar
 home_assistant_backup_emergency_kit_*.txt
+dashboard_tent_backup_*.json
 
 # Claude temp files
 tmpclaude-*
