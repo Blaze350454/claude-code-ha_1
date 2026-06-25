@@ -9,7 +9,7 @@
 | Growing Medium | Boiled pro mix + perlite in fabric pots |
 | Feeding Method | Hydroponic via drip irrigation |
 | Nutrient Reservoir | 25 gallon |
-| Flush Reservoir | 15 gallon (clean water) |
+| Flush Reservoir | 20 gallon (clean water) |
 
 ## System Goals
 - Deliver nutrients to 9 plants via drippers
