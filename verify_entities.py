@@ -36,7 +36,6 @@ MAPPING = [
     ("input_datetime.next_pre_feed_start",      "input_datetime.pre_feed_air_stir_start"),
     ("input_datetime.next_pre_feed_stop",       "input_datetime.pre_feed_air_stir_stop"),
     ("input_datetime.night_cycle_start",        "input_datetime.night_cycle_start_time"),
-    ("input_datetime.last_flush_date",          "input_datetime.last_flush_date"),
     ("input_boolean.alternating_active",        "input_boolean.air_stir_alternating_active"),
     ("input_boolean.irrigation_enabled",        "input_boolean.irrigation_enabled"),
     ("input_text.irrigation_status",            "input_text.irrigation_status"),

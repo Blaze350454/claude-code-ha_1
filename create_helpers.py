@@ -127,12 +127,6 @@ INPUT_DATETIMES = [
         "display_name": "Night Cycle Start Time",
         "has_date": True, "has_time": True,
     },
-    {
-        "id": "last_flush_date",
-        "slug_name": "Last Flush Date",
-        "display_name": "Last Flush Date",
-        "has_date": True, "has_time": False,
-    },
 ]
 
 INPUT_BOOLEANS = [
