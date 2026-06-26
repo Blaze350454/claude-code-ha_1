@@ -553,14 +553,23 @@ tent_camera_snapshot:
   - variables:
       cam: "{{ cam | default('camera.tent_1') }}"
       shortname: "{{ (cam | default('camera.tent_1')).split('.')[1] }}"
+      pre_thumb: "{{ state_attr(cam | default('camera.tent_1'), 'thumbnail') }}"
   - action: blink.trigger_camera
     target:
       entity_id: "{{ cam }}"
-  - delay:
-      seconds: 8
-  - action: homeassistant.update_entity
-    target:
-      entity_id: "{{ cam }}"
+  # Poll until Blink actually serves the fresh frame (weak-signal cams need ~40s);
+  # a flat 8s wait grabbed the stale thumbnail. Cap at ~48s.
+  - repeat:
+      sequence:
+      - delay:
+          seconds: 6
+      - action: homeassistant.update_entity
+        target:
+          entity_id: "{{ cam }}"
+      until:
+      - condition: template
+        value_template: >
+          {{ state_attr(cam, 'thumbnail') != pre_thumb or repeat.index >= 8 }}
   - action: camera.snapshot
     target:
       entity_id: "{{ cam }}"

@@ -114,21 +114,32 @@ tent_camera_timelapse:
             stamp: "{{ now().strftime('%Y%m%d_%H%M') }}"
             is_blink: "{{ state_attr(cams[idx % (cams | length)], 'brand') == 'Blink' }}"
         # Blink quirk: trigger_camera only captures into Blink's cloud and HA
-        # shows the cached thumbnail until refreshed — so trigger, wait for the
-        # upload, then update_entity before snapshotting. Non-Blink (streaming)
-        # cams skip straight to the snapshot.
+        # shows the cached thumbnail until refreshed. A flat wait is unreliable —
+        # weak-signal cams (e.g. overhead, -64 dBm) need ~40s to upload while
+        # tent_1 needs ~10s, so an 8s wait snapshotted STALE frames. Instead:
+        # trigger, then poll (update_entity every 6s) until the thumbnail URL
+        # actually changes, capped at ~48s so a stuck cam can't hang the rotation.
+        # Non-Blink (streaming) cams skip straight to the snapshot.
         - if:
             - condition: template
               value_template: "{{ is_blink }}"
           then:
+            - variables:
+                pre_thumb: "{{ state_attr(cam, 'thumbnail') }}"
             - action: blink.trigger_camera
               target:
                 entity_id: "{{ cam }}"
-            - delay:
-                seconds: 8
-            - action: homeassistant.update_entity
-              target:
-                entity_id: "{{ cam }}"
+            - repeat:
+                sequence:
+                  - delay:
+                      seconds: 6
+                  - action: homeassistant.update_entity
+                    target:
+                      entity_id: "{{ cam }}"
+                until:
+                  - condition: template
+                    value_template: >
+                      {{ state_attr(cam, 'thumbnail') != pre_thumb or repeat.index >= 8 }}
         # Timestamped frame for the lapse sequence...
         - action: camera.snapshot
           target:
