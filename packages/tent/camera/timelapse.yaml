@@ -22,10 +22,11 @@ tent_camera_timelapse:
   # The per-camera folders must pre-exist (camera.snapshot does not mkdir):
   # tent_1, tent_2, tent_overhead are created on the host.
   #
-  # Retention: JPGs older than 30 days are MOVED (not deleted) nightly into
-  # /archive/<shortname>/ (host ~/timelapse_archive/<shortname>/, bind-mounted),
-  # so www keeps a rolling 30-day window while the archive accumulates the whole
-  # grow. Served at http://192.168.2.151:8123/local/timelapse/<shortname>/.
+  # Retention: on the 1st of each month, frames captured BEFORE the current month
+  # are MOVED (not deleted) into /archive/<shortname>/ (host
+  # ~/timelapse_archive/<shortname>/, bind-mounted), so www holds the current
+  # month and the archive accumulates completed months. Served at
+  # http://192.168.2.151:8123/local/timelapse/<shortname>/.
   #
   # Requires `allowlist_external_dirs: [/config/www/timelapse]` (covers subdirs).
   # www/ is gitignored. Rotation persists in input_number.timelapse_rotation_index.
@@ -37,14 +38,17 @@ tent_camera_timelapse:
   # ================================================
 
   shell_command:
-    # Move JPGs older than 30 days into the per-camera archive (bind-mounted at
-    # /archive). BusyBox sh/find. The latest.jpg pointer is skipped (it doesn't
-    # match <name>_*.jpg).
+    # On the 1st of each month, move every frame captured BEFORE this calendar
+    # month into the per-camera archive (bind-mounted at /archive), so www holds
+    # the current month. BusyBox find has no -newermt, so stamp a reference file
+    # at the 1st of the month and use `! -newer`. latest.jpg is skipped (it
+    # doesn't match <name>_*.jpg).
     timelapse_archive: >-
-      sh -c 'for d in /config/www/timelapse/tent_*; do [ -d "$d" ] || continue;
+      sh -c 'ref=/tmp/tl_cut; touch -d "$(date +%Y-%m-01) 00:00:00" "$ref";
+      for d in /config/www/timelapse/tent_*; do [ -d "$d" ] || continue;
       n=$(basename "$d"); mkdir -p "/archive/$n";
-      find "$d" -type f -name "${n}_*.jpg" -mtime +30 -exec mv {} "/archive/$n/" \; ;
-      done'
+      find "$d" -type f -name "${n}_*.jpg" ! -newer "$ref" -exec mv {} "/archive/$n/" \; ;
+      done; rm -f "$ref"'
 
   # Single control for the whole feature: "Off" disables it (button shows red),
   # any interval enables it (green) and sets the COMBINED gap between pics. No
@@ -179,13 +183,16 @@ tent_camera_timelapse:
       mode: single
 
     - id: camera_timelapse_cleanup
-      alias: Camera Timelapse — Daily Archive (>30d)
+      alias: Camera Timelapse — Monthly Archive (1st)
       description: >-
-        Moves timelapse JPGs older than 30 days into the per-camera archive
-        (bind-mounted /archive), keeping a rolling 30-day window in www.
+        On the 1st of each month at 03:30, moves frames from previous months into
+        the per-camera archive (bind-mounted /archive); www keeps the current month.
       triggers:
         - trigger: time
           at: "03:30:00"
+      conditions:
+        - condition: template
+          value_template: "{{ now().day == 1 }}"
       actions:
         - action: shell_command.timelapse_archive
       mode: single
