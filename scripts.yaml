@@ -219,6 +219,12 @@ run_feed_cycle:
       - action: valve.close_valve
         target:
           entity_id: valve.flush_valve_irrigation_tent
+      # Stamp the last successful line-clear flush (mirrors last_feed_time).
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.last_flush_time
+        data:
+          datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
       - action: input_number.set_value
         target:
           entity_id: input_number.tent_irrigation_day_counter
@@ -342,6 +348,9 @@ tent_irrigation_advance_to_next_feed:
           {% set h = (on_total // 60) % 24 %}
           {% set m = on_total % 60 %}
           {{ (now().date() + timedelta(days=1)) | string ~ ' ' ~ '%02d:%02d:00' | format(h, m) }}
+  # Keep next_flush_time fresh: after the last feed of a flush-day the day
+  # counter has just reset to 0, so this rolls next flush forward one interval.
+  - action: script.tent_irrigation_set_next_flush
   mode: single
   icon: mdi:skip-next
 
@@ -427,6 +436,13 @@ run_flush_now:
   - action: switch.turn_on
     target:
       entity_id: switch.flush_pump_irrigation_tent
+  # Stamp the last flush (mirrors last_feed_time; manual flush updates "last"
+  # only, not the automated next_flush schedule).
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.last_flush_time
+    data:
+      datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
   # Run until the flush reservoir empties (float reads dry) or the duration elapses.
   - wait_template: "{{ is_state('binary_sensor.flush_empty_irrigation_tent', 'off') }}"
     timeout: "{{ (states('input_number.flush_now_duration') | float(15) * 60) | round | int }}"

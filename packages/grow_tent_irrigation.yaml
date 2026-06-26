@@ -18,6 +18,22 @@ grow_tent_irrigation:
       has_time: true
       icon: mdi:history
 
+    # Flush event timestamps (mirror of last_feed_time / next_feed_time).
+    # last_flush_time is stamped whenever a line-clear flush actually runs —
+    # the daily in-feed flush (run_feed_cycle) or a manual Flush Now. The flush
+    # reservoir SERVICE/stir anchor (last_flush_service) is separate.
+    # next_flush_time is recomputed by script.tent_irrigation_set_next_flush.
+    last_flush_time:
+      name: Last Flush Time
+      has_date: true
+      has_time: true
+      icon: mdi:history
+    next_flush_time:
+      name: Next Flush Time
+      has_date: true
+      has_time: true
+      icon: mdi:water-sync
+
     # Deficit/credit anchors: tent_stir_burst stamps the per-tank anchor each time
     # it stirs that tank (pre-feed/pre-flush/baseline). The baseline top-up stirs a
     # tank only when now - its anchor >= baseline interval. Tracked PER TANK so that

@@ -114,6 +114,47 @@ tent_irrigation_schedule:
                 message: >-
                   Requested {{ feeds_requested }} feeds/day exceeds the max {{ max_feeds }}
                   for this light window (min gap {{ min_gap_min }} min). Set to {{ max_feeds }}.
+    tent_irrigation_set_next_flush:
+      alias: Tent Irrigation — Set Next Flush Time
+      description: >-
+        Recomputes input_datetime.next_flush_time = the last feed of the next
+        flush-eligible day. The daily line-clear flush runs on the LAST feed of a
+        day once tent_irrigation_day_counter has reached daily_flush_day_interval,
+        so next flush = (today's last-feed time) + max(0, interval - counter) days.
+        Called from advance_to_next_feed (after every feed / after a flush resets
+        the counter to 0), from Daily Setup (post-increment) and on feeds/day change.
+      sequence:
+        - variables:
+            feeds_per_day: "{{ states('input_number.feeds_per_day_2') | int }}"
+            lights_on_h: "{{ states('input_datetime.veg_lights_on_time')[0:2] | int }}"
+            lights_on_m: "{{ states('input_datetime.veg_lights_on_time')[3:5] | int }}"
+            lights_off_h: "{{ states('input_datetime.veg_lights_off_time')[0:2] | int }}"
+            lights_off_m: "{{ states('input_datetime.veg_lights_off_time')[3:5] | int }}"
+            lights_on_duration_min: >-
+              {% set on_m = lights_on_h * 60 + lights_on_m %}
+              {% set off_m = lights_off_h * 60 + lights_off_m %}
+              {% if off_m > on_m %}{{ off_m - on_m }}{% else %}{{ (24 * 60 - on_m) + off_m }}{% endif %}
+            interval_min: >-
+              {% set dur = lights_on_duration_min | int - 35 %}
+              {% if feeds_per_day > 1 %}{{ (dur / (feeds_per_day - 1)) | round(0) | int }}{% else %}{{ dur | int }}{% endif %}
+            # Offset of the LAST feed in the window (feed 1 is at lights-on + 5 min).
+            last_feed_offset_min: "{{ 5 + (feeds_per_day - 1) * (interval_min | int) }}"
+            flush_interval: "{{ states('input_number.daily_flush_day_interval') | int(1) }}"
+            day_counter: "{{ states('input_number.tent_irrigation_day_counter') | int(0) }}"
+            days_until: "{{ [flush_interval | int - day_counter | int, 0] | max }}"
+            next_flush_dt: >-
+              {% set base = today_at('%02d:%02d:00' | format(lights_on_h, lights_on_m)) %}
+              {% if base > now() %}{% set base = base - timedelta(days=1) %}{% endif %}
+              {% set cand = base + timedelta(minutes=last_feed_offset_min | int, days=days_until | int) %}
+              {% if cand <= now() %}{% set cand = cand + timedelta(days=flush_interval | int) %}{% endif %}
+              {{ cand.strftime('%Y-%m-%d %H:%M:%S') }}
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.next_flush_time
+          data:
+            datetime: "{{ next_flush_dt }}"
+      mode: single
+      icon: mdi:water-sync
   automation:
     - id: automation.irrigation_daily_setup
       alias: Tent Irrigation — Daily Setup at Lights On
@@ -171,6 +212,8 @@ tent_irrigation_schedule:
             entity_id: input_text.tent_irrigation_status
           data:
             value: Idle
+        # Recompute next flush now that today's day-counter increment is in.
+        - action: script.tent_irrigation_set_next_flush
       mode: single
     - id: automation.irrigation_rebuild_on_feeds_change
       alias: Tent Irrigation — Rebuild Schedule on Feeds/Day Change
@@ -190,6 +233,8 @@ tent_irrigation_schedule:
           value_template: "{{ trigger.from_state is not none and trigger.from_state.state not in ['unknown', 'unavailable'] }}"
       actions:
         - action: script.tent_irrigation_rebuild_feed_schedule
+        # A feeds/day change moves the last-feed-of-day time, so refresh next flush.
+        - action: script.tent_irrigation_set_next_flush
       mode: single
     - id: automation.irrigation_lights_off_stop
       alias: Tent Irrigation — Lights Off Cleanup
