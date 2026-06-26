@@ -39,12 +39,6 @@
         "has_time": true
       },
       {
-        "id": "last_flush_date",
-        "name": "Last Flush Date",
-        "has_date": true,
-        "has_time": false
-      },
-      {
         "id": "next_pre_feed_start",
         "name": "Pre-Feed Air/Stir Start",
         "has_date": true,
