@@ -21,9 +21,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # configuration.yaml allowlists the absolute path /config/www/timelapse (a real
+      # camera-timelapse dir on the VM, gitignored so not in the repo). HA validates
+      # allowlist_external_dirs entries are existing directories. The frenck action
+      # mounts the repo at /github/workspace and runs --config there, so /config/...
+      # can never exist under it — which is why the check could not go green. Instead
+      # mount the workspace at /config so the absolute path resolves into the repo,
+      # create the dir, drop in CI secrets, then run the same check_config.
+      - name: Prepare CI config dir
+        run: |
+          mkdir -p www/timelapse
+          cp ci/fake_secrets.yaml secrets.yaml
       - name: Home Assistant Core Configuration Check
-        uses: frenck/action-home-assistant@v1
-        with:
-          path: "."
-          version: "2026.5.0"
-          secrets: "ci/fake_secrets.yaml"
+        run: |
+          docker run --rm --entrypoint "" \
+            -v "${{ github.workspace }}:/config" \
+            ghcr.io/home-assistant/home-assistant:2026.5.0 \
+            python -m homeassistant --config /config --script check_config
