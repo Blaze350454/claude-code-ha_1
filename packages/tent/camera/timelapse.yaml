@@ -207,3 +207,72 @@ tent_camera_timelapse:
       actions:
         - action: shell_command.timelapse_archive
       mode: single
+
+  # Per-camera "time until next timelapse capture", shown on each dashboard tile
+  # beside the name. The rotation is deterministic: the scheduler fires every
+  # combined interval and shoots cams[rotation_index % N]; a camera at sorted
+  # position p is k=(p-index)%N fires away, i.e. at last_capture+(k+1)*interval.
+  # Trigger-based so the countdown ticks every minute. "Off" when paused.
+  template:
+    - trigger:
+        - trigger: time_pattern
+          minutes: "/1"
+        - trigger: state
+          entity_id:
+            - input_datetime.tent_timelapse_last_capture
+            - input_number.timelapse_rotation_index
+            - input_select.tent_timelapse
+        - trigger: homeassistant
+          event: start
+      sensor:
+        - name: Tent 1 Next Timelapse
+          unique_id: tent_1_next_timelapse
+          icon: mdi:camera-timer
+          state: >
+            {% set m = {'Every 15 min':15,'Every 30 min':30,'Every 1 hour':60,'Every 2 hours':120,'Every 3 hours':180,'Every 6 hours':360,'Every 12 hours':720,'Every 24 hours':1440} %}
+            {% set me = 'camera.tent_1' %}
+            {% set sel = states('input_select.tent_timelapse') %}
+            {% set cams = states.camera | map(attribute='entity_id') | select('match','camera.tent_') | reject('search','_last_capture') | reject('is_state','unavailable') | reject('is_state','unknown') | list | sort %}
+            {% if sel not in m %}Off
+            {% elif me not in cams %}n/a
+            {% else %}
+            {% set iv = m[sel]*60 %}
+            {% set k = (cams.index(me) - (states('input_number.timelapse_rotation_index')|int(0))) % (cams|length) %}
+            {% set secs = [((state_attr('input_datetime.tent_timelapse_last_capture','timestamp')|float(0)) + (k+1)*iv - now().timestamp())|int, 0]|max %}
+            {% set mins = secs // 60 %}
+            {{ (mins//60)~'h '~('%02d'|format(mins%60))~'m' if mins>=60 else mins~'m' }}
+            {% endif %}
+        - name: Tent 2 Next Timelapse
+          unique_id: tent_2_next_timelapse
+          icon: mdi:camera-timer
+          state: >
+            {% set m = {'Every 15 min':15,'Every 30 min':30,'Every 1 hour':60,'Every 2 hours':120,'Every 3 hours':180,'Every 6 hours':360,'Every 12 hours':720,'Every 24 hours':1440} %}
+            {% set me = 'camera.tent_2' %}
+            {% set sel = states('input_select.tent_timelapse') %}
+            {% set cams = states.camera | map(attribute='entity_id') | select('match','camera.tent_') | reject('search','_last_capture') | reject('is_state','unavailable') | reject('is_state','unknown') | list | sort %}
+            {% if sel not in m %}Off
+            {% elif me not in cams %}n/a
+            {% else %}
+            {% set iv = m[sel]*60 %}
+            {% set k = (cams.index(me) - (states('input_number.timelapse_rotation_index')|int(0))) % (cams|length) %}
+            {% set secs = [((state_attr('input_datetime.tent_timelapse_last_capture','timestamp')|float(0)) + (k+1)*iv - now().timestamp())|int, 0]|max %}
+            {% set mins = secs // 60 %}
+            {{ (mins//60)~'h '~('%02d'|format(mins%60))~'m' if mins>=60 else mins~'m' }}
+            {% endif %}
+        - name: Tent Overhead Next Timelapse
+          unique_id: tent_overhead_next_timelapse
+          icon: mdi:camera-timer
+          state: >
+            {% set m = {'Every 15 min':15,'Every 30 min':30,'Every 1 hour':60,'Every 2 hours':120,'Every 3 hours':180,'Every 6 hours':360,'Every 12 hours':720,'Every 24 hours':1440} %}
+            {% set me = 'camera.tent_overhead' %}
+            {% set sel = states('input_select.tent_timelapse') %}
+            {% set cams = states.camera | map(attribute='entity_id') | select('match','camera.tent_') | reject('search','_last_capture') | reject('is_state','unavailable') | reject('is_state','unknown') | list | sort %}
+            {% if sel not in m %}Off
+            {% elif me not in cams %}n/a
+            {% else %}
+            {% set iv = m[sel]*60 %}
+            {% set k = (cams.index(me) - (states('input_number.timelapse_rotation_index')|int(0))) % (cams|length) %}
+            {% set secs = [((state_attr('input_datetime.tent_timelapse_last_capture','timestamp')|float(0)) + (k+1)*iv - now().timestamp())|int, 0]|max %}
+            {% set mins = secs // 60 %}
+            {{ (mins//60)~'h '~('%02d'|format(mins%60))~'m' if mins>=60 else mins~'m' }}
+            {% endif %}
