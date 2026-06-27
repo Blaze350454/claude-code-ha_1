@@ -24,12 +24,13 @@ git push
 After push, check GitHub Actions: https://github.com/Blaze350454/claude-code-ha_1/actions
 
 - **YAML Lint** must be green.
-- **Home Assistant Config Check** is currently non-blocking (HA 2026.4.x
-  `check_config` bug — see comment in `.github/workflows/validate.yml`). Read
-  the log anyway; if it fails for a reason unrelated to the known
-  `helpers/trigger.py:205` KeyError, investigate before deploying.
+- **Home Assistant Config Check** must be green too. It runs
+  `check_config` against the full config in a HA container (see
+  `.github/workflows/validate.yml`); CI secrets come from `ci/fake_secrets.yaml`
+  and the workspace is mounted at `/config` so `allowlist_external_dirs` paths
+  resolve. A red here is a real config error — investigate before deploying.
 
-Do not deploy to the VM if YAML Lint failed.
+Do not deploy to the VM if either job failed.
 
 ## 3. Deploy to VM
 
