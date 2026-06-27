@@ -34,13 +34,39 @@ Do not deploy to the VM if either job failed.
 
 ## 3. Deploy to VM
 
-SSH in and pull:
+**A cron auto-deploys for you.** `*/15 * * * * /home/homeadmin/pull-ha.sh`
+runs every 15 min: it `git pull`s, and **restarts HA only when warranted**:
+
+- **No new commits** → nothing.
+- **New commits touch only CI / docs / git metadata** (`ci/`, `.github/`,
+  `*.md`, `.gitignore`, `.yamllint*`) → pulls, **no restart** (HA never loads
+  those). So pushing a doc/CI-only change won't bounce HA.
+- **New commits touch HA-loaded files** → `docker restart homeassistant`,
+  unless a tent feed/flush is mid-cycle (`input_text.tent_irrigation_status`
+  != `Idle`), in which case the restart is **deferred up to ~1 h** (4 cron
+  ticks) so a deploy can't interrupt irrigation, then restarts regardless.
+
+So after a `git push`, a runtime change goes live within ≤15 min on its own.
+Log: `/home/homeadmin/pull.log`. Original script: `pull-ha.sh.bak`.
+
+The deferral needs a long-lived token to read HA's state. It's **off until you
+create one** — without it the script restarts immediately (no defer). Enable:
+
+```bash
+# on the VM, paste a long-lived access token (HA → profile → create token):
+printf '%s' 'YOUR_LONG_LIVED_TOKEN' > ~/.ha_token && chmod 600 ~/.ha_token
+```
+
+**Deploy now instead of waiting** for the next cron tick — SSH in and pull:
 
 ```bash
 ssh homeadmin@192.168.2.151
 cd ~/homeassistant/.config
-git pull --rebase
+git pull --rebase && docker restart homeassistant   # restart only if needed
 ```
+
+⚠️ Because a runtime push restarts HA, **avoid pushing while a feed/flush is
+running** (or rely on the deferral once the token is set).
 
 ## 4. Reload HA
 
