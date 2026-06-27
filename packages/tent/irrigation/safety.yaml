@@ -144,6 +144,16 @@ tent_irrigation_safety:
             entity_id: input_text.tent_irrigation_status
           data:
             value: Idle
+        # A restart can roll next_feed_time back to a stale pre-restart snapshot
+        # (HA restores input_datetime helpers from a periodic save that may
+        # predate the last advance), freezing the schedule on a past time. Rebuild
+        # to the next FUTURE feed so the schedule self-heals after any restart.
+        - if:
+            - condition: state
+              entity_id: input_boolean.tent_irrigation_enabled
+              state: 'on'
+          then:
+            - action: script.tent_irrigation_rebuild_feed_schedule
       mode: single
     - id: tent_irrigation_block_feed_when_reservoir_dry
       alias: Tent Irrigation — Block Feed When Reservoir Dry
