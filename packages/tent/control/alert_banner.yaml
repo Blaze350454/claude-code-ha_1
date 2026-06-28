@@ -1,0 +1,138 @@
+# Tent critical-error alert banner
+# ---------------------------------------------------------------------------
+# Backend for the flashing "ERROR !!" header card on the tent dashboard.
+#
+#   sensor.tent_error_list      -> count of active errors; `errors` attribute
+#                                  is a list of {key, msg} for every real fault
+#                                  currently detected across the tent.
+#   binary_sensor.tent_alert_banner -> on when the banner should show. Honors
+#                                  the snooze: while snoozed, the keys that were
+#                                  active at snooze time stay hidden, but a NEW
+#                                  (different) error key breaks through.
+#   script.tent_alert_snooze    -> hide the current errors for the duration
+#                                  picked in input_select.tent_alert_snooze_duration.
+#
+# To add/remove what counts as an error, edit the detection block below — it is
+# duplicated in the sensor state (count) and its `errors` attribute (the list);
+# keep the two copies in sync. Known-dead spares (reservoir prime-pump Matter
+# plug, KP303 [53db], hydro tower) are intentionally NOT watched here.
+# ---------------------------------------------------------------------------
+tent_control_alert_banner:
+
+  input_boolean:
+    tent_alert_details_open:
+      name: "Tent Alert Details Open"
+      icon: mdi:chevron-down
+
+  input_datetime:
+    tent_alert_snooze_until:
+      name: "Tent Alert Snooze Until"
+      has_date: true
+      has_time: true
+      initial: "2000-01-01 00:00:00"
+
+  input_text:
+    tent_alert_snoozed_keys:
+      name: "Tent Alert Snoozed Keys"
+      max: 255
+      initial: ""
+
+  input_select:
+    tent_alert_snooze_duration:
+      name: "Tent Alert Snooze Duration"
+      icon: mdi:timer-sand
+      options:
+        - "15 minutes"
+        - "30 minutes"
+        - "1 hour"
+        - "2 hours"
+        - "4 hours"
+        - "8 hours"
+        - "24 hours"
+      initial: "1 hour"
+
+  template:
+    - sensor:
+        - name: "Tent Error List"
+          unique_id: tent_error_list
+          icon: mdi:alert-circle
+          # State = number of active errors. Keep this detection block in sync
+          # with the `errors` attribute block below.
+          state: >
+            {% set ns = namespace(e=[]) %}
+            {% if is_state('binary_sensor.feed_empty_irrigation_tent','unavailable') %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% if states('binary_sensor.tp_link_power_strip_c074_cloud_connection') in ['off','unavailable'] %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% if states('sensor.feed_level_irrigation_tent')|int(99) == 0 and (is_state('switch.feed_pump_irrigation_tent','on') or is_state('valve.feed_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% if states('sensor.flush_level_irrigation_tent')|int(99) == 0 and (is_state('switch.flush_pump_irrigation_tent','on') or is_state('valve.flush_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% if is_state('binary_sensor.climate_ok','off') %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% if is_state('climate.air_conditioner_tent','unavailable') %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% if is_state('humidifier.dehumidifier_tent','unavailable') %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% if is_state('switch.tent_humidifier','unavailable') %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% if states('light.hlg') == 'unavailable' or states('light.chilled') == 'unavailable' %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% if is_state('binary_sensor.tent_temperature_divergence','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% if is_state('binary_sensor.tent_humidity_divergence','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% for c in ['tent_1','tent_2','tent_overhead'] %}{% if is_state('binary_sensor.battery_camera_' ~ c,'on') %}{% set ns.e = ns.e + [1] %}{% endif %}{% endfor %}
+            {{ ns.e | length }}
+          attributes:
+            errors: >
+              {% set ns = namespace(e=[]) %}
+              {% if is_state('binary_sensor.feed_empty_irrigation_tent','unavailable') %}{% set ns.e = ns.e + [{'key':'irrig_offline','msg':'Irrigation controller (ESP32) offline — float/valve/sensor data lost'}] %}{% endif %}
+              {% if states('binary_sensor.tp_link_power_strip_c074_cloud_connection') in ['off','unavailable'] %}{% set ns.e = ns.e + [{'key':'power_strip','msg':'Feed/flush power strip (HS300 c074) offline'}] %}{% endif %}
+              {% if states('sensor.feed_level_irrigation_tent')|int(99) == 0 and (is_state('switch.feed_pump_irrigation_tent','on') or is_state('valve.feed_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [{'key':'feed_dry','msg':'Feed reservoir DRY while feeding'}] %}{% endif %}
+              {% if states('sensor.flush_level_irrigation_tent')|int(99) == 0 and (is_state('switch.flush_pump_irrigation_tent','on') or is_state('valve.flush_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [{'key':'flush_dry','msg':'Flush reservoir DRY while flushing'}] %}{% endif %}
+              {% if is_state('binary_sensor.climate_ok','off') %}{% set ns.e = ns.e + [{'key':'climate','msg':'Climate out of safe range (temp/RH off target)'}] %}{% endif %}
+              {% if is_state('climate.air_conditioner_tent','unavailable') %}{% set ns.e = ns.e + [{'key':'ac_offline','msg':'Air conditioner offline'}] %}{% endif %}
+              {% if is_state('humidifier.dehumidifier_tent','unavailable') %}{% set ns.e = ns.e + [{'key':'dehum_offline','msg':'Dehumidifier offline'}] %}{% endif %}
+              {% if is_state('switch.tent_humidifier','unavailable') %}{% set ns.e = ns.e + [{'key':'humidifier_offline','msg':'Humidifier offline'}] %}{% endif %}
+              {% if states('light.hlg') == 'unavailable' or states('light.chilled') == 'unavailable' %}{% set ns.e = ns.e + [{'key':'lights_offline','msg':'Grow light offline'}] %}{% endif %}
+              {% if is_state('binary_sensor.tent_temperature_divergence','on') %}{% set ns.e = ns.e + [{'key':'temp_divergence','msg':'Tent temperature sensors disagree — one may be failing'}] %}{% endif %}
+              {% if is_state('binary_sensor.tent_humidity_divergence','on') %}{% set ns.e = ns.e + [{'key':'humid_divergence','msg':'Tent humidity sensors disagree — one may be failing'}] %}{% endif %}
+              {% for c in ['tent_1','tent_2','tent_overhead'] %}{% if is_state('binary_sensor.battery_camera_' ~ c,'on') %}{% set ns.e = ns.e + [{'key':'cam_batt_' ~ c,'msg':'Camera ' ~ c ~ ' battery low'}] %}{% endif %}{% endfor %}
+              {{ ns.e }}
+
+    - binary_sensor:
+        - name: "Tent Alert Banner"
+          unique_id: tent_alert_banner
+          device_class: problem
+          icon: mdi:alert
+          # On when at least one error is active AND it is not currently snoozed.
+          # A new error key (one not present when the user snoozed) breaks through.
+          state: >
+            {% set errs = state_attr('sensor.tent_error_list','errors') or [] %}
+            {% set active = errs | map(attribute='key') | list %}
+            {% set raw = states('input_text.tent_alert_snoozed_keys') %}
+            {% set raw = '' if raw in ['unknown','unavailable'] else raw %}
+            {% set snz = raw.split(',') | reject('eq','') | list %}
+            {% set until = states('input_datetime.tent_alert_snooze_until') %}
+            {% set until_ts = as_timestamp(until, 0) %}
+            {% set snoozing = now().timestamp() <= until_ts %}
+            {% set fresh = active | reject('in', snz) | list %}
+            {{ (active | length > 0) and ((not snoozing) or (fresh | length > 0)) }}
+          attributes:
+            count: "{{ (state_attr('sensor.tent_error_list','errors') or []) | length }}"
+
+  script:
+    tent_alert_snooze:
+      alias: "Tent Alert — Snooze Current Errors"
+      icon: mdi:bell-off
+      mode: restart
+      sequence:
+        - variables:
+            dur_min: >
+              {% set m = {'15 minutes':15,'30 minutes':30,'1 hour':60,'2 hours':120,'4 hours':240,'8 hours':480,'24 hours':1440} %}
+              {{ m.get(states('input_select.tent_alert_snooze_duration'), 60) }}
+            keys: >
+              {{ (state_attr('sensor.tent_error_list','errors') or []) | map(attribute='key') | join(',') }}
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.tent_alert_snooze_until
+          data:
+            datetime: "{{ (now() + timedelta(minutes=dur_min | int)).strftime('%Y-%m-%d %H:%M:%S') }}"
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.tent_alert_snoozed_keys
+          data:
+            value: "{{ keys }}"
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.tent_alert_details_open

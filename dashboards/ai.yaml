@@ -19,6 +19,82 @@ views:
     path: irrigation
     icon: mdi:watering-can
     cards:
+      # ===================================================================
+      # Critical-error alert banner. Hidden unless binary_sensor.tent_alert_banner
+      # is on. Slow red<->black flash with opposing-color text; tap to expand the
+      # error list + snooze. Backend: packages/tent/control/alert_banner.yaml.
+      # Once proven here, copy this whole card to the TOP of the UI tent dashboard.
+      # ===================================================================
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.tent_alert_banner
+            state: "on"
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:mushroom-template-card
+              primary: ERROR !!
+              secondary: >-
+                {{ (state_attr('sensor.tent_error_list','errors') or []) | count }}
+                active — tap for detail
+              icon: mdi:alert
+              layout: horizontal
+              multiline_secondary: true
+              tap_action:
+                action: perform-action
+                perform_action: input_boolean.toggle
+                target:
+                  entity_id: input_boolean.tent_alert_details_open
+              card_mod:
+                style: |
+                  ha-card {
+                    border: none;
+                    animation: errbg 1.8s ease-in-out infinite;
+                  }
+                  @keyframes errbg {
+                    0%, 100% { background: #c00000; }
+                    50%      { background: #000000; }
+                  }
+                  .primary {
+                    font-size: 2em;
+                    font-weight: 800;
+                    letter-spacing: 3px;
+                    animation: errtx 1.8s ease-in-out infinite;
+                  }
+                  .secondary { animation: errtx 1.8s ease-in-out infinite; }
+                  ha-state-icon, .shape {
+                    animation: errtx 1.8s ease-in-out infinite;
+                  }
+                  @keyframes errtx {
+                    0%, 100% { color: #000000; }
+                    50%      { color: #ff3030; }
+                  }
+            - type: conditional
+              conditions:
+                - condition: state
+                  entity: input_boolean.tent_alert_details_open
+                  state: "on"
+              card:
+                type: vertical-stack
+                cards:
+                  - type: markdown
+                    content: >-
+                      ### ⚠️ Active tent errors
+
+                      {% for e in (state_attr('sensor.tent_error_list','errors') or []) %}
+                      - **{{ e.msg }}**
+                      {% endfor %}
+                  - type: entities
+                    entities:
+                      - entity: input_select.tent_alert_snooze_duration
+                        name: Snooze duration
+                  - type: button
+                    name: DISABLE ALERT FOR SELECTED TIME
+                    icon: mdi:bell-off-outline
+                    tap_action:
+                      action: perform-action
+                      perform_action: script.tent_alert_snooze
       - type: vertical-stack
         cards:
           - type: horizontal-stack
