@@ -84,8 +84,12 @@
 #   - rising is trusted immediately (a full-float trip can raise to 100, even
 #     mid-burst -- the only time a full-but-high-tripping float confirms full);
 #   - while the tank is agitated, a FALLING reading is frozen (hold last value);
-#   - while it is not agitated, step down only as each lower float goes dry
-#     (hold the current level until the next float below it dries).
+#   - while it is not agitated, a falling reading is reported as-is (the true
+#     highest wet float). The old per-tier "hold until the NEXT float below dries"
+#     ladder was dropped 2026-06-28: it latched the level one tier too high during
+#     drainage (full float dry but 3/4 still wet held the gauge at 100/Full), which
+#     pinned "Full" and tripped block_feed_fill_when_reservoir_full on a tank that
+#     was no longer full. The agitation freeze still rejects splash flicker.
 - trigger:
     - trigger: state
       entity_id:
@@ -117,10 +121,6 @@
         {% set raw = 100 if full else (75 if tq else (50 if half else (25 if empty else 0))) %}
         {% if raw >= prev %}{{ raw }}
         {% elif agit %}{{ prev }}
-        {% elif prev == 100 %}{{ 100 if tq else 75 }}
-        {% elif prev == 75 %}{{ 75 if half else 50 }}
-        {% elif prev == 50 %}{{ 50 if empty else 25 }}
-        {% elif prev == 25 %}{{ 25 if empty else 0 }}
         {% else %}{{ raw }}{% endif %}
       attributes:
         level_text: >
@@ -133,7 +133,7 @@
           {% set half = is_state('binary_sensor.feed_half_irrigation_tent', 'on') %}
           {% set empty = is_state('binary_sensor.feed_empty_irrigation_tent', 'on') %}
           {% set raw = 100 if full else (75 if tq else (50 if half else (25 if empty else 0))) %}
-          {% set lvl = raw if raw >= prev else (prev if agit else ((100 if tq else 75) if prev == 100 else ((75 if half else 50) if prev == 75 else ((50 if empty else 25) if prev == 50 else ((25 if empty else 0) if prev == 25 else raw))))) %}
+          {% set lvl = raw if raw >= prev else (prev if agit else raw) %}
           {{ 'Full' if lvl >= 100 else ('3/4' if lvl >= 75 else ('1/2' if lvl >= 50 else ('Low' if lvl >= 25 else 'Empty'))) }}
 
 - trigger:
@@ -165,9 +165,6 @@
         {% set raw = 100 if full else (50 if half else (25 if empty else 0)) %}
         {% if raw >= prev %}{{ raw }}
         {% elif agit %}{{ prev }}
-        {% elif prev == 100 %}{{ 50 if half else (25 if empty else 0) }}
-        {% elif prev == 50 %}{{ 50 if empty else 0 }}
-        {% elif prev == 25 %}{{ 25 if empty else 0 }}
         {% else %}{{ raw }}{% endif %}
       attributes:
         level_text: >
@@ -179,5 +176,5 @@
           {% set half = is_state('binary_sensor.flush_half_irrigation_tent', 'on') %}
           {% set empty = is_state('binary_sensor.flush_empty_irrigation_tent', 'on') %}
           {% set raw = 100 if full else (50 if half else (25 if empty else 0)) %}
-          {% set lvl = raw if raw >= prev else (prev if agit else ((50 if half else (25 if empty else 0)) if prev == 100 else ((50 if empty else 0) if prev == 50 else ((25 if empty else 0) if prev == 25 else raw)))) %}
+          {% set lvl = raw if raw >= prev else (prev if agit else raw) %}
           {{ 'Full' if lvl >= 100 else ('1/2' if lvl >= 50 else ('Low' if lvl >= 25 else 'Empty')) }}
