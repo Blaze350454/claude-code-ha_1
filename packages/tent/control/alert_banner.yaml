@@ -64,10 +64,10 @@ tent_control_alert_banner:
             {% if states('binary_sensor.tp_link_power_strip_c074_cloud_connection') in ['off','unavailable'] %}{% set ns.e = ns.e + [1] %}{% endif %}
             {% if states('sensor.feed_level_irrigation_tent')|int(99) == 0 and (is_state('switch.feed_pump_irrigation_tent','on') or is_state('valve.feed_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [1] %}{% endif %}
             {% if states('sensor.flush_level_irrigation_tent')|int(99) == 0 and (is_state('switch.flush_pump_irrigation_tent','on') or is_state('valve.flush_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [1] %}{% endif %}
-            {% if is_state('binary_sensor.climate_ok','off') %}{% set ns.e = ns.e + [1] %}{% endif %}
-            {% if is_state('climate.air_conditioner_tent','unavailable') %}{% set ns.e = ns.e + [1] %}{% endif %}
-            {% if is_state('humidifier.dehumidifier_tent','unavailable') %}{% set ns.e = ns.e + [1] %}{% endif %}
-            {% if is_state('switch.tent_humidifier','unavailable') %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {# Climate checks disabled 2026-06-28 (AC/dehum/humidifier intentionally offline
+               during commissioning). To re-enable, restore here AND in the errors block:
+               climate_ok off; climate.air_conditioner_tent / humidifier.dehumidifier_tent /
+               switch.tent_humidifier == unavailable. #}
             {% if states('light.hlg') == 'unavailable' or states('light.chilled') == 'unavailable' %}{% set ns.e = ns.e + [1] %}{% endif %}
             {% if is_state('binary_sensor.tent_temperature_divergence','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
             {% if is_state('binary_sensor.tent_humidity_divergence','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
@@ -80,10 +80,7 @@ tent_control_alert_banner:
               {% if states('binary_sensor.tp_link_power_strip_c074_cloud_connection') in ['off','unavailable'] %}{% set ns.e = ns.e + [{'key':'power_strip','msg':'Feed/flush power strip (HS300 c074) offline'}] %}{% endif %}
               {% if states('sensor.feed_level_irrigation_tent')|int(99) == 0 and (is_state('switch.feed_pump_irrigation_tent','on') or is_state('valve.feed_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [{'key':'feed_dry','msg':'Feed reservoir DRY while feeding'}] %}{% endif %}
               {% if states('sensor.flush_level_irrigation_tent')|int(99) == 0 and (is_state('switch.flush_pump_irrigation_tent','on') or is_state('valve.flush_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [{'key':'flush_dry','msg':'Flush reservoir DRY while flushing'}] %}{% endif %}
-              {% if is_state('binary_sensor.climate_ok','off') %}{% set ns.e = ns.e + [{'key':'climate','msg':'Climate out of safe range (temp/RH off target)'}] %}{% endif %}
-              {% if is_state('climate.air_conditioner_tent','unavailable') %}{% set ns.e = ns.e + [{'key':'ac_offline','msg':'Air conditioner offline'}] %}{% endif %}
-              {% if is_state('humidifier.dehumidifier_tent','unavailable') %}{% set ns.e = ns.e + [{'key':'dehum_offline','msg':'Dehumidifier offline'}] %}{% endif %}
-              {% if is_state('switch.tent_humidifier','unavailable') %}{% set ns.e = ns.e + [{'key':'humidifier_offline','msg':'Humidifier offline'}] %}{% endif %}
+              {# Climate checks disabled 2026-06-28 — see note in the state block above. #}
               {% if states('light.hlg') == 'unavailable' or states('light.chilled') == 'unavailable' %}{% set ns.e = ns.e + [{'key':'lights_offline','msg':'Grow light offline'}] %}{% endif %}
               {% if is_state('binary_sensor.tent_temperature_divergence','on') %}{% set ns.e = ns.e + [{'key':'temp_divergence','msg':'Tent temperature sensors disagree — one may be failing'}] %}{% endif %}
               {% if is_state('binary_sensor.tent_humidity_divergence','on') %}{% set ns.e = ns.e + [{'key':'humid_divergence','msg':'Tent humidity sensors disagree — one may be failing'}] %}{% endif %}
