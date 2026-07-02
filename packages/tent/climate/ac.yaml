@@ -16,7 +16,10 @@ tent_climate_ac:
           entity_id: input_boolean.grow_tent_automation_enabled
           state: "on"
       actions:
+    # continue_on_error: the AC can be unplugged/unavailable — the overheat
+    # NOTIFICATION below must still go out even when boost can't be set.
         - action: switch.turn_on
+          continue_on_error: true
           target:
             entity_id: switch.boost_mode_air_conditioner_tent
         - action: persistent_notification.create
@@ -31,6 +34,7 @@ tent_climate_ac:
           entity_id: sensor.tent_average_temperature
           below: 29
         - action: switch.turn_off
+          continue_on_error: true
           target:
             entity_id: switch.boost_mode_air_conditioner_tent
         - action: persistent_notification.create

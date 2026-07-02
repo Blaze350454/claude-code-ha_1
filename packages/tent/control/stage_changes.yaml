@@ -13,7 +13,11 @@ tent_control_stage_changes:
                   entity_id: input_select.tent_humidity_mode
                   state: "Humidify"
               sequence:
+        # continue_on_error on the AC/dehum/humidifier-plug calls: those
+        # devices can be unplugged/unavailable — the rest of the shutdown
+        # sequence (e.g. the live ESPHome fan) must still run.
                 - service: humidifier.turn_off
+                  continue_on_error: true
                   target:
                     entity_id: humidifier.dehumidifier_tent
 
@@ -24,6 +28,7 @@ tent_control_stage_changes:
                   state: "Dehumidify"
               sequence:
                 - service: switch.turn_off
+                  continue_on_error: true
                   target:
                     entity_id: switch.tent_humidifier
                 - service: fan.turn_off
@@ -37,12 +42,14 @@ tent_control_stage_changes:
                   state: "Off"
               sequence:
                 - service: switch.turn_off
+                  continue_on_error: true
                   target:
                     entity_id: switch.tent_humidifier
                 - service: fan.turn_off
                   target:
                     entity_id: fan.tent_humidifier_fan_pwm
                 - service: humidifier.turn_off
+                  continue_on_error: true
                   target:
                     entity_id: humidifier.dehumidifier_tent
 
