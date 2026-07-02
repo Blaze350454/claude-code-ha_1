@@ -106,6 +106,57 @@ tent_irrigation_safety:
               threshold ({{ trigger.for }}). All pumps and valves forced off
               — check system.
       mode: single
+    - id: tent_irrigation_idle_flow_watchdog
+      alias: Tent Irrigation — Idle-Flow Watchdog
+      description: >
+        Sustained flow while both water pumps have been off 10+ min means
+        water is moving when nothing should run (stuck valve, siphon, leak
+        past a pump). Closes all line valves, flags FAULT and notifies.
+        Threshold 0.2 L/min clears the ~0.19 single-pulse blips from
+        air-pump vibration, and the 2-min sustain means one stray pulse
+        (rate falls back to 0 on the next update) can't trip it. The
+        10-min pumps-off condition covers post-feed line drain-down.
+        Only acts when the system is supposed to be idle, so it stays
+        within the flow-is-dashboard-only commissioning rule.
+      triggers:
+        - trigger: numeric_state
+          entity_id: sensor.flow_rate_irrigation_tent
+          above: 0.2
+          for:
+            minutes: 2
+      conditions:
+        - condition: state
+          entity_id: switch.feed_pump_irrigation_tent
+          state: 'off'
+          for:
+            minutes: 10
+        - condition: state
+          entity_id: switch.flush_pump_irrigation_tent
+          state: 'off'
+          for:
+            minutes: 10
+      actions:
+        - action: valve.close_valve
+          target:
+            entity_id:
+              - valve.feed_valve_irrigation_tent
+              - valve.flush_valve_irrigation_tent
+              - valve.feed_fill_valve_irrigation_tent
+              - valve.flush_fill_valve_irrigation_tent
+              - valve.flush_drain_valve_irrigation_tent
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.tent_irrigation_status
+          data:
+            value: FAULT — Idle flow detected
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Idle Flow Detected
+            message: >
+              {{ states('sensor.flow_rate_irrigation_tent') }} L/min measured
+              with both water pumps off 10+ min. Line valves closed — check
+              for a stuck valve, siphon or leak.
+      mode: single
     - id: tent_irrigation_startup_recovery
       alias: Tent Irrigation — Startup Recovery
       description: Forces all pumps and valves off immediately on HA start or restart
