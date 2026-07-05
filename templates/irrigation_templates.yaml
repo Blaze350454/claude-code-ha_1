@@ -178,3 +178,23 @@
           {% set raw = 100 if full else (50 if half else (25 if empty else 0)) %}
           {% set lvl = raw if raw >= prev else (prev if agit else raw) %}
           {{ 'Full' if lvl >= 100 else ('1/2' if lvl >= 50 else ('Low' if lvl >= 25 else 'Empty')) }}
+
+# --- Reservoir-dry flags (added 2026-07-04) ---
+# Single definition of "dry" for each tank — every consumer keys off these
+# instead of re-testing the level sensor: the dashboard DRY banner, the
+# block-feed/flush-when-dry safety automations, and the tent error list.
+# Reads the agitation-frozen level sensor (== 0) so stir/air splash can't
+# false-trip. int(99) means an unavailable level (ESP offline) is NOT dry —
+# controller-offline is its own error. Change what "dry" means HERE and all
+# consumers follow.
+- binary_sensor:
+    - name: "Feed Reservoir Dry"
+      unique_id: feed_reservoir_dry
+      device_class: problem
+      icon: mdi:water-alert
+      state: "{{ states('sensor.feed_level_irrigation_tent') | int(99) == 0 }}"
+    - name: "Flush Reservoir Dry"
+      unique_id: flush_reservoir_dry
+      device_class: problem
+      icon: mdi:water-alert
+      state: "{{ states('sensor.flush_level_irrigation_tent') | int(99) == 0 }}"

@@ -211,10 +211,11 @@ tent_irrigation_safety:
       description: >
         Turns off feed pump, stir pump, and valve when feed reservoir is dry —
         either because they were activated while already dry, or because the
-        reservoir drained while they were running. Reads the agitation-frozen
-        level sensor (sensor.feed_level_irrigation_tent == 0) instead of the raw
-        empty float, so stir/air splash can't false-trip it. A tank already empty
-        when agitation starts still reads 0 and is caught immediately; one that
+        reservoir drained while they were running. Keys off
+        binary_sensor.feed_reservoir_dry — the single shared "dry" definition
+        (templates/irrigation_templates.yaml), which reads the agitation-frozen
+        level sensor so stir/air splash can't false-trip it. A tank already empty
+        when agitation starts still reads dry and is caught immediately; one that
         drains mid-burst is caught once agitation stops and the level steps down.
       triggers:
         - trigger: state
@@ -225,13 +226,13 @@ tent_irrigation_safety:
         - trigger: state
           entity_id: valve.feed_valve_irrigation_tent
           to: open
-        - trigger: numeric_state
-          entity_id: sensor.feed_level_irrigation_tent
-          below: 1
+        - trigger: state
+          entity_id: binary_sensor.feed_reservoir_dry
+          to: 'on'
       conditions:
-        - condition: numeric_state
-          entity_id: sensor.feed_level_irrigation_tent
-          below: 1
+        - condition: state
+          entity_id: binary_sensor.feed_reservoir_dry
+          state: 'on'
         - condition: or
           conditions:
             - condition: state
@@ -262,10 +263,11 @@ tent_irrigation_safety:
       description: >
         Turns off flush pump, stir pump, and valve when flush reservoir is dry —
         either because they were activated while already dry, or because the
-        reservoir drained while they were running. Reads the agitation-frozen
-        level sensor (sensor.flush_level_irrigation_tent == 0) instead of the raw
-        empty float, so stir/air splash can't false-trip it. A tank already empty
-        when agitation starts still reads 0 and is caught immediately; one that
+        reservoir drained while they were running. Keys off
+        binary_sensor.flush_reservoir_dry — the single shared "dry" definition
+        (templates/irrigation_templates.yaml), which reads the agitation-frozen
+        level sensor so stir/air splash can't false-trip it. A tank already empty
+        when agitation starts still reads dry and is caught immediately; one that
         drains mid-burst is caught once agitation stops and the level steps down.
       triggers:
         - trigger: state
@@ -276,13 +278,13 @@ tent_irrigation_safety:
         - trigger: state
           entity_id: valve.flush_valve_irrigation_tent
           to: open
-        - trigger: numeric_state
-          entity_id: sensor.flush_level_irrigation_tent
-          below: 1
+        - trigger: state
+          entity_id: binary_sensor.flush_reservoir_dry
+          to: 'on'
       conditions:
-        - condition: numeric_state
-          entity_id: sensor.flush_level_irrigation_tent
-          below: 1
+        - condition: state
+          entity_id: binary_sensor.flush_reservoir_dry
+          state: 'on'
         - condition: or
           conditions:
             - condition: state
