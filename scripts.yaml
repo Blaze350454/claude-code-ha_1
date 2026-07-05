@@ -130,8 +130,8 @@ run_feed_cycle:
   sequence:
   - if:
     - condition: state
-      entity_id: binary_sensor.feed_empty_irrigation_tent
-      state: 'off'
+      entity_id: binary_sensor.feed_reservoir_dry
+      state: 'on'
     then:
     - action: notify.mobile_app_sm_a166w
       data:
@@ -151,7 +151,7 @@ run_feed_cycle:
       is_flush_day: >
         {{ states('input_number.tent_irrigation_day_counter') | int
            >= states('input_number.daily_flush_day_interval') | int }}
-      flush_dry: "{{ is_state('binary_sensor.flush_empty_irrigation_tent', 'off') }}"
+      flush_dry: "{{ is_state('binary_sensor.flush_reservoir_dry', 'on') }}"
       feed_minutes: "{{ states('input_number.feed_duration') | float }}"
       clear_minutes: "{{ states('input_number.daily_flush_duration') | float }}"
   - choose:
@@ -203,13 +203,18 @@ run_feed_cycle:
       - action: switch.turn_on
         target:
           entity_id: switch.flush_pump_irrigation_tent
+      # clear_minutes (daily_flush_duration) is the TOTAL flush period; the
+      # end-of-line drain valve is open for the LAST 30 s of it. Previous
+      # behavior: whole period drain-closed + a 5 s purge tacked on the end,
+      # at a 6 min default — changed to 3.5 min total / 30 s in-period purge
+      # per user 2026-07-05.
       - delay:
-          minutes: "{{ clear_minutes }}"
+          seconds: "{{ [ ((clear_minutes * 60) | round | int) - 30, 0 ] | max }}"
       - action: valve.open_valve
         target:
           entity_id: valve.flush_drain_valve_irrigation_tent
       - delay:
-          seconds: 5
+          seconds: "{{ [ (clear_minutes * 60) | round | int, 30 ] | min }}"
       - action: valve.close_valve
         target:
           entity_id: valve.flush_drain_valve_irrigation_tent
@@ -354,10 +359,14 @@ tent_irrigation_advance_to_next_feed:
   mode: single
   icon: mdi:skip-next
 
-# Manual end-of-day plant flush: pushes flush-reservoir water through the lines to
-# the plants for "Flush Now Duration" (input_number.flush_now_duration) minutes, OR until
-# the flush reservoir runs dry, whichever comes first. Triggered by the "Flush Now"
-# dashboard button. Independent of the automated in-feed daily flush (daily_flush_duration).
+# Manual end-of-day plant flush: pushes flush-reservoir water through the lines
+# to the plants for "Flush Now Duration" (input_number.flush_now_duration)
+# minutes TOTAL — pump + flush valve open the whole period — with the
+# end-of-line drain valve open for the LAST "Flush Now Drain Duration"
+# (input_number.flush_now_drain_duration) minutes of it (added 2026-07-05;
+# clamped to the total). Stops early if the flush reservoir runs dry.
+# Triggered by the "Flush Now" dashboard button; second press cancels.
+# Independent of the automated in-feed daily flush (daily_flush_duration).
 run_flush_now:
   alias: Run Flush Now
   # restart mode = the Flush Now button toggles: a second press while flushing
@@ -365,7 +374,7 @@ run_flush_now:
   mode: restart
   icon: mdi:water-sync
   sequence:
-  # --- Toggle OFF: already flushing -> stop pump, close valve, cancel timer ---
+  # --- Toggle OFF: already flushing -> stop pump, close valves, cancel timer ---
   - if:
     - condition: state
       entity_id: input_boolean.flush_now_running
@@ -376,7 +385,9 @@ run_flush_now:
         entity_id: switch.flush_pump_irrigation_tent
     - action: valve.close_valve
       target:
-        entity_id: valve.flush_valve_irrigation_tent
+        entity_id:
+          - valve.flush_valve_irrigation_tent
+          - valve.flush_drain_valve_irrigation_tent
     - action: input_boolean.turn_off
       target:
         entity_id: input_boolean.flush_now_running
@@ -399,8 +410,8 @@ run_flush_now:
     - stop: "Feed in progress"
   - if:
     - condition: state
-      entity_id: binary_sensor.flush_empty_irrigation_tent
-      state: 'off'
+      entity_id: binary_sensor.flush_reservoir_dry
+      state: 'on'
     then:
     - action: notify.mobile_app_sm_a166w
       data:
@@ -408,6 +419,12 @@ run_flush_now:
         message: Flush reservoir is empty. Refill before flushing.
     - stop: "Flush reservoir dry"
   # --- Run the flush ---
+  - variables:
+      total_seconds: "{{ (states('input_number.flush_now_duration') | float(15) * 60) | round | int }}"
+      # Drain tail clamped so it can never exceed the total flush period.
+      drain_seconds: >
+        {{ [ (states('input_number.flush_now_drain_duration') | float(1) * 60) | round | int,
+             (states('input_number.flush_now_duration') | float(15) * 60) | round | int ] | min }}
   - action: input_boolean.turn_on
     target:
       entity_id: input_boolean.flush_now_running
@@ -443,16 +460,33 @@ run_flush_now:
       entity_id: input_datetime.last_flush_time
     data:
       datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
-  # Run until the flush reservoir empties (float reads dry) or the duration elapses.
-  - wait_template: "{{ is_state('binary_sensor.flush_empty_irrigation_tent', 'off') }}"
-    timeout: "{{ (states('input_number.flush_now_duration') | float(15) * 60) | round | int }}"
+  # Main push with the drain closed: run until the reservoir empties or the
+  # pre-drain window (total minus drain tail) elapses.
+  - wait_template: "{{ is_state('binary_sensor.flush_reservoir_dry', 'on') }}"
+    timeout: "{{ [total_seconds - drain_seconds, 0] | max }}"
     continue_on_timeout: true
+  # End-of-line drain purge for the LAST drain_seconds of the period —
+  # skipped if the reservoir already ran dry (nothing left to push).
+  - if:
+    - condition: state
+      entity_id: binary_sensor.flush_reservoir_dry
+      state: 'off'
+    then:
+    - action: valve.open_valve
+      target:
+        entity_id: valve.flush_drain_valve_irrigation_tent
+    - wait_template: "{{ is_state('binary_sensor.flush_reservoir_dry', 'on') }}"
+      timeout: "{{ drain_seconds }}"
+      continue_on_timeout: true
+  # --- Shutdown ---
   - action: switch.turn_off
     target:
       entity_id: switch.flush_pump_irrigation_tent
   - action: valve.close_valve
     target:
-      entity_id: valve.flush_valve_irrigation_tent
+      entity_id:
+        - valve.flush_valve_irrigation_tent
+        - valve.flush_drain_valve_irrigation_tent
   - action: input_boolean.turn_off
     target:
       entity_id: input_boolean.flush_now_running

@@ -149,6 +149,9 @@ grow_tent_irrigation:
       mode: box
       icon: mdi:timer-sand
 
+    # TOTAL scheduled line-clear flush period (run_feed_cycle); the end-of-line
+    # drain valve is open for the LAST 30 s of it.
+    # Default/original value was 6 min; running 3.5 min as of 2026-07-05 (user).
     daily_flush_duration:
       name: Daily Flush Duration
       min: 0.5
@@ -169,8 +172,9 @@ grow_tent_irrigation:
       mode: box
       icon: mdi:watering-can
 
-    # Manual end-of-day plant flush length (script.run_flush_now / "Flush Now").
-    # Separate from the automated in-feed daily flush above.
+    # Manual end-of-day plant flush length (script.run_flush_now / "Flush Now"):
+    # TOTAL time the flush pump + flush valve are open. Separate from the
+    # automated in-feed daily flush above.
     flush_now_duration:
       name: Flush Now Duration
       min: 1
@@ -179,6 +183,19 @@ grow_tent_irrigation:
       unit_of_measurement: min
       mode: box
       icon: mdi:water-sync
+
+    # Drain tail for the manual flush (added 2026-07-05): the end-of-line drain
+    # valve is open for the LAST this-many minutes of flush_now_duration
+    # (clamped to the total in the script). Max 5 keeps it under the 10 min
+    # drain-valve watchdog threshold.
+    flush_now_drain_duration:
+      name: Flush Now Drain Duration
+      min: 0.5
+      max: 5
+      step: 0.5
+      unit_of_measurement: min
+      mode: box
+      icon: mdi:valve
 
     daily_flush_day_interval:
       name: Daily Flush Interval
