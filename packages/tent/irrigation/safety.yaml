@@ -206,6 +206,55 @@ tent_irrigation_safety:
           then:
             - action: script.tent_irrigation_rebuild_feed_schedule
       mode: single
+    - id: tent_irrigation_reconnect_valve_recovery
+      alias: Tent Irrigation — Reconnect Valve Recovery
+      description: >
+        Closes any valve that comes back from unavailable directly to open.
+        Covers the gap Startup Recovery can't: after a power blip the ESP
+        reconnects AFTER HA has already started, and its optimistic template
+        valves can publish stale/phantom "open" states (2026-07-06 incident:
+        all five reported open while physically closed; the flush drain sat
+        "open" 10 min until the watchdog FAULTed the system). Guarded so it
+        only acts while both water pumps are off and no feed cycle is
+        running — a mid-cycle wifi blip can't abort a legitimate feed. The
+        ESP also force-closes/publishes closed on boot (on_boot added same
+        date), so this is the HA-side backstop.
+      triggers:
+        - trigger: state
+          entity_id:
+            - valve.feed_valve_irrigation_tent
+            - valve.flush_valve_irrigation_tent
+            - valve.feed_fill_valve_irrigation_tent
+            - valve.flush_fill_valve_irrigation_tent
+            - valve.flush_drain_valve_irrigation_tent
+          from: unavailable
+          to: open
+      conditions:
+        - condition: state
+          entity_id: switch.feed_pump_irrigation_tent
+          state: 'off'
+        - condition: state
+          entity_id: switch.flush_pump_irrigation_tent
+          state: 'off'
+        - condition: state
+          entity_id: script.run_feed_cycle
+          state: 'off'
+      actions:
+        - action: valve.close_valve
+          target:
+            entity_id:
+              - valve.feed_valve_irrigation_tent
+              - valve.flush_valve_irrigation_tent
+              - valve.feed_fill_valve_irrigation_tent
+              - valve.flush_fill_valve_irrigation_tent
+              - valve.flush_drain_valve_irrigation_tent
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Irrigation Valve Reconnect Recovery
+            message: >
+              {{ trigger.entity_id }} reported open right after reconnecting
+              with pumps off — all valves re-closed (phantom-open guard).
+      mode: single
     - id: tent_irrigation_block_feed_when_reservoir_dry
       alias: Tent Irrigation — Block Feed When Reservoir Dry
       description: >
@@ -464,6 +513,7 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_pre_feed_air_stir_start
                       - automation.tent_irrigation_pre_feed_air_stir_stop
                       - automation.tent_irrigation_startup_recovery
+                      - automation.tent_irrigation_reconnect_valve_recovery
                       - automation.tent_irrigation_table_drain_pump
                       - automation.tent_irrigation_watchdog
                       - automation.tent_irrigation_maintenance_cycle
@@ -492,6 +542,7 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_pre_feed_air_stir_start
                       - automation.tent_irrigation_pre_feed_air_stir_stop
                       - automation.tent_irrigation_startup_recovery
+                      - automation.tent_irrigation_reconnect_valve_recovery
                       - automation.tent_irrigation_table_drain_pump
                       - automation.tent_irrigation_maintenance_cycle
                       - automation.tent_irrigation_watchdog
@@ -526,6 +577,7 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_pre_feed_air_stir_start
                       - automation.tent_irrigation_pre_feed_air_stir_stop
                       - automation.tent_irrigation_startup_recovery
+                      - automation.tent_irrigation_reconnect_valve_recovery
                       - automation.tent_irrigation_table_drain_pump
                       - automation.tent_irrigation_watchdog
                       - automation.tent_irrigation_maintenance_cycle
@@ -575,6 +627,7 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_pre_feed_air_stir_start
                       - automation.tent_irrigation_pre_feed_air_stir_stop
                       - automation.tent_irrigation_startup_recovery
+                      - automation.tent_irrigation_reconnect_valve_recovery
                       - automation.tent_irrigation_table_drain_pump
                       - automation.tent_irrigation_maintenance_cycle
                       - automation.tent_irrigation_watchdog
