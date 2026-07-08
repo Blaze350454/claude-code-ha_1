@@ -1,0 +1,443 @@
+# Grow Calendar — date-based grow stage stat sheet.
+#
+# STATISTICAL ONLY (current state): editable stage-start dates + harvest date,
+# plus derived sensors (scheduled stage, grow day, stage day, days to next
+# stage / harvest) for the Tent dashboard. Nothing here changes any selector,
+# schedule, or device.
+#
+# UPGRADE PATH (auto stage control): uncomment the `automation:` block at the
+# bottom and push. It sets input_select.feed_stage and a mapped
+# input_select.grow_tent_growth_stage when the scheduled stage changes, gated
+# by input_boolean.grow_calendar_linked (declared below, default off). Then add
+# the linked toggle to the dashboard's Grow Calendar section.
+#
+# Date semantics: each date is the day that stage STARTS. Scheduled stage =
+# the latest stage in stage order whose date is <= today; dates set out of
+# order resolve to the later stage in stage order. Unset dates read
+# 1970-01-01, so anything < 2020-01-01 is treated as unset (ISO date strings
+# compare correctly as plain strings).
+
+tent_control_grow_calendar:
+
+  input_datetime:
+    grow_stage_seedling_date:
+      name: "Grow — Seedling Start (Grow Start)"
+      has_date: true
+      has_time: false
+      icon: mdi:sprout
+    grow_stage_early_veg_date:
+      name: "Grow — Early Veg Start"
+      has_date: true
+      has_time: false
+      icon: mdi:leaf
+    grow_stage_medium_veg_date:
+      name: "Grow — Medium Veg Start"
+      has_date: true
+      has_time: false
+      icon: mdi:leaf
+    grow_stage_late_veg_date:
+      name: "Grow — Late Veg Start"
+      has_date: true
+      has_time: false
+      icon: mdi:leaf
+    grow_stage_early_flower_date:
+      name: "Grow — Early Flower Start"
+      has_date: true
+      has_time: false
+      icon: mdi:flower-outline
+    grow_stage_mid_flower_date:
+      name: "Grow — Mid Flower Start"
+      has_date: true
+      has_time: false
+      icon: mdi:flower
+    grow_stage_late_flower_date:
+      name: "Grow — Late Flower Start"
+      has_date: true
+      has_time: false
+      icon: mdi:flower
+    grow_harvest_date:
+      name: "Grow — Harvest Date"
+      has_date: true
+      has_time: false
+      icon: mdi:scissors-cutting
+    # NO initial: on any helper — values must survive the push-triggered restarts.
+
+  input_boolean:
+    grow_active:
+      name: "Grow Active"
+      icon: mdi:leaf-circle
+    # Used only by the (commented) advance automation below. Kept declared so
+    # the upgrade is uncomment-only. Default off; harmless while unused.
+    grow_calendar_linked:
+      name: "Grow Calendar Linked"
+      icon: mdi:link-variant
+
+  input_text:
+    # Notification dedupe latch for the (commented) advance automation.
+    # NO initial: — must survive restarts or every push would re-notify.
+    grow_calendar_last_announced:
+      name: "Grow Calendar Last Announced Stage"
+      max: 32
+
+  template:
+    - sensor:
+        - name: "Grow Scheduled Stage"
+          unique_id: grow_scheduled_stage
+          icon: mdi:calendar-star
+          state: >
+            {% set pairs = [
+                ('Seedling',     'input_datetime.grow_stage_seedling_date'),
+                ('Early Veg',    'input_datetime.grow_stage_early_veg_date'),
+                ('Medium Veg',   'input_datetime.grow_stage_medium_veg_date'),
+                ('Late Veg',     'input_datetime.grow_stage_late_veg_date'),
+                ('Early Flower', 'input_datetime.grow_stage_early_flower_date'),
+                ('Mid Flower',   'input_datetime.grow_stage_mid_flower_date'),
+                ('Late Flower',  'input_datetime.grow_stage_late_flower_date'),
+                ('Harvest',      'input_datetime.grow_harvest_date'),
+            ] %}
+            {% set today = now().date().isoformat() %}
+            {% set seed = states('input_datetime.grow_stage_seedling_date') %}
+            {% set ns = namespace(stage='Not started') %}
+            {% if is_state('input_boolean.grow_active', 'on')
+                  and seed >= '2020-01-01' and seed <= today %}
+              {% for name, ent in pairs %}
+                {% set d = states(ent) %}
+                {% if d >= '2020-01-01' and d <= today %}
+                  {% set ns.stage = name %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            {{ ns.stage }}
+
+        - name: "Grow Day"
+          unique_id: grow_day
+          icon: mdi:counter
+          state: >
+            {% set seed = states('input_datetime.grow_stage_seedling_date') %}
+            {% set today = now().date() %}
+            {% if is_state('input_boolean.grow_active', 'on')
+                  and seed >= '2020-01-01' and seed <= today.isoformat() %}
+              {{ (today - strptime(seed, '%Y-%m-%d').date()).days + 1 }}
+            {% else %}
+              unknown
+            {% endif %}
+
+        - name: "Grow Stage Day"
+          unique_id: grow_stage_day
+          icon: mdi:calendar-today
+          # Day within the current scheduled stage (1-based). When the stage is
+          # Harvest this reads "days since harvest date" — the dashboard uses that.
+          state: >
+            {% set dates = [
+                'input_datetime.grow_stage_seedling_date',
+                'input_datetime.grow_stage_early_veg_date',
+                'input_datetime.grow_stage_medium_veg_date',
+                'input_datetime.grow_stage_late_veg_date',
+                'input_datetime.grow_stage_early_flower_date',
+                'input_datetime.grow_stage_mid_flower_date',
+                'input_datetime.grow_stage_late_flower_date',
+                'input_datetime.grow_harvest_date',
+            ] %}
+            {% set today = now().date().isoformat() %}
+            {% set seed = states('input_datetime.grow_stage_seedling_date') %}
+            {% set ns = namespace(date='') %}
+            {% if is_state('input_boolean.grow_active', 'on')
+                  and seed >= '2020-01-01' and seed <= today %}
+              {% for ent in dates %}
+                {% set d = states(ent) %}
+                {% if d >= '2020-01-01' and d <= today %}
+                  {% set ns.date = d %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            {% if ns.date == '' %}
+              unknown
+            {% else %}
+              {{ (now().date() - strptime(ns.date, '%Y-%m-%d').date()).days + 1 }}
+            {% endif %}
+
+        - name: "Grow Days To Next Stage"
+          unique_id: grow_days_to_next_stage
+          icon: mdi:calendar-arrow-right
+          # First stage in stage order whose date is strictly in the future.
+          state: >
+            {% set pairs = [
+                ('Seedling',     'input_datetime.grow_stage_seedling_date'),
+                ('Early Veg',    'input_datetime.grow_stage_early_veg_date'),
+                ('Medium Veg',   'input_datetime.grow_stage_medium_veg_date'),
+                ('Late Veg',     'input_datetime.grow_stage_late_veg_date'),
+                ('Early Flower', 'input_datetime.grow_stage_early_flower_date'),
+                ('Mid Flower',   'input_datetime.grow_stage_mid_flower_date'),
+                ('Late Flower',  'input_datetime.grow_stage_late_flower_date'),
+                ('Harvest',      'input_datetime.grow_harvest_date'),
+            ] %}
+            {% set today = now().date().isoformat() %}
+            {% set ns = namespace(d='') %}
+            {% if is_state('input_boolean.grow_active', 'on') %}
+              {% for name, ent in pairs %}
+                {% set d = states(ent) %}
+                {% if ns.d == '' and d >= '2020-01-01' and d <= '2100-12-31'
+                      and d > today %}
+                  {% set ns.d = d %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            {% if ns.d == '' %}
+              unknown
+            {% else %}
+              {{ (strptime(ns.d, '%Y-%m-%d').date() - now().date()).days }}
+            {% endif %}
+          attributes:
+            next_stage: >
+              {% set pairs = [
+                  ('Seedling',     'input_datetime.grow_stage_seedling_date'),
+                  ('Early Veg',    'input_datetime.grow_stage_early_veg_date'),
+                  ('Medium Veg',   'input_datetime.grow_stage_medium_veg_date'),
+                  ('Late Veg',     'input_datetime.grow_stage_late_veg_date'),
+                  ('Early Flower', 'input_datetime.grow_stage_early_flower_date'),
+                  ('Mid Flower',   'input_datetime.grow_stage_mid_flower_date'),
+                  ('Late Flower',  'input_datetime.grow_stage_late_flower_date'),
+                  ('Harvest',      'input_datetime.grow_harvest_date'),
+              ] %}
+              {% set today = now().date().isoformat() %}
+              {% set ns = namespace(stage=none) %}
+              {% if is_state('input_boolean.grow_active', 'on') %}
+                {% for name, ent in pairs %}
+                  {% set d = states(ent) %}
+                  {% if ns.stage is none and d >= '2020-01-01'
+                        and d <= '2100-12-31' and d > today %}
+                    {% set ns.stage = name %}
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+              {{ ns.stage }}
+
+        - name: "Grow Days To Harvest"
+          unique_id: grow_days_to_harvest
+          icon: mdi:scissors-cutting
+          # 0 on harvest day, negative after (dashboard formats it).
+          state: >
+            {% set d = states('input_datetime.grow_harvest_date') %}
+            {% if is_state('input_boolean.grow_active', 'on')
+                  and d >= '2020-01-01' and d <= '2100-12-31' %}
+              {{ (strptime(d, '%Y-%m-%d').date() - now().date()).days }}
+            {% else %}
+              unknown
+            {% endif %}
+
+  script:
+    grow_calendar_fill_defaults:
+      alias: "Grow Calendar — Fill Dates From Seedling Start"
+      description: >
+        Fills the seven downstream stage/harvest dates from the seedling start
+        date using default stage lengths. Aborts silently if the seedling date
+        is unset. Overwrites existing dates — edit individual dates afterward.
+      icon: mdi:calendar-refresh
+      mode: single
+      sequence:
+        - variables:
+            start: "{{ states('input_datetime.grow_stage_seedling_date') }}"
+            # Stage lengths (days) — edit here to change the default schedule.
+            # Cumulative offsets: 14 / 28 / 42 / 49 / 70 / 91 / harvest 105.
+            len_seedling: 14
+            len_early_veg: 14
+            len_medium_veg: 14
+            len_late_veg: 7
+            len_early_flower: 21
+            len_mid_flower: 21
+            len_late_flower: 14
+        - condition: template
+          value_template: "{{ start >= '2020-01-01' and start <= '2100-12-31' }}"
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.grow_stage_early_veg_date
+          data:
+            date: >
+              {{ (strptime(start, '%Y-%m-%d')
+                  + timedelta(days=len_seedling)).strftime('%Y-%m-%d') }}
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.grow_stage_medium_veg_date
+          data:
+            date: >
+              {{ (strptime(start, '%Y-%m-%d')
+                  + timedelta(days=len_seedling + len_early_veg)).strftime('%Y-%m-%d') }}
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.grow_stage_late_veg_date
+          data:
+            date: >
+              {{ (strptime(start, '%Y-%m-%d')
+                  + timedelta(days=len_seedling + len_early_veg
+                                   + len_medium_veg)).strftime('%Y-%m-%d') }}
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.grow_stage_early_flower_date
+          data:
+            date: >
+              {{ (strptime(start, '%Y-%m-%d')
+                  + timedelta(days=len_seedling + len_early_veg
+                                   + len_medium_veg + len_late_veg)).strftime('%Y-%m-%d') }}
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.grow_stage_mid_flower_date
+          data:
+            date: >
+              {{ (strptime(start, '%Y-%m-%d')
+                  + timedelta(days=len_seedling + len_early_veg + len_medium_veg
+                                   + len_late_veg + len_early_flower)).strftime('%Y-%m-%d') }}
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.grow_stage_late_flower_date
+          data:
+            date: >
+              {{ (strptime(start, '%Y-%m-%d')
+                  + timedelta(days=len_seedling + len_early_veg + len_medium_veg
+                                   + len_late_veg + len_early_flower
+                                   + len_mid_flower)).strftime('%Y-%m-%d') }}
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.grow_harvest_date
+          data:
+            date: >
+              {{ (strptime(start, '%Y-%m-%d')
+                  + timedelta(days=len_seedling + len_early_veg + len_medium_veg
+                                   + len_late_veg + len_early_flower
+                                   + len_mid_flower + len_late_flower)).strftime('%Y-%m-%d') }}
+
+# ---------------------------------------------------------------------------
+# UPGRADE BLOCK — auto stage control (verified against feed_stage.yaml,
+# stage_changes.yaml, lights.yaml on 2026-07-08; re-check if those changed).
+# Uncomment everything below (align `automation:` with the keys above) to make
+# the calendar drive both stage selectors when the scheduled stage changes.
+# Gated by grow_calendar_linked + grow_active, both off by default.
+#
+# Design notes:
+# - growth_map sends the calendar's Early Flower to Transition so the existing
+#   6-day light ramp (Tent Lights Transition) owns the veg->flower flip.
+# - do_growth writes grow_tent_growth_stage only when it STRICTLY advances
+#   (growth_order) — never downgrades, never fights the ramp; a stalled ramp
+#   is rescued by the next boundary (Flower 5 > Transition 3).
+# - Harvest is announce-only; neither selector has a Harvest option.
+# - growth_stage_change_defaults applies climate defaults only while
+#   input_boolean.grow_tent_automation_enabled is on, and adds its own
+#   persistent notification (expected duplicate).
+# - Restart refires are silent: the last-announced latch dedupes the notify,
+#   and the selector writes are idempotent.
+#
+#  automation:
+#    - id: automation.grow_calendar_advance
+#      alias: "Tent Grow Calendar — Advance Stage"
+#      description: >
+#        When the calendar's scheduled stage changes (or the link is turned
+#        on), copy it into input_select.feed_stage and a mapped,
+#        never-downgrading value into input_select.grow_tent_growth_stage,
+#        then notify. Early Flower maps to Transition so the 6-day light ramp
+#        owns the veg->flower flip. Harvest is announce-only.
+#      triggers:
+#        - trigger: state
+#          entity_id: sensor.grow_scheduled_stage
+#          id: schedule
+#        - trigger: state
+#          entity_id: input_boolean.grow_calendar_linked
+#          to: "on"
+#          id: linked
+#      conditions:
+#        - condition: state
+#          entity_id: input_boolean.grow_active
+#          state: "on"
+#        - condition: state
+#          entity_id: input_boolean.grow_calendar_linked
+#          state: "on"
+#        - condition: template
+#          value_template: >
+#            {{ states('sensor.grow_scheduled_stage')
+#               not in ['Not started', 'unknown', 'unavailable'] }}
+#      actions:
+#        - variables:
+#            sched: "{{ states('sensor.grow_scheduled_stage') }}"
+#            growth_map:
+#              Seedling: Seedling
+#              Early Veg: Early Veg
+#              Medium Veg: Veg
+#              Late Veg: Veg
+#              Early Flower: Transition
+#              Mid Flower: Flower
+#              Late Flower: Late Flower
+#            growth_order:
+#              Seedling: 0
+#              Early Veg: 1
+#              Veg: 2
+#              Transition: 3
+#              Early Flower: 4
+#              Flower: 5
+#              Late Flower: 6
+#            growth_current: "{{ states('input_select.grow_tent_growth_stage') }}"
+#            growth_target: "{{ growth_map.get(sched, '') }}"
+#            do_feed: >
+#              {{ sched != 'Harvest'
+#                 and sched != states('input_select.feed_stage') }}
+#            do_growth: >
+#              {{ sched != 'Harvest' and growth_target != ''
+#                 and growth_order.get(growth_target, -1)
+#                     > growth_order.get(growth_current, 99) }}
+#            announce: >
+#              {{ sched != states('input_text.grow_calendar_last_announced')
+#                 or (trigger.id | default('')) == 'linked' }}
+#        - if: "{{ do_feed }}"
+#          then:
+#            - action: input_select.select_option
+#              target:
+#                entity_id: input_select.feed_stage
+#              data:
+#                option: "{{ sched }}"
+#        - if: "{{ do_growth }}"
+#          then:
+#            - action: input_select.select_option
+#              target:
+#                entity_id: input_select.grow_tent_growth_stage
+#              data:
+#                option: "{{ growth_target }}"
+#            # Calendar overrode a stalled/short Transition ramp — reset the
+#            # ramp state the same way its own completion branch does.
+#            - if: "{{ growth_current == 'Transition' }}"
+#              then:
+#                - action: input_number.set_value
+#                  target:
+#                    entity_id: input_number.transition_day_counter
+#                  data:
+#                    value: 0
+#                - action: input_datetime.set_datetime
+#                  target:
+#                    entity_id: input_datetime.veg_lights_off_time
+#                  data:
+#                    time: "06:00:00"
+#        - if: "{{ announce }}"
+#          then:
+#            - action: notify.mobile_app_sm_a166w
+#              data:
+#                title: >
+#                  {{ 'Grow calendar: HARVEST DAY' if sched == 'Harvest'
+#                     else 'Grow calendar: stage -> ' ~ sched }}
+#                message: >
+#                  Grow day {{ states('sensor.grow_day') }}.
+#                  {% if sched == 'Harvest' %}Harvest date reached — selectors
+#                  stay at Late Flower.
+#                  {% else %}Feed stage: {{ states('input_select.feed_stage') }}
+#                  {{ '(updated)' if do_feed else '(unchanged)' }};
+#                  growth stage: {{ states('input_select.grow_tent_growth_stage') }}
+#                  {{ '(-> ' ~ growth_target ~ ')' if do_growth else '(unchanged)' }}.
+#                  {% endif %}
+#            - action: persistent_notification.create
+#              data:
+#                notification_id: grow_calendar_advance
+#                title: "Grow Calendar — {{ sched }}"
+#                message: >
+#                  {{ now().strftime('%Y-%m-%d %H:%M') }} — scheduled stage is
+#                  now {{ sched }} (grow day {{ states('sensor.grow_day') }}).
+#            - action: input_text.set_value
+#              target:
+#                entity_id: input_text.grow_calendar_last_announced
+#              data:
+#                value: "{{ sched }}"
+#      mode: single

@@ -161,7 +161,8 @@ grow_tent:
       min: 0
       max: 7
       step: 1
-      initial: 0
+      # No initial: — a mid-ramp HA restart (every config push) must not
+      # reset the 6-day lights transition back to day 0.
       icon: mdi:counter
 
   # --- Lights Transition Pre-Shift ---
