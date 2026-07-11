@@ -15,6 +15,10 @@ grow_tent:
 
 # Input helpers for grow tent settings
   input_number:
+    # RESERVED for Phase 2 needle-valve RESERVOIR water setpoint (see comment at
+    # bottom of file) — do NOT reuse for air temp. Climate status/alerts read the
+    # stage-driven tent_day/night_temp_target via sensor.active_temp_target
+    # since 2026-07-11.
     grow_tent_target_temp:
       name: "Target Temperature"
       min: 15
@@ -23,6 +27,10 @@ grow_tent:
       unit_of_measurement: "°C"
       icon: mdi:thermometer
 
+    # UNUSED since the 2026-07-11 VPD rewire — humidity alerting is VPD-based
+    # (sensor.grow_tent_vpd vs sensor.active_vpd_target ± vpd_tolerance). Kept
+    # only so any old dashboard card doesn't break; safe to delete once cards
+    # are confirmed migrated.
     grow_tent_target_humidity:
       name: "Target Humidity"
       min: 30
@@ -395,6 +403,21 @@ grow_tent:
               {{ states('input_number.vpd_night_target') | float(0.8) }}
             {% endif %}
 
+        # Day/night-aware temp target, sourced from the per-stage helpers that
+        # growth_stage_change_defaults populates (user-tweakable afterward).
+        # Mirrors the Active VPD Target pattern so status/alerts and dashboard
+        # read one entity instead of picking a slider.
+        - name: "Active Temp Target"
+          unique_id: active_temp_target
+          unit_of_measurement: "°C"
+          icon: mdi:thermometer-auto
+          state: >
+            {% if is_state('binary_sensor.tent_climate_day_mode', 'on') %}
+              {{ states('input_number.tent_day_temp_target') | float(25) }}
+            {% else %}
+              {{ states('input_number.tent_night_temp_target') | float(21) }}
+            {% endif %}
+
         - name: "VPD Ideal RH"
           unique_id: vpd_ideal_rh
           unit_of_measurement: "%"
@@ -423,13 +446,14 @@ grow_tent:
             {% endif %}
           state: >
             {% set temp = states('sensor.tent_average_temperature') | float(0) %}
-            {% set target_temp = states('input_number.grow_tent_target_temp') | float(0) %}
-            {% set humidity = states('sensor.tent_average_humidity') | float(0) %}
-            {% set target_humidity = states('input_number.grow_tent_target_humidity') | float(0) %}
+            {% set target_temp = states('sensor.active_temp_target') | float(25) %}
+            {% set vpd = states('sensor.grow_tent_vpd') | float(0) %}
+            {% set vpd_target = states('sensor.active_vpd_target') | float(1.0) %}
+            {% set vpd_tol = states('input_number.vpd_tolerance') | float(0.3) %}
             {% if (temp - target_temp) | abs > 3 %}
               Temperature Alert
-            {% elif (humidity - target_humidity) | abs > 10 %}
-              Humidity Alert
+            {% elif vpd > 0 and (vpd - vpd_target) | abs > vpd_tol %}
+              VPD Alert
             {% elif is_state('binary_sensor.tent_lights_on', 'on') %}
               Growing
             {% else %}
@@ -598,10 +622,12 @@ grow_tent:
           device_class: safety
           state: >
             {% set temp = states('sensor.tent_average_temperature') | float(0) %}
-            {% set target_temp = states('input_number.grow_tent_target_temp') | float(0) %}
-            {% set humidity = states('sensor.tent_average_humidity') | float(0) %}
-            {% set target_humidity = states('input_number.grow_tent_target_humidity') | float(0) %}
-            {{ (temp - target_temp) | abs <= 3 and (humidity - target_humidity) | abs <= 10 }}
+            {% set target_temp = states('sensor.active_temp_target') | float(25) %}
+            {% set vpd = states('sensor.grow_tent_vpd') | float(0) %}
+            {% set vpd_target = states('sensor.active_vpd_target') | float(1.0) %}
+            {% set vpd_tol = states('input_number.vpd_tolerance') | float(0.3) %}
+            {{ (temp - target_temp) | abs <= 3
+               and vpd > 0 and (vpd - vpd_target) | abs <= vpd_tol }}
 
         - name: "Tent Lights On"
           unique_id: tent_lights_on
