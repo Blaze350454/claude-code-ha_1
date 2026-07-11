@@ -447,17 +447,24 @@ grow_tent:
           state_class: measurement
           icon: mdi:water-percent
           state: >
-            {% set sensors = [
-              states('sensor.canopy_humidity_tent'),
-              states('sensor.flower_humidity_tent'),
-              states('sensor.indoor_humidity_air_conditioner_tent'),
-              states('sensor.current_humidity_dehumidifier')
-            ] %}
-            {% set readings = sensors
-              | reject('in', ['unavailable', 'unknown'])
-              | map('float', default=none)
-              | reject('none')
-              | list %}
+            {# AUTO-DISCOVERY (2026-07-11): any sensor with device_class
+               humidity in area 'tent' joins automatically. Excluded: soil /
+               flood MOISTURE sensors ('moisture' in entity_id — they report
+               device_class humidity too), anything labeled sys_irrigation,
+               and 'outdoor' ids. New air RH sensors just need the Tent area. #}
+            {% set ns = namespace(vals=[]) %}
+            {% for s in states.sensor if s.attributes.device_class == 'humidity' %}
+              {% if area_id(s.entity_id) == 'tent'
+                    and 'moisture' not in s.entity_id
+                    and 'outdoor' not in s.entity_id
+                    and 'sys_irrigation' not in labels(s.entity_id) %}
+                {% set v = s.state | float(none) %}
+                {% if v is not none %}
+                  {% set ns.vals = ns.vals + [v] %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {% set readings = ns.vals %}
             {% if readings | length == 0 %}
               {{ none }}
             {% else %}
@@ -485,12 +492,17 @@ grow_tent:
               {% endif %}
             {% endif %}
           availability: >
-            {{ [
-              states('sensor.canopy_humidity_tent'),
-              states('sensor.flower_humidity_tent'),
-              states('sensor.indoor_humidity_air_conditioner_tent'),
-              states('sensor.current_humidity_dehumidifier')
-            ] | reject('in', ['unavailable', 'unknown']) | list | length > 0 }}
+            {% set ns = namespace(n=0) %}
+            {% for s in states.sensor if s.attributes.device_class == 'humidity'
+                  and s.state not in ['unknown', 'unavailable'] %}
+              {% if area_id(s.entity_id) == 'tent'
+                    and 'moisture' not in s.entity_id
+                    and 'outdoor' not in s.entity_id
+                    and 'sys_irrigation' not in labels(s.entity_id) %}
+                {% set ns.n = ns.n + 1 %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.n > 0 }}
 
         - name: "Tent Average Temperature"
           unique_id: tent_average_temperature
@@ -570,15 +582,26 @@ grow_tent:
           state_class: measurement
           icon: mdi:gauge
           state: >
-            {% set sensors = [
-              states('sensor.canopy_pressure_tent'),
-              states('sensor.flower_pressure_tent')
-            ] %}
-            {% set readings = sensors
-              | reject('in', ['unavailable', 'unknown'])
-              | map('float', default=none)
-              | reject('none')
-              | list %}
+            {# AUTO-DISCOVERY (2026-07-11): any sensor with device_class
+               pressure/atmospheric_pressure in area 'tent' joins
+               automatically. Excluded: the irrigation line-pressure
+               transducers (sys_irrigation label; they report psi and the
+               900-1100 hPa sane gate below is a second fence) and 'outdoor'
+               ids. Expects hPa — a future sensor reporting another unit
+               would be dropped by the sane-range gate, not converted. #}
+            {% set ns = namespace(vals=[]) %}
+            {% for s in states.sensor
+                  if s.attributes.device_class in ['pressure', 'atmospheric_pressure'] %}
+              {% if area_id(s.entity_id) == 'tent'
+                    and 'outdoor' not in s.entity_id
+                    and 'sys_irrigation' not in labels(s.entity_id) %}
+                {% set v = s.state | float(none) %}
+                {% if v is not none %}
+                  {% set ns.vals = ns.vals + [v] %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {% set readings = ns.vals %}
             {% if readings | length == 0 %}
               {{ none }}
             {% else %}
@@ -606,10 +629,17 @@ grow_tent:
               {% endif %}
             {% endif %}
           availability: >
-            {{ [
-              states('sensor.canopy_pressure_tent'),
-              states('sensor.flower_pressure_tent')
-            ] | reject('in', ['unavailable', 'unknown']) | list | length > 0 }}
+            {% set ns = namespace(n=0) %}
+            {% for s in states.sensor
+                  if s.attributes.device_class in ['pressure', 'atmospheric_pressure']
+                  and s.state not in ['unknown', 'unavailable'] %}
+              {% if area_id(s.entity_id) == 'tent'
+                    and 'outdoor' not in s.entity_id
+                    and 'sys_irrigation' not in labels(s.entity_id) %}
+                {% set ns.n = ns.n + 1 %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.n > 0 }}
 
     - binary_sensor:
         - name: "Climate OK"
