@@ -68,7 +68,6 @@ grow_tent:
       min: 30
       max: 90
       step: 1
-      initial: 65
       unit_of_measurement: "%"
       icon: mdi:water-percent
 
@@ -77,7 +76,6 @@ grow_tent:
       min: 2
       max: 15
       step: 1
-      initial: 5
       unit_of_measurement: "%"
       icon: mdi:arrow-expand-vertical
 
@@ -86,7 +84,6 @@ grow_tent:
       min: 20
       max: 80
       step: 1
-      initial: 40
       unit_of_measurement: "%"
       icon: mdi:arrow-collapse-down
 
@@ -95,7 +92,6 @@ grow_tent:
       min: 30
       max: 95
       step: 1
-      initial: 75
       unit_of_measurement: "%"
       icon: mdi:arrow-collapse-up
 
@@ -105,7 +101,6 @@ grow_tent:
       min: 15
       max: 30
       step: 0.5
-      initial: 23
       unit_of_measurement: "°C"
       icon: mdi:thermometer-high
 
@@ -114,7 +109,6 @@ grow_tent:
       min: 15
       max: 25
       step: 0.5
-      initial: 20
       unit_of_measurement: "°C"
       icon: mdi:thermometer-low
 
@@ -123,7 +117,6 @@ grow_tent:
       min: 1
       max: 100
       step: 1
-      initial: 60
       unit_of_measurement: "%"
       icon: mdi:fan
 
@@ -132,7 +125,6 @@ grow_tent:
       min: 1
       max: 100
       step: 1
-      initial: 30
       unit_of_measurement: "%"
       icon: mdi:fan
 
@@ -142,7 +134,6 @@ grow_tent:
       min: 0.2
       max: 2.0
       step: 0.05
-      initial: 1.0
       unit_of_measurement: "kPa"
       icon: mdi:cloud-outline
 
@@ -151,7 +142,6 @@ grow_tent:
       min: 0.2
       max: 2.0
       step: 0.05
-      initial: 0.8
       unit_of_measurement: "kPa"
       icon: mdi:cloud-outline
 
@@ -160,7 +150,6 @@ grow_tent:
       min: 0.1
       max: 0.5
       step: 0.05
-      initial: 0.3
       unit_of_measurement: "kPa"
       icon: mdi:arrow-expand-horizontal
 
@@ -179,7 +168,6 @@ grow_tent:
       min: 0
       max: 30
       step: 1
-      initial: 5
       unit_of_measurement: "min"
       icon: mdi:timer-cog-outline
     # Climate day mode flips this many minutes before lights actually toggle,
@@ -201,7 +189,6 @@ grow_tent:
       min: 1
       max: 10
       step: 0.5
-      initial: 3
       unit_of_measurement: "°C"
       icon: mdi:thermometer-alert
     # Alert when max - min of canopy / flower / AC / camera temp sensors
@@ -212,7 +199,6 @@ grow_tent:
       min: 5
       max: 30
       step: 1
-      initial: 15
       unit_of_measurement: "%"
       icon: mdi:water-alert
     # Alert when max - min of canopy / flower / AC / dehumidifier RH sensors
@@ -300,7 +286,6 @@ grow_tent:
         - down-mid
         - down
         - swing
-      initial: middle
       icon: mdi:pan-vertical
 
     ac_night_vertical:
@@ -313,7 +298,6 @@ grow_tent:
         - down-mid
         - down
         - swing
-      initial: up
       icon: mdi:pan-vertical
 
     ac_day_horizontal:
@@ -326,7 +310,6 @@ grow_tent:
         - right-mid
         - right
         - swing
-      initial: swing
       icon: mdi:pan-horizontal
 
     ac_night_horizontal:
@@ -339,7 +322,6 @@ grow_tent:
         - right-mid
         - right
         - swing
-      initial: middle
       icon: mdi:pan-horizontal
 
     ac_day_wind_mode:
@@ -349,7 +331,6 @@ grow_tent:
         - natural
         - indirect
         - breezeless
-      initial: normal
       icon: mdi:weather-windy
 
     ac_night_wind_mode:
@@ -359,7 +340,6 @@ grow_tent:
         - natural
         - indirect
         - breezeless
-      initial: breezeless
       icon: mdi:weather-windy
 
     ac_day_power_mode:
@@ -369,7 +349,6 @@ grow_tent:
         - eco
         - sleep
         - boost
-      initial: normal
       icon: mdi:lightning-bolt
 
     ac_night_power_mode:
@@ -379,7 +358,6 @@ grow_tent:
         - eco
         - sleep
         - boost
-      initial: eco
       icon: mdi:lightning-bolt
 
 # Modern template sensors
