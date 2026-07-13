@@ -96,3 +96,128 @@
         {% if cur is none %}{{ prev if prev is not none }}
         {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
         {% else %}{{ [prev, cur] | min | round(1) }}{% endif %}
+
+# --- grow-tent-env air sensors (added 2026-07-13, replacing the old Canopy/Flower) ---
+- trigger:
+    - trigger: state
+      entity_id: sensor.grow_tent_environment_lights_temperature
+    - trigger: time
+      at: "00:00:00"
+  sensor:
+    - name: "Lights Temperature Today Max"
+      unique_id: lights_temperature_today_max
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:thermometer-chevron-up
+      state: >
+        {% set cur = states('sensor.grow_tent_environment_lights_temperature') | float(none) %}
+        {% set prev = this.state | float(none) %}
+        {% if cur is none %}{{ prev if prev is not none }}
+        {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
+        {% else %}{{ [prev, cur] | max | round(1) }}{% endif %}
+    - name: "Lights Temperature Today Min"
+      unique_id: lights_temperature_today_min
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:thermometer-chevron-down
+      state: >
+        {% set cur = states('sensor.grow_tent_environment_lights_temperature') | float(none) %}
+        {% set prev = this.state | float(none) %}
+        {% if cur is none %}{{ prev if prev is not none }}
+        {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
+        {% else %}{{ [prev, cur] | min | round(1) }}{% endif %}
+
+- trigger:
+    - trigger: state
+      entity_id: sensor.grow_tent_environment_controller_temperature
+    - trigger: time
+      at: "00:00:00"
+  sensor:
+    - name: "Controller Temperature Today Max"
+      unique_id: controller_temperature_today_max
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:thermometer-chevron-up
+      state: >
+        {% set cur = states('sensor.grow_tent_environment_controller_temperature') | float(none) %}
+        {% set prev = this.state | float(none) %}
+        {% if cur is none %}{{ prev if prev is not none }}
+        {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
+        {% else %}{{ [prev, cur] | max | round(1) }}{% endif %}
+    - name: "Controller Temperature Today Min"
+      unique_id: controller_temperature_today_min
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:thermometer-chevron-down
+      state: >
+        {% set cur = states('sensor.grow_tent_environment_controller_temperature') | float(none) %}
+        {% set prev = this.state | float(none) %}
+        {% if cur is none %}{{ prev if prev is not none }}
+        {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
+        {% else %}{{ [prev, cur] | min | round(1) }}{% endif %}
+
+- trigger:
+    - trigger: state
+      entity_id: sensor.grow_tent_environment_top_canopy_temperature
+    - trigger: time
+      at: "00:00:00"
+  sensor:
+    - name: "Top Canopy Temperature Today Max"
+      unique_id: top_canopy_temperature_today_max
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:thermometer-chevron-up
+      state: >
+        {% set cur = states('sensor.grow_tent_environment_top_canopy_temperature') | float(none) %}
+        {% set prev = this.state | float(none) %}
+        {% if cur is none %}{{ prev if prev is not none }}
+        {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
+        {% else %}{{ [prev, cur] | max | round(1) }}{% endif %}
+    - name: "Top Canopy Temperature Today Min"
+      unique_id: top_canopy_temperature_today_min
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:thermometer-chevron-down
+      state: >
+        {% set cur = states('sensor.grow_tent_environment_top_canopy_temperature') | float(none) %}
+        {% set prev = this.state | float(none) %}
+        {% if cur is none %}{{ prev if prev is not none }}
+        {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
+        {% else %}{{ [prev, cur] | min | round(1) }}{% endif %}
+
+- trigger:
+    - trigger: state
+      entity_id: sensor.grow_tent_environment_mid_canopy_temperature
+    - trigger: time
+      at: "00:00:00"
+  sensor:
+    - name: "Mid Canopy Temperature Today Max"
+      unique_id: mid_canopy_temperature_today_max
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:thermometer-chevron-up
+      state: >
+        {% set cur = states('sensor.grow_tent_environment_mid_canopy_temperature') | float(none) %}
+        {% set prev = this.state | float(none) %}
+        {% if cur is none %}{{ prev if prev is not none }}
+        {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
+        {% else %}{{ [prev, cur] | max | round(1) }}{% endif %}
+    - name: "Mid Canopy Temperature Today Min"
+      unique_id: mid_canopy_temperature_today_min
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:thermometer-chevron-down
+      state: >
+        {% set cur = states('sensor.grow_tent_environment_mid_canopy_temperature') | float(none) %}
+        {% set prev = this.state | float(none) %}
+        {% if cur is none %}{{ prev if prev is not none }}
+        {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
+        {% else %}{{ [prev, cur] | min | round(1) }}{% endif %}
