@@ -1,0 +1,51 @@
+tower_irrigation_reservoir:
+  automation:
+    - id: alert_tower_reservoir_medium_dry
+      alias: "Alert — Tower Reservoir Medium Dry"
+      description: >
+        Single push when the tower's early-warning ("medium") level sensor
+        first goes dry (~1/3 tank remaining). Light-duty: no repeat, no
+        persistent_notification — an early heads-up, not the safety-critical
+        condition (that's LOW, handled in packages/tower/irrigation/safety.yaml).
+        1-minute for: debounces sensor chatter right at the threshold.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.grow_tower_water_level_medium
+          to: "off"
+          for: "00:01:00"
+      actions:
+        - action: notify.send_message
+          target:
+            entity_id: notify.brenton_s_phone
+          data:
+            title: "Grow tower: reservoir getting low"
+            message: >-
+              Water level MEDIUM sensor reads dry (~1/3 tank remaining).
+              Plan a refill soon — pump is still running normally.
+      mode: single
+
+    - id: alert_tower_reservoir_low_dry_repeat
+      alias: "Alert — Tower Reservoir Low Dry (Repeat)"
+      description: >
+        Repeats push every 30 minutes while the critical ("low") level
+        sensor stays dry. Mirrors tent's alert_feed_reservoir_dry_repeat
+        (packages/tent/irrigation/reservoirs.yaml) — a plain state condition
+        here instead of numeric_state, since the tower only has a binary
+        dry/wet sensor.
+      triggers:
+        - trigger: time_pattern
+          minutes: /30
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.grow_tower_water_level_low
+          state: "off"
+      actions:
+        - action: notify.send_message
+          target:
+            entity_id: notify.brenton_s_phone
+          data:
+            title: "Grow tower: reservoir still critically low"
+            message: >-
+              Water level LOW sensor is still dry — pump remains blocked by
+              the safety interlock. Refill needed.
+      mode: single

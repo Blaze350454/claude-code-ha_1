@@ -1,0 +1,95 @@
+tower_control_alert_banner:
+
+  input_boolean:
+    tower_alert_details_open:
+      name: "Tower Alert Details Open"
+      icon: mdi:chevron-down
+
+  input_datetime:
+    tower_alert_snooze_until:
+      name: "Tower Alert Snooze Until"
+      has_date: true
+      has_time: true
+      initial: "2000-01-01 00:00:00"
+
+  input_text:
+    tower_alert_snoozed_keys:
+      name: "Tower Alert Snoozed Keys"
+      max: 255
+      initial: ""
+
+  input_select:
+    tower_alert_snooze_duration:
+      name: "Tower Alert Snooze Duration"
+      icon: mdi:timer-sand
+      options:
+        - "15 minutes"
+        - "30 minutes"
+        - "1 hour"
+        - "2 hours"
+        - "4 hours"
+        - "8 hours"
+        - "24 hours"
+      initial: "1 hour"
+
+  template:
+    - sensor:
+        - name: "Tower Error List"
+          unique_id: tower_error_list
+          icon: mdi:alert-circle
+          state: >
+            {% set ns = namespace(e=[]) %}
+            {% if is_state('binary_sensor.grow_tower_water_level_low','off') %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% if is_state('binary_sensor.grow_tower_water_level_medium','off') %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {{ ns.e | length }}
+          attributes:
+            errors: >
+              {% set ns = namespace(e=[]) %}
+              {% if is_state('binary_sensor.grow_tower_water_level_low','off') %}{% set ns.e = ns.e + [{'key':'tower_low_dry','msg':'Grow tower reservoir CRITICALLY LOW — pump stopped'}] %}{% endif %}
+              {% if is_state('binary_sensor.grow_tower_water_level_medium','off') %}{% set ns.e = ns.e + [{'key':'tower_medium_dry','msg':'Grow tower reservoir low (~1/3 mark) — refill soon'}] %}{% endif %}
+              {{ ns.e }}
+
+    - binary_sensor:
+        - name: "Tower Alert Banner"
+          unique_id: tower_alert_banner
+          device_class: problem
+          icon: mdi:alert
+          state: >
+            {% set errs = state_attr('sensor.tower_error_list','errors') or [] %}
+            {% set active = errs | map(attribute='key') | list %}
+            {% set raw = states('input_text.tower_alert_snoozed_keys') %}
+            {% set raw = '' if raw in ['unknown','unavailable'] else raw %}
+            {% set snz = raw.split(',') | reject('eq','') | list %}
+            {% set until = states('input_datetime.tower_alert_snooze_until') %}
+            {% set until_ts = as_timestamp(until, 0) %}
+            {% set snoozing = now().timestamp() <= until_ts %}
+            {% set fresh = active | reject('in', snz) | list %}
+            {{ (active | length > 0) and ((not snoozing) or (fresh | length > 0)) }}
+          attributes:
+            count: "{{ (state_attr('sensor.tower_error_list','errors') or []) | length }}"
+
+  script:
+    tower_alert_snooze:
+      alias: "Tower Alert — Snooze Current Errors"
+      icon: mdi:bell-off
+      mode: restart
+      sequence:
+        - variables:
+            dur_min: >
+              {% set m = {'15 minutes':15,'30 minutes':30,'1 hour':60,'2 hours':120,'4 hours':240,'8 hours':480,'24 hours':1440} %}
+              {{ m.get(states('input_select.tower_alert_snooze_duration'), 60) }}
+            keys: >
+              {{ (state_attr('sensor.tower_error_list','errors') or []) | map(attribute='key') | join(',') }}
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.tower_alert_snooze_until
+          data:
+            datetime: "{{ (now() + timedelta(minutes=dur_min | int)).strftime('%Y-%m-%d %H:%M:%S') }}"
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.tower_alert_snoozed_keys
+          data:
+            value: "{{ keys }}"
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.tower_alert_details_open
