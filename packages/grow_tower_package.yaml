@@ -58,6 +58,18 @@ grow_tower:
       # Default off (no `initial:`) — plants are still seeds in trays; flip
       # this on manually once transplanted into the tower.
 
+    tower_pump_defaults_seeded:
+      name: "Tower Pump Defaults Seeded"
+      icon: mdi:database-check-outline
+      # Internal marker, not meant for daily use. Defaults off (no `initial:`,
+      # matching input_boolean's real default-off behavior). The seeding
+      # automation in packages/tower/irrigation/pump.yaml flips this on the
+      # first time it runs and never touches the sliders again afterward —
+      # checking THIS boolean rather than "is the slider still at its default
+      # value" is required because input_number entities do NOT start at
+      # `unknown` when no `initial:` is set, they start at their `min:` value,
+      # which is indistinguishable from a value the user genuinely chose.
+
   template:
     # Derives Day/Night purely from sun.sun's next_setting/next_rising
     # (astronomically computed, no history dependency) + the two delay
