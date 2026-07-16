@@ -1,0 +1,94 @@
+grow_tower:
+  input_number:
+    tower_day_on_seconds:
+      name: "Tower Day Watering Duration"
+      min: 5
+      max: 300
+      step: 5
+      unit_of_measurement: "s"
+      icon: mdi:timer-outline
+      # No `initial:` — see tower_irrigation_seed_default_slider_values in
+      # packages/tower/irrigation/pump.yaml for why (re-applying on every HA
+      # restart would wipe dashboard tuning on the next config-push deploy).
+
+    tower_day_off_minutes:
+      name: "Tower Day Rest Interval"
+      min: 1
+      max: 90
+      step: 1
+      unit_of_measurement: "min"
+      icon: mdi:timer-sand
+
+    tower_night_on_seconds:
+      name: "Tower Night Watering Duration"
+      min: 5
+      max: 300
+      step: 5
+      unit_of_measurement: "s"
+      icon: mdi:timer-outline
+
+    tower_night_off_minutes:
+      name: "Tower Night Rest Interval"
+      min: 1
+      max: 180
+      step: 1
+      unit_of_measurement: "min"
+      icon: mdi:timer-sand
+
+    tower_sunset_delay_minutes:
+      name: "Tower Sunset-to-Night Delay"
+      min: 0
+      max: 120
+      step: 5
+      unit_of_measurement: "min"
+      icon: mdi:weather-sunset-down
+
+    tower_sunrise_delay_minutes:
+      name: "Tower Sunrise-to-Day Delay"
+      min: 0
+      max: 120
+      step: 5
+      unit_of_measurement: "min"
+      icon: mdi:weather-sunset-up
+
+  input_boolean:
+    tower_pump_automation_enabled:
+      name: "Enable Tower Pump Automation"
+      icon: mdi:auto-fix
+      # Default off (no `initial:`) — plants are still seeds in trays; flip
+      # this on manually once transplanted into the tower.
+
+  template:
+    # Derives Day/Night purely from sun.sun's next_setting/next_rising
+    # (astronomically computed, no history dependency) + the two delay
+    # sliders — recomputed every minute, so it self-heals on every restart
+    # instead of depending on a stored flag that could miss a sunset/sunrise
+    # event if HA happened to be down at that moment.
+    - trigger:
+        - trigger: time_pattern
+          minutes: "/1"
+        - trigger: state
+          entity_id:
+            - input_number.tower_sunset_delay_minutes
+            - input_number.tower_sunrise_delay_minutes
+      binary_sensor:
+        - name: "Tower Night Mode"
+          unique_id: tower_night_mode
+          icon: mdi:weather-night
+          state: >
+            {% set next_set = as_timestamp(state_attr('sun.sun', 'next_setting'), none) %}
+            {% set next_rise = as_timestamp(state_attr('sun.sun', 'next_rising'), none) %}
+            {% if next_set is none or next_rise is none %}
+              {{ is_state('sun.sun', 'below_horizon') }}
+            {% else %}
+              {% set day_s = 86400 %}
+              {% set since_sunset = day_s - ((next_set - now().timestamp()) % day_s) %}
+              {% set since_sunrise = day_s - ((next_rise - now().timestamp()) % day_s) %}
+              {% set sunset_delay = (states('input_number.tower_sunset_delay_minutes') | float(30)) * 60 %}
+              {% set sunrise_delay = (states('input_number.tower_sunrise_delay_minutes') | float(30)) * 60 %}
+              {% if since_sunset < since_sunrise %}
+                {{ since_sunset >= sunset_delay }}
+              {% else %}
+                {{ not (since_sunrise >= sunrise_delay) }}
+              {% endif %}
+            {% endif %}

@@ -1,0 +1,169 @@
+tower_irrigation_pump:
+  script:
+    tower_irrigation_pump_cycle:
+      alias: "Tower Irrigation — Pump Duty Cycle"
+      description: >
+        Recurring on/off duty cycle for the tower's single recirculating pump.
+        Repeats while the master toggle (input_boolean.tower_pump_automation_enabled)
+        is on: each iteration re-checks the dry interlock (never attempts to turn
+        the pump on while binary_sensor.grow_tower_water_level_low reads dry),
+        then reads the current profile (binary_sensor.tower_night_mode) fresh so
+        a day/night transition mid-loop is picked up on the next iteration.
+        Durations are re-read from the input_number sliders every iteration.
+        mode: restart so a duplicate start request cleanly restarts the loop
+        rather than stacking a second instance.
+
+        Known limitation: a day<->night flip that lands mid-wait isn't applied
+        until the current on/off pair finishes (bounded by the longest
+        configured interval). Acceptable per design — the dry interlock and
+        the master-toggle stop are handled by separate, immediately-reacting
+        automations specifically because that gap is not acceptable for those
+        two conditions.
+      mode: restart
+      sequence:
+        - repeat:
+            while:
+              - condition: state
+                entity_id: input_boolean.tower_pump_automation_enabled
+                state: "on"
+            sequence:
+              - if:
+                  - condition: state
+                    entity_id: binary_sensor.grow_tower_water_level_low
+                    state: "off"   # off = dry (device_class moisture: on = wet)
+                then:
+                  - delay:
+                      seconds: 30
+                else:
+                  - variables:
+                      on_seconds: >
+                        {% if is_state('binary_sensor.tower_night_mode', 'on') %}
+                          {{ states('input_number.tower_night_on_seconds') | float(90) }}
+                        {% else %}
+                          {{ states('input_number.tower_day_on_seconds') | float(120) }}
+                        {% endif %}
+                      off_minutes: >
+                        {% if is_state('binary_sensor.tower_night_mode', 'on') %}
+                          {{ states('input_number.tower_night_off_minutes') | float(60) }}
+                        {% else %}
+                          {{ states('input_number.tower_day_off_minutes') | float(20) }}
+                        {% endif %}
+                  - action: switch.turn_on
+                    target:
+                      entity_id: switch.grow_tower_water_pump
+                  - delay:
+                      seconds: "{{ on_seconds }}"
+                  - action: switch.turn_off
+                    target:
+                      entity_id: switch.grow_tower_water_pump
+                  - delay:
+                      minutes: "{{ off_minutes }}"
+      icon: mdi:water-pump
+
+  automation:
+    - id: tower_irrigation_pump_enable_toggle
+      alias: "Tower Irrigation — Master Enable Toggle"
+      description: >
+        Starts or stops the duty-cycle script the instant the master toggle
+        changes, rather than waiting for the script's own while: loop to
+        notice on its next iteration boundary (which could be up to ~3h away
+        during a long night rest interval). OFF also force-turns-off the pump
+        switch directly, so "no-op while off" is actually immediate. Mirrors
+        tent's toggle_kill_tent_irrigation_automations pattern.
+      triggers:
+        - trigger: state
+          entity_id: input_boolean.tower_pump_automation_enabled
+      actions:
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.tower_pump_automation_enabled
+                  state: "on"
+              sequence:
+                - action: script.turn_on
+                  target:
+                    entity_id: script.tower_irrigation_pump_cycle
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.tower_pump_automation_enabled
+                  state: "off"
+              sequence:
+                - action: script.turn_off
+                  target:
+                    entity_id: script.tower_irrigation_pump_cycle
+                - action: switch.turn_off
+                  target:
+                    entity_id: switch.grow_tower_water_pump
+      mode: single
+
+    - id: tower_irrigation_startup_recovery
+      alias: "Tower Irrigation — Startup Recovery"
+      description: >
+        Forces the pump off on every HA start (covers a restart that happened
+        mid on-duration, which would otherwise leave the switch stuck on with
+        no script left running to turn it off), then re-arms the duty-cycle
+        script only if the master toggle is already on. Mirrors
+        tent_irrigation_startup_recovery in packages/tent/irrigation/safety.yaml.
+      triggers:
+        - trigger: homeassistant
+          event: start
+      actions:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.grow_tower_water_pump
+        - action: script.turn_off
+          target:
+            entity_id: script.tower_irrigation_pump_cycle
+        - if:
+            - condition: state
+              entity_id: input_boolean.tower_pump_automation_enabled
+              state: "on"
+          then:
+            - action: script.turn_on
+              target:
+                entity_id: script.tower_irrigation_pump_cycle
+      mode: single
+
+    - id: tower_irrigation_seed_default_slider_values
+      alias: "Tower Irrigation — Seed Default Slider Values"
+      description: >
+        One-time seeding of sensible non-blank defaults for the six timing
+        sliders in grow_tower_package.yaml. Those sliders deliberately carry
+        no `initial:` (which would re-apply on every config-push restart and
+        silently overwrite any dashboard tuning). Without `initial:`, a
+        genuinely new input_number instead starts in state `unknown`. This
+        automation runs on every HA start but only WRITES a value the first
+        time a given slider is still unknown/unavailable — a permanent no-op
+        after that first write, whether it was this automation or the user
+        that set it.
+      triggers:
+        - trigger: homeassistant
+          event: start
+      actions:
+        - repeat:
+            for_each:
+              - entity_id: input_number.tower_day_on_seconds
+                value: 120
+              - entity_id: input_number.tower_day_off_minutes
+                value: 20
+              - entity_id: input_number.tower_night_on_seconds
+                value: 90
+              - entity_id: input_number.tower_night_off_minutes
+                value: 60
+              - entity_id: input_number.tower_sunset_delay_minutes
+                value: 30
+              - entity_id: input_number.tower_sunrise_delay_minutes
+                value: 30
+            sequence:
+              - if:
+                  - condition: template
+                    value_template: >
+                      {{ states(repeat.item.entity_id)
+                         in ['unknown', 'unavailable', 'none', ''] }}
+                then:
+                  - action: input_number.set_value
+                    target:
+                      entity_id: "{{ repeat.item.entity_id }}"
+                    data:
+                      value: "{{ repeat.item.value }}"
+      mode: single

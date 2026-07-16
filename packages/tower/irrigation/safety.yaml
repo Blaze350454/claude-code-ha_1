@@ -1,0 +1,40 @@
+tower_irrigation_safety:
+  automation:
+    - id: tower_irrigation_block_pump_when_dry
+      alias: "Tower Irrigation — Block Pump When Reservoir Dry"
+      description: >
+        Force-stops the pump whenever the reservoir is dry — either because
+        the pump was turned on while already dry, or because the reservoir
+        drained while it was running. Mirrors tent's
+        tent_irrigation_block_feed_when_reservoir_dry (packages/tent/irrigation/
+        safety.yaml) simplified to this tower's single pump/single sensor
+        (no separate feed/flush loops). Double trigger (equipment turned on
+        OR sensor turned dry) with a re-check condition on both, so it's an
+        independent backstop for whatever script.tower_irrigation_pump_cycle
+        is doing — this still force-stops the pump even if the switch is ever
+        driven from outside that script (manual dashboard toggle, etc).
+
+        binary_sensor.grow_tower_water_level_low is device_class moisture:
+        'on' = wet (water present), 'off' = dry. No notify.* call yet — add
+        one to the actions below (e.g. notify.mobile_app_<device>) once phone/
+        dashboard notifications are wanted for the tower; nothing else needs
+        to change to support that.
+      triggers:
+        - trigger: state
+          entity_id: switch.grow_tower_water_pump
+          to: "on"
+        - trigger: state
+          entity_id: binary_sensor.grow_tower_water_level_low
+          to: "off"
+      conditions:
+        - condition: state
+          entity_id: binary_sensor.grow_tower_water_level_low
+          state: "off"
+        - condition: state
+          entity_id: switch.grow_tower_water_pump
+          state: "on"
+      actions:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.grow_tower_water_pump
+      mode: single
