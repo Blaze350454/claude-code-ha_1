@@ -60,8 +60,13 @@ tower_control_alert_banner:
             {% set raw = states('input_text.tower_alert_snoozed_keys') %}
             {% set raw = '' if raw in ['unknown','unavailable'] else raw %}
             {% set snz = raw.split(',') | reject('eq','') | list %}
-            {% set until = states('input_datetime.tower_alert_snooze_until') %}
-            {% set until_ts = as_timestamp(until, 0) %}
+            {# as_timestamp() on the raw naive string misparses it as UTC even
+               though input_datetime stores/displays LOCAL time - on a
+               UTC-3 instance that silently makes every snooze read as
+               already-expired the instant it's set. The entity's own
+               `timestamp` attribute is already a correct epoch, no parsing
+               needed. #}
+            {% set until_ts = state_attr('input_datetime.tower_alert_snooze_until', 'timestamp') | float(0) %}
             {% set snoozing = now().timestamp() <= until_ts %}
             {% set fresh = active | reject('in', snz) | list %}
             {{ (active | length > 0) and ((not snoozing) or (fresh | length > 0)) }}
