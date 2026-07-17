@@ -82,7 +82,7 @@ Device: `tent-irrigation-controller`
 | Flow Rate Irrigation Tent | GPIO32 (pulse) | Flow rate (L/min) — sensor range: 0.5–20 L/min — entity: `sensor.flow_rate_irrigation_tent` |
 | Flow Total Irrigation Tent | GPIO32 (pulse) | Cumulative volume (L) — entity: `sensor.flow_total_irrigation_tent` |
 
-**Fault flag (template binary_sensor):** `binary_sensor.pressure_sensor_fault_irrigation_tent` (`device_class: problem`) — ON when a pressure transducer reads below its electrical floor (disconnected/unpowered, raw ADC < 0.20 V) or over-range (> 32 psi). Informational only; HA decides what to do.
+**Dead-transducer floor (firmware, 2026-07-17):** each pressure sensor averages the raw ADC voltage (5-sample window at 2 s, published every 2 s) and publishes **NAN → `unknown` in HA** when the settled voltage is below 0.20 V — i.e. the transducer is disconnected, unpowered, or failed (a healthy one outputs 0.333 V at 0 psi). Before this, a dead transducer read a believable flat `0.0 psi` (the pre-reg transducer did exactly that for weeks). This replaces the earlier `binary_sensor.pressure_sensor_fault_irrigation_tent` badge, which had been removed from firmware. Informational only; no automation acts on pressure.
 
 ### Valves (solenoid control)
 | Entity | GPIO | Description |
@@ -118,9 +118,11 @@ Device: `tent-irrigation-controller`
 > - Per-valve max-on watchdog - force-closes any valve open past `valve_max_on_time` (40 min).
 > - `api: reboot_timeout: 10min` - reboots (outputs default OFF -> valves closed) if HA is unreachable.
 > - Fill-full interlocks - `Feed Full` / `Flush Full` float trips immediately close the matching fill valve.
-> - `Pressure Sensor Fault` flag - disconnected / over-range transducer detection (see Sensors above).
+> - Pressure sensors publish NAN (HA `unknown`) below the 0.20 V electrical floor instead of
+>   a fake 0 psi (2026-07-17; supersedes the removed `Pressure Sensor Fault` flag).
 >
 > Pressure transfer function: `psi = (V - 0.333) / (3.0 - 0.333) * 30` (0-30 psi sensor).
+> Raw volts are averaged (5 x 2 s window) BEFORE conversion; below 0.20 V the sensor reports NAN.
 > Flow K-factor: 62.72 pulses/L (bucket test 2026-05-10).
 
 ---
