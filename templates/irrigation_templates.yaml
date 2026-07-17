@@ -43,37 +43,72 @@
       icon: mdi:pulse
       state: "{{ states('sensor.flow_rate_irrigation_tent') | float(0) | round(2) }}"
 
+# Pressure latches got a zombie-latch guard 2026-07-17: since the firmware NAN
+# floor, a dead/absent transducer parks its source sensor at `unknown`, the
+# reading trigger never fires again, and the latch would hold its last number
+# forever (Last Feed Pressure Pre showed a stale 31.5 for weeks). The `dead`
+# trigger clears the latch once the source has been non-numeric for 12 h
+# straight -- that spans several feeds at the 4/day cadence, so a healthy
+# post-reg (which is `unknown` between feeds BY DESIGN, numeric while pumping)
+# never trips it. Bump the `for:` if the schedule ever slows below 2 feeds/day.
+# The pump-on gate moved from `condition:` into the state template so the dead
+# trigger can fire while pumps are off; mid-feed non-numeric blips (post-reg
+# dipping under the 0.20 V firmware floor) HOLD the latch instead of wiping it.
 - trigger:
     - trigger: state
       entity_id: sensor.pressure_post_regulator_irrigation_tent
-  condition:
-    - condition: template
-      value_template: >
-        {{ is_state('switch.feed_pump_irrigation_tent', 'on')
-           or is_state('switch.flush_pump_irrigation_tent', 'on') }}
+      id: reading
+    - trigger: state
+      entity_id: sensor.pressure_post_regulator_irrigation_tent
+      to:
+        - unknown
+        - unavailable
+      for: "12:00:00"
+      id: dead
   sensor:
     - name: "Last Feed Pressure Post"
       unique_id: last_feed_pressure_post
       unit_of_measurement: "psi"
       state_class: measurement
       icon: mdi:gauge
-      state: "{{ states('sensor.pressure_post_regulator_irrigation_tent') | float(0) | round(1) }}"
+      state: >
+        {% if trigger.id == 'dead' %}
+          {{ none }}
+        {% elif (is_state('switch.feed_pump_irrigation_tent', 'on')
+                 or is_state('switch.flush_pump_irrigation_tent', 'on'))
+                and has_value('sensor.pressure_post_regulator_irrigation_tent') %}
+          {{ states('sensor.pressure_post_regulator_irrigation_tent') | float(0) | round(1) }}
+        {% else %}
+          {{ this.state }}
+        {% endif %}
 
 - trigger:
     - trigger: state
       entity_id: sensor.pressure_pre_regulator_irrigation_tent
-  condition:
-    - condition: template
-      value_template: >
-        {{ is_state('switch.feed_pump_irrigation_tent', 'on')
-           or is_state('switch.flush_pump_irrigation_tent', 'on') }}
+      id: reading
+    - trigger: state
+      entity_id: sensor.pressure_pre_regulator_irrigation_tent
+      to:
+        - unknown
+        - unavailable
+      for: "12:00:00"
+      id: dead
   sensor:
     - name: "Last Feed Pressure Pre"
       unique_id: last_feed_pressure_pre
       unit_of_measurement: "psi"
       state_class: measurement
       icon: mdi:gauge
-      state: "{{ states('sensor.pressure_pre_regulator_irrigation_tent') | float(0) | round(1) }}"
+      state: >
+        {% if trigger.id == 'dead' %}
+          {{ none }}
+        {% elif (is_state('switch.feed_pump_irrigation_tent', 'on')
+                 or is_state('switch.flush_pump_irrigation_tent', 'on'))
+                and has_value('sensor.pressure_pre_regulator_irrigation_tent') %}
+          {{ states('sensor.pressure_pre_regulator_irrigation_tent') | float(0) | round(1) }}
+        {% else %}
+          {{ this.state }}
+        {% endif %}
 
 # --- Reservoir levels: agitation freeze + full-float latch
 #     (2026-06-24; stir pumps added as a freeze source 2026-06-25) ---
