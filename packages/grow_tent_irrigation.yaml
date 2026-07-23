@@ -462,6 +462,20 @@ grow_tent_irrigation:
       name: "Irrigation Tent — All Off"
       icon: mdi:power-off
 
+    # Stops only water DELIVERY to the table (feed/flush pumps + feed/flush/drain
+    # valves) and aborts any running feed/flush. Reservoir fills + table drain + air
+    # + stir keep running. Reacted to by "Toggle — Irrigation Tent Stop Water".
+    irrigation_tent_kill_water:
+      name: "Irrigation Tent — Stop Water"
+      icon: mdi:water-off
+
+    # Stops only reservoir AIR + STIR (air pump + both stir pumps) and disables the
+    # air/stir automations. Water plumbing is untouched. Reacted to by
+    # "Toggle — Irrigation Tent Stop Air/Stir".
+    irrigation_tent_kill_aeration:
+      name: "Irrigation Tent — Stop Air/Stir"
+      icon: mdi:air-filter
+
     # On while a Feed Now is running; lets the Feed Now button act as a
     # toggle (second press cancels). Set/cleared by script.run_feed_now.
     feed_now_running:

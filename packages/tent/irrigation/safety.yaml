@@ -581,6 +581,7 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_table_drain_pump
                       - automation.tent_irrigation_watchdog
                       - automation.tent_irrigation_maintenance_cycle
+                      - automation.tent_irrigation_air_alternation
                 - action: script.turn_off
                   target:
                     entity_id:
@@ -608,6 +609,10 @@ tent_irrigation_safety:
                   entity_id: input_boolean.irrigation_tent_kill
                   state: 'off'
               sequence:
+                # Shared safety/scheduling automations always resume when All Off is
+                # released. Water and air/stir automations resume only if the matching
+                # scoped kill (Stop Water / Stop Air-Stir) is not still held, so a
+                # partial hold survives a STOP ALL press-and-release.
                 - action: automation.turn_on
                   target:
                     entity_id:
@@ -619,18 +624,148 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_block_flush_fill_when_reservoir_full
                       - automation.tent_irrigation_block_table_drain_pump_when_dry
                       - automation.tent_irrigation_daily_setup_at_lights_on
-                      - automation.tent_irrigation_feed_trigger
                       - automation.tent_irrigation_lights_off_cleanup
-                      - automation.tent_irrigation_night_pulses_veg
-                      - automation.tent_irrigation_night_pulses_flower
-                      - automation.tent_irrigation_re_enable_maintenance_on_enable
-                      - automation.tent_irrigation_pre_feed_air_stir_start
-                      - automation.tent_irrigation_pre_feed_air_stir_stop
                       - automation.tent_irrigation_startup_recovery
                       - automation.tent_irrigation_reconnect_valve_recovery
                       - automation.tent_irrigation_table_drain_pump
-                      - automation.tent_irrigation_maintenance_cycle
                       - automation.tent_irrigation_watchdog
+                - if:
+                    - condition: state
+                      entity_id: input_boolean.irrigation_tent_kill_water
+                      state: 'off'
+                  then:
+                    - action: automation.turn_on
+                      target:
+                        entity_id:
+                          - automation.tent_irrigation_feed_trigger
+                - if:
+                    - condition: state
+                      entity_id: input_boolean.irrigation_tent_kill_aeration
+                      state: 'off'
+                  then:
+                    - action: automation.turn_on
+                      target:
+                        entity_id:
+                          - automation.tent_irrigation_air_alternation
+                          - automation.tent_irrigation_maintenance_cycle
+                          - automation.tent_irrigation_night_pulses_veg
+                          - automation.tent_irrigation_night_pulses_flower
+                          - automation.tent_irrigation_re_enable_maintenance_on_enable
+                          - automation.tent_irrigation_pre_feed_air_stir_start
+                          - automation.tent_irrigation_pre_feed_air_stir_stop
+
+    # Scoped kill: stop only WATER delivery to the table. Feed/flush pumps off,
+    # feed/flush/drain valves closed, feed trigger disabled, any manual/scheduled
+    # feed or flush aborted. Reservoir fills, table drain, air and stir keep running.
+    # Off-branch re-enables the feed trigger only if STOP ALL isn't also held.
+    - alias: Toggle — Irrigation Tent Stop Water
+      id: toggle_irrigation_tent_stop_water
+      trigger:
+        - platform: state
+          entity_id: input_boolean.irrigation_tent_kill_water
+      action:
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.irrigation_tent_kill_water
+                  state: 'on'
+              sequence:
+                - action: automation.turn_off
+                  target:
+                    entity_id:
+                      - automation.tent_irrigation_feed_trigger
+                - action: script.turn_off
+                  target:
+                    entity_id:
+                      - script.tent_irrigation_advance_to_next_feed
+                      - script.run_feed_cycle
+                      - script.run_feed_now
+                      - script.run_flush_now
+                - action: input_boolean.turn_off
+                  target:
+                    entity_id:
+                      - input_boolean.feed_now_running
+                      - input_boolean.flush_now_running
+                - action: input_text.set_value
+                  target:
+                    entity_id: input_text.tent_irrigation_status
+                  data:
+                    value: Idle
+                - action: switch.turn_off
+                  target:
+                    entity_id:
+                      - switch.feed_pump_irrigation_tent
+                      - switch.flush_pump_irrigation_tent
+                - action: valve.close_valve
+                  target:
+                    entity_id:
+                      - valve.feed_valve_irrigation_tent
+                      - valve.flush_valve_irrigation_tent
+                      - valve.flush_drain_valve_irrigation_tent
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.irrigation_tent_kill_water
+                  state: 'off'
+                - condition: state
+                  entity_id: input_boolean.irrigation_tent_kill
+                  state: 'off'
+              sequence:
+                - action: automation.turn_on
+                  target:
+                    entity_id:
+                      - automation.tent_irrigation_feed_trigger
+      mode: single
+
+    # Scoped kill: stop only reservoir AIR + STIR. Air pump + both stir pumps off
+    # (via stop_alternating), and the air/stir automations disabled so nothing
+    # re-triggers them. Water plumbing is untouched. Off-branch re-enables the
+    # air/stir automations only if STOP ALL isn't also held.
+    - alias: Toggle — Irrigation Tent Stop Air/Stir
+      id: toggle_irrigation_tent_stop_aeration
+      trigger:
+        - platform: state
+          entity_id: input_boolean.irrigation_tent_kill_aeration
+      action:
+        - choose:
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.irrigation_tent_kill_aeration
+                  state: 'on'
+              sequence:
+                - action: automation.turn_off
+                  target:
+                    entity_id:
+                      - automation.tent_irrigation_air_alternation
+                      - automation.tent_irrigation_maintenance_cycle
+                      - automation.tent_irrigation_night_pulses_veg
+                      - automation.tent_irrigation_night_pulses_flower
+                      - automation.tent_irrigation_pre_feed_air_stir_start
+                      - automation.tent_irrigation_re_enable_maintenance_on_enable
+                - action: script.turn_off
+                  target:
+                    entity_id:
+                      - script.run_night_pulse
+                      - script.tent_air_burst
+                      - script.tent_stir_burst
+                - action: script.stop_alternating
+            - conditions:
+                - condition: state
+                  entity_id: input_boolean.irrigation_tent_kill_aeration
+                  state: 'off'
+                - condition: state
+                  entity_id: input_boolean.irrigation_tent_kill
+                  state: 'off'
+              sequence:
+                - action: automation.turn_on
+                  target:
+                    entity_id:
+                      - automation.tent_irrigation_air_alternation
+                      - automation.tent_irrigation_maintenance_cycle
+                      - automation.tent_irrigation_night_pulses_veg
+                      - automation.tent_irrigation_night_pulses_flower
+                      - automation.tent_irrigation_pre_feed_air_stir_start
+                      - automation.tent_irrigation_re_enable_maintenance_on_enable
+      mode: single
 
     - id: tent_irrigation_maintenance_cycle
       alias: Tent Irrigation — Maintenance Cycle
