@@ -35,34 +35,3 @@
         {% if cur is none %}{{ prev if prev is not none }}
         {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
         {% else %}{{ [prev, cur] | min | round(1) }}{% endif %}
-
-- trigger:
-    - trigger: state
-      entity_id: sensor.tent_average_pressure
-    - trigger: time
-      at: "00:00:00"
-  sensor:
-    - name: "Tent Average Pressure Today Max"
-      unique_id: tent_average_pressure_today_max
-      unit_of_measurement: "hPa"
-      device_class: pressure
-      state_class: measurement
-      icon: mdi:gauge-full
-      state: >
-        {% set cur = states('sensor.tent_average_pressure') | float(none) %}
-        {% set prev = this.state | float(none) %}
-        {% if cur is none %}{{ prev if prev is not none }}
-        {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
-        {% else %}{{ [prev, cur] | max | round(1) }}{% endif %}
-    - name: "Tent Average Pressure Today Min"
-      unique_id: tent_average_pressure_today_min
-      unit_of_measurement: "hPa"
-      device_class: pressure
-      state_class: measurement
-      icon: mdi:gauge-low
-      state: >
-        {% set cur = states('sensor.tent_average_pressure') | float(none) %}
-        {% set prev = this.state | float(none) %}
-        {% if cur is none %}{{ prev if prev is not none }}
-        {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
-        {% else %}{{ [prev, cur] | min | round(1) }}{% endif %}
