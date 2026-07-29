@@ -451,12 +451,16 @@ grow_tent:
                humidity in area 'tent' joins automatically. Excluded: soil /
                flood MOISTURE sensors ('moisture' in entity_id — they report
                device_class humidity too), anything labeled sys_irrigation,
-               and 'outdoor' ids. New air RH sensors just need the Tent area. #}
+               'outdoor' ids, and the SCD41's piggyback RH ('co2' in entity_id
+               — grow_tent_climate_tent_co2_humidity reads high; it is a CO2
+               sensor's internal element, not an air-quality RH probe).
+               New air RH sensors just need the Tent area. #}
             {% set ns = namespace(vals=[]) %}
             {% for s in states.sensor if s.attributes.device_class == 'humidity' %}
               {% if area_id(s.entity_id) == 'tent'
                     and 'moisture' not in s.entity_id
                     and 'outdoor' not in s.entity_id
+                    and 'co2' not in s.entity_id
                     and 'sys_irrigation' not in labels(s.entity_id) %}
                 {% set v = s.state | float(none) %}
                 {% if v is not none %}
@@ -498,6 +502,7 @@ grow_tent:
               {% if area_id(s.entity_id) == 'tent'
                     and 'moisture' not in s.entity_id
                     and 'outdoor' not in s.entity_id
+                    and 'co2' not in s.entity_id
                     and 'sys_irrigation' not in labels(s.entity_id) %}
                 {% set ns.n = ns.n + 1 %}
               {% endif %}
@@ -517,14 +522,17 @@ grow_tent:
                assign a new air sensor to the Tent area and it's in. Excluded:
                water temps (label sys_irrigation = feed/flush DS18B20s, label
                sub_climate_humidifier = humidifier reservoir), the AC outdoor
-               probe ('outdoor' in entity_id), and non-tent areas (mom, house,
-               printer). The median ±5°C filter below still rejects junk
-               readings (e.g. stale Blink camera temps). #}
+               probe ('outdoor' in entity_id), the SCD41's piggyback temp
+               ('co2' in entity_id — it carries a +4°C offset and is a CO2
+               sensor's internal die temp, not an air probe), and non-tent
+               areas (mom, house, printer). The median ±5°C filter below still
+               rejects junk readings (e.g. stale Blink camera temps). #}
             {% set exclude = ['sys_irrigation', 'sub_climate_humidifier'] %}
             {% set ns = namespace(vals=[]) %}
             {% for s in states.sensor if s.attributes.device_class == 'temperature' %}
               {% if area_id(s.entity_id) == 'tent'
                     and 'outdoor' not in s.entity_id
+                    and 'co2' not in s.entity_id
                     and labels(s.entity_id) | select('in', exclude) | list | length == 0 %}
                 {% set v = s.state | float(none) %}
                 {% if v is not none %}
@@ -568,6 +576,7 @@ grow_tent:
                   and s.state not in ['unknown', 'unavailable'] %}
               {% if area_id(s.entity_id) == 'tent'
                     and 'outdoor' not in s.entity_id
+                    and 'co2' not in s.entity_id
                     and labels(s.entity_id) | select('in', exclude) | list | length == 0 %}
                 {% set ns.n = ns.n + 1 %}
               {% endif %}
