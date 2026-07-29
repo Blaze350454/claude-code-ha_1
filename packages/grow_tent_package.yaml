@@ -483,14 +483,17 @@ grow_tent:
               {% elif sane | length <= 2 %}
                 {{ (sane | sum / sane | length) | round(1) }}
               {% else %}
-                {# 3+ readings: compute median, drop any >15% RH from median, average the rest #}
+                {# 3+ readings: compute median, drop any >10% RH from median, average the rest.
+                   Tightened 15 -> 10 (2026-07-29) so a disconnected/stuck probe is rejected
+                   sooner. KEEP IN SYNC with templates/tent_average_spread.yaml, which reuses
+                   this same band to derive the daily high/low. #}
                 {% set sorted = sane | sort | list %}
                 {% set mid = (sorted | length / 2) | int %}
                 {% set median = sorted[mid] if sorted | length is odd else
                    (sorted[mid - 1] + sorted[mid]) / 2 %}
                 {% set filtered = sane
-                  | select('>=', median - 15)
-                  | select('<=', median + 15)
+                  | select('>=', median - 10)
+                  | select('<=', median + 10)
                   | list %}
                 {% if filtered | length == 0 %}
                   {{ median | round(1) }}
@@ -564,7 +567,9 @@ grow_tent:
               {% elif sane | length <= 2 %}
                 {{ (sane | sum / sane | length) | round(1) }}
               {% else %}
-                {# 3+ readings: compute median, drop any >5°C from median, average the rest #}
+                {# 3+ readings: compute median, drop any >5°C from median, average the rest.
+                   KEEP IN SYNC with templates/tent_average_spread.yaml, which reuses this
+                   same band to derive the daily high/low. #}
                 {% set sorted = sane | sort | list %}
                 {% set mid = (sorted | length / 2) | int %}
                 {% set median = sorted[mid] if sorted | length is odd else

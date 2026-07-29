@@ -14,10 +14,30 @@
 #   so 50°C is clear of routine running but leaves real lead time before
 #   anything deforms.
 #
-#   Humidity 85% — NOT a PETG limit. PETG's moisture sensitivity is a filament
-#   storage/printing problem; a finished printed part does not weaken in humid
-#   air. This threshold protects the ELECTRONICS: condensation on the PCB and
-#   long-term corrosion. The tent normally runs ~64-66% RH, so 85% will not nag.
+#   Humidity — NOT a PETG limit, and NOT a plain RH threshold either.
+#   PETG's moisture sensitivity is a filament storage/printing problem; a
+#   finished printed part does not weaken in humid air. What actually damages
+#   the board is CONDENSATION, and condensation is not a function of RH alone —
+#   it happens when a surface is colder than the surrounding air's DEWPOINT.
+#
+#   A plain "controller RH > 85%" alert was the first attempt and was WRONG for
+#   this tent: the grow deliberately runs at near-maximum humidity during parts
+#   of the cycle, and the control box equalises with tent air over time, so 85%
+#   would fire routinely during normal healthy operation. An alert that cries
+#   wolf every grow is worse than no alert.
+#
+#   Note also that computing a dewpoint from the controller's OWN temp+RH would
+#   be circular: dewpoint depression is essentially a function of RH alone
+#   (~2.4°C at 85% RH, ~1.6°C at 90%, whatever the temperature), so that test is
+#   just an RH threshold wearing a disguise. The meaningful question is whether
+#   the BOX is colder than the TENT's dewpoint — i.e. whether tent air will
+#   condense on it. The box self-heats (two bucks), so it normally sits well
+#   above tent dewpoint and this stays quiet no matter how humid the tent gets.
+#   It fires when that margin is actually lost: box unpowered/cooling, or a
+#   humidity spike the box can't stay ahead of.
+#
+#   So: alert if the box comes within DEWPOINT_MARGIN_C of tent dewpoint, OR if
+#   the box is effectively saturated regardless (the input_number backstop, 95%).
 #
 # Both limits are input_numbers so they can be tuned from the UI without a
 # redeploy. Deliberately NO `initial:` — that would reset the value on every
@@ -36,6 +56,9 @@ tent_control_controller_health:
       step: 1
       unit_of_measurement: "°C"
       icon: mdi:thermometer-alert
+    # Saturation backstop only — the primary test is the dewpoint margin below.
+    # Set high (95) on purpose: the tent runs near-max RH by design, so this
+    # must not fire on ordinary humid operation.
     tent_controller_humidity_max:
       name: "Tent Controller Max Humidity"
       min: 50
@@ -45,6 +68,31 @@ tent_control_controller_health:
       icon: mdi:water-alert
 
   template:
+    - sensor:
+        # Tent dewpoint via the Magnus formula. Exposed as its own sensor so the
+        # condensation alert below is inspectable rather than a black box, and
+        # because dewpoint is generally useful alongside VPD.
+        - name: "Tent Dewpoint"
+          unique_id: tent_dewpoint
+          unit_of_measurement: "°C"
+          device_class: temperature
+          state_class: measurement
+          icon: mdi:water-thermometer
+          availability: >
+            {{ states('sensor.tent_average_temperature') | float(none) is not none
+               and states('sensor.tent_average_humidity') | float(none) is not none }}
+          state: >
+            {% set t = states('sensor.tent_average_temperature') | float(none) %}
+            {% set rh = states('sensor.tent_average_humidity') | float(none) %}
+            {% if t is none or rh is none or rh <= 0 %}
+              {{ none }}
+            {% else %}
+              {% set a = 17.27 %}
+              {% set b = 237.7 %}
+              {% set alpha = (a * t) / (b + t) + log(rh / 100) %}
+              {{ ((b * alpha) / (a - alpha)) | round(1) }}
+            {% endif %}
+
     - binary_sensor:
         # 5-minute hysteresis both ways: the enclosure has real thermal mass, so
         # anything shorter is noise, and it keeps the dashboard banner from
@@ -62,6 +110,10 @@ tent_control_controller_health:
             {% set lim = states('input_number.tent_controller_temp_max') | float(none) %}
             {{ v is not none and lim is not none and v > lim }}
 
+        # Condensation risk, NOT "the tent is humid". See the header for why a
+        # plain RH threshold was rejected. Fires when the enclosure gets within
+        # 2°C of tent dewpoint (tent air would start condensing on it), or when
+        # the box is effectively saturated regardless of the tent.
         - name: "Tent Controller Humidity High"
           unique_id: tent_controller_humidity_high
           device_class: problem
@@ -69,9 +121,15 @@ tent_control_controller_health:
           delay_on: "00:05:00"
           delay_off: "00:05:00"
           state: >
-            {% set v = states('sensor.grow_tent_climate_controller_humidity') | float(none) %}
+            {% set margin = 2.0 %}
+            {% set box_t = states('sensor.grow_tent_climate_controller_temperature') | float(none) %}
+            {% set box_rh = states('sensor.grow_tent_climate_controller_humidity') | float(none) %}
+            {% set dew = states('sensor.tent_dewpoint') | float(none) %}
             {% set lim = states('input_number.tent_controller_humidity_max') | float(none) %}
-            {{ v is not none and lim is not none and v > lim }}
+            {% set near_dew = box_t is not none and dew is not none
+                              and box_t < (dew + margin) %}
+            {% set saturated = box_rh is not none and lim is not none and box_rh > lim %}
+            {{ near_dew or saturated }}
 
   automation:
     - id: tent_controller_temp_high_alert
@@ -112,9 +170,10 @@ tent_control_controller_health:
     - id: tent_controller_humidity_high_alert
       alias: "Controller — Enclosure Over Humidity"
       description: >
-        Controller enclosure has been above
-        input_number.tent_controller_humidity_max for 5 minutes. This is a
-        condensation / corrosion risk to the board, not a risk to the plastic.
+        Controller enclosure is at condensation risk — either within 2°C of the
+        tent dewpoint, or effectively saturated. A risk to the board, not to the
+        plastic. Deliberately NOT a plain RH threshold: this tent runs near-max
+        humidity by design, so a plain threshold would fire every grow.
       triggers:
         - trigger: state
           entity_id: binary_sensor.tent_controller_humidity_high
@@ -123,13 +182,23 @@ tent_control_controller_health:
         - action: persistent_notification.create
           data:
             notification_id: tent_controller_humidity
-            title: "Controller Enclosure DAMP"
+            title: "Controller Condensation Risk"
             message: >
-              {{ now().strftime('%Y-%m-%d %H:%M:%S') }} — controller enclosure at
+              {{ now().strftime('%Y-%m-%d %H:%M:%S') }} — control box at
+              {{ states('sensor.grow_tent_climate_controller_temperature') | float(0) | round(1) }}°C /
               {{ states('sensor.grow_tent_climate_controller_humidity') | float(0) | round(1) }}% RH,
-              above the {{ states('input_number.tent_controller_humidity_max') | float(0) | round(0) }}% limit.
-              Condensation risk on the PCB. Check the enclosure seal and whether
-              tent RH has climbed.
+              tent dewpoint {{ states('sensor.tent_dewpoint') }}°C.
+              {% set box_t = states('sensor.grow_tent_climate_controller_temperature') | float(none) %}
+              {% set dew = states('sensor.tent_dewpoint') | float(none) %}
+              {% if box_t is not none and dew is not none and box_t < (dew + 2.0) %}
+              The box is within 2°C of the dewpoint, so tent air can condense on
+              it. Normally it self-heats well clear of this — check that it is
+              still powered and that airflow has not changed.
+              {% else %}
+              The box is effectively saturated (above the
+              {{ states('input_number.tent_controller_humidity_max') | float(0) | round(0) }}% backstop).
+              Check the enclosure seal.
+              {% endif %}
       mode: single
 
     - id: tent_controller_humidity_recovered

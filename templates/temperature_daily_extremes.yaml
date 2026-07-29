@@ -4,9 +4,13 @@
 # follow the source sensor, reset to the current reading at midnight. An
 # unavailable source keeps the last extreme; each sensor is unknown until its
 # first reading after creation.
+# Tent average high/low = today's warmest / coolest FILTERED probe (the
+# spread across the readings given to the average). See tent_average_spread.yaml.
 - trigger:
     - trigger: state
-      entity_id: sensor.tent_average_temperature
+      entity_id:
+        - sensor.tent_average_temperature_spread_high
+        - sensor.tent_average_temperature_spread_low
     - trigger: time
       at: "00:00:00"
   sensor:
@@ -17,7 +21,7 @@
       state_class: measurement
       icon: mdi:thermometer-chevron-up
       state: >
-        {% set cur = states('sensor.tent_average_temperature') | float(none) %}
+        {% set cur = states('sensor.tent_average_temperature_spread_high') | float(none) %}
         {% set prev = this.state | float(none) %}
         {% if cur is none %}{{ prev if prev is not none }}
         {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
@@ -29,7 +33,7 @@
       state_class: measurement
       icon: mdi:thermometer-chevron-down
       state: >
-        {% set cur = states('sensor.tent_average_temperature') | float(none) %}
+        {% set cur = states('sensor.tent_average_temperature_spread_low') | float(none) %}
         {% set prev = this.state | float(none) %}
         {% if cur is none %}{{ prev if prev is not none }}
         {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
@@ -96,4 +100,3 @@
         {% if cur is none %}{{ prev if prev is not none }}
         {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
         {% else %}{{ [prev, cur] | min | round(1) }}{% endif %}
-

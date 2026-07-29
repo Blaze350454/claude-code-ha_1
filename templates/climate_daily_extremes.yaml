@@ -5,9 +5,13 @@
 # source sensor, reset to the current reading at midnight. An unavailable
 # source keeps the last extreme; each sensor is unknown until its first
 # reading after creation.
+# High/low = today's highest / lowest FILTERED probe feeding the average
+# (spread across the readings given to it). See tent_average_spread.yaml.
 - trigger:
     - trigger: state
-      entity_id: sensor.tent_average_humidity
+      entity_id:
+        - sensor.tent_average_humidity_spread_high
+        - sensor.tent_average_humidity_spread_low
     - trigger: time
       at: "00:00:00"
   sensor:
@@ -18,7 +22,7 @@
       state_class: measurement
       icon: mdi:water-plus
       state: >
-        {% set cur = states('sensor.tent_average_humidity') | float(none) %}
+        {% set cur = states('sensor.tent_average_humidity_spread_high') | float(none) %}
         {% set prev = this.state | float(none) %}
         {% if cur is none %}{{ prev if prev is not none }}
         {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
@@ -30,7 +34,7 @@
       state_class: measurement
       icon: mdi:water-minus
       state: >
-        {% set cur = states('sensor.tent_average_humidity') | float(none) %}
+        {% set cur = states('sensor.tent_average_humidity_spread_low') | float(none) %}
         {% set prev = this.state | float(none) %}
         {% if cur is none %}{{ prev if prev is not none }}
         {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}

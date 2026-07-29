@@ -1,0 +1,222 @@
+# --- Filtered spread (high/low) for the tent averages ---
+# Originally drafted 2026-07-13, never deployed; rewritten and deployed
+# 2026-07-29 with the current selection rules.
+#
+# WHAT THESE ARE FOR
+# The tent averages reject out-of-band probes (median +/- 5C, median +/- 10% RH)
+# so one stuck or disconnected sensor cannot drag the average. But the daily
+# high/low trackers used to follow the AVERAGE itself, which meant they could
+# only ever show the average's own range -- and whatever a bad probe leaked
+# through could latch as the day's "record". These sensors expose the highest
+# and lowest reading among the probes that ACTUALLY PASSED the filter, so the
+# high/low in each gauge dial is the real spread across healthy sensors and a
+# rejected sensor is invisible to them.
+#
+# The daily trackers in temperature_daily_extremes.yaml and
+# climate_daily_extremes.yaml follow these instead of the raw averages.
+#
+# !! KEEP IN SYNC WITH packages/grow_tent_package.yaml !!
+# The selection + rejection logic below is deliberately identical to the two
+# average sensors there. If you change an exclusion or a band in one place you
+# must change it in the other, or the "high" can come from a probe the average
+# itself threw away. Current rules, both files:
+#   temperature: area=tent, device_class temperature, NOT outdoor / co2 /
+#                controller, NOT labelled sys_irrigation or
+#                sub_climate_humidifier; sane range 5-50C; band median +/- 5C
+#   humidity:    area=tent, device_class humidity, NOT moisture / outdoor / co2 /
+#                controller, NOT labelled sys_irrigation; sane range 5-99%;
+#                band median +/- 10%
+# (No pressure twins: the tent has no pressure source and
+# sensor.tent_average_pressure was deleted 2026-07-24 by design.)
+
+# ===================== TEMPERATURE (mirrors Tent Average Temperature) =========
+- sensor:
+    - name: "Tent Average Temperature Spread High"
+      unique_id: tent_average_temperature_spread_high
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:thermometer-chevron-up
+      availability: >
+        {% set exclude = ['sys_irrigation', 'sub_climate_humidifier'] %}
+        {% set ns = namespace(n=0) %}
+        {% for s in states.sensor if s.attributes.device_class == 'temperature'
+              and s.state not in ['unknown', 'unavailable'] %}
+          {% if area_id(s.entity_id) == 'tent'
+                and 'outdoor' not in s.entity_id
+                and 'co2' not in s.entity_id
+                and 'controller' not in s.entity_id
+                and labels(s.entity_id) | select('in', exclude) | list | length == 0 %}
+            {% set ns.n = ns.n + 1 %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.n > 0 }}
+      state: >
+        {% set exclude = ['sys_irrigation', 'sub_climate_humidifier'] %}
+        {% set ns = namespace(vals=[]) %}
+        {% for s in states.sensor if s.attributes.device_class == 'temperature' %}
+          {% if area_id(s.entity_id) == 'tent'
+                and 'outdoor' not in s.entity_id
+                and 'co2' not in s.entity_id
+                and 'controller' not in s.entity_id
+                and labels(s.entity_id) | select('in', exclude) | list | length == 0 %}
+            {% set v = s.state | float(none) %}
+            {% if v is not none %}
+              {% set v = (v - 32) * 5 / 9
+                 if s.attributes.unit_of_measurement == '°F' else v %}
+              {% set ns.vals = ns.vals + [v] %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {% set sane = ns.vals | select('>=', 5) | select('<=', 50) | list %}
+        {% if sane | length == 0 %}{{ none }}
+        {% elif sane | length <= 2 %}{{ sane | max | round(1) }}
+        {% else %}
+          {% set sorted = sane | sort | list %}
+          {% set mid = (sorted | length / 2) | int %}
+          {% set median = sorted[mid] if sorted | length is odd else
+             (sorted[mid - 1] + sorted[mid]) / 2 %}
+          {% set filtered = sane | select('>=', median - 5) | select('<=', median + 5) | list %}
+          {{ (filtered | max if filtered | length > 0 else median) | round(1) }}
+        {% endif %}
+
+    - name: "Tent Average Temperature Spread Low"
+      unique_id: tent_average_temperature_spread_low
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:thermometer-chevron-down
+      availability: >
+        {% set exclude = ['sys_irrigation', 'sub_climate_humidifier'] %}
+        {% set ns = namespace(n=0) %}
+        {% for s in states.sensor if s.attributes.device_class == 'temperature'
+              and s.state not in ['unknown', 'unavailable'] %}
+          {% if area_id(s.entity_id) == 'tent'
+                and 'outdoor' not in s.entity_id
+                and 'co2' not in s.entity_id
+                and 'controller' not in s.entity_id
+                and labels(s.entity_id) | select('in', exclude) | list | length == 0 %}
+            {% set ns.n = ns.n + 1 %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.n > 0 }}
+      state: >
+        {% set exclude = ['sys_irrigation', 'sub_climate_humidifier'] %}
+        {% set ns = namespace(vals=[]) %}
+        {% for s in states.sensor if s.attributes.device_class == 'temperature' %}
+          {% if area_id(s.entity_id) == 'tent'
+                and 'outdoor' not in s.entity_id
+                and 'co2' not in s.entity_id
+                and 'controller' not in s.entity_id
+                and labels(s.entity_id) | select('in', exclude) | list | length == 0 %}
+            {% set v = s.state | float(none) %}
+            {% if v is not none %}
+              {% set v = (v - 32) * 5 / 9
+                 if s.attributes.unit_of_measurement == '°F' else v %}
+              {% set ns.vals = ns.vals + [v] %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        {% set sane = ns.vals | select('>=', 5) | select('<=', 50) | list %}
+        {% if sane | length == 0 %}{{ none }}
+        {% elif sane | length <= 2 %}{{ sane | min | round(1) }}
+        {% else %}
+          {% set sorted = sane | sort | list %}
+          {% set mid = (sorted | length / 2) | int %}
+          {% set median = sorted[mid] if sorted | length is odd else
+             (sorted[mid - 1] + sorted[mid]) / 2 %}
+          {% set filtered = sane | select('>=', median - 5) | select('<=', median + 5) | list %}
+          {{ (filtered | min if filtered | length > 0 else median) | round(1) }}
+        {% endif %}
+
+# ====================== HUMIDITY (mirrors Tent Average Humidity) ==============
+- sensor:
+    - name: "Tent Average Humidity Spread High"
+      unique_id: tent_average_humidity_spread_high
+      unit_of_measurement: "%"
+      device_class: humidity
+      state_class: measurement
+      icon: mdi:water-plus
+      availability: >
+        {% set ns = namespace(n=0) %}
+        {% for s in states.sensor if s.attributes.device_class == 'humidity'
+              and s.state not in ['unknown', 'unavailable'] %}
+          {% if area_id(s.entity_id) == 'tent'
+                and 'moisture' not in s.entity_id
+                and 'outdoor' not in s.entity_id
+                and 'co2' not in s.entity_id
+                and 'controller' not in s.entity_id
+                and 'sys_irrigation' not in labels(s.entity_id) %}
+            {% set ns.n = ns.n + 1 %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.n > 0 }}
+      state: >
+        {% set ns = namespace(vals=[]) %}
+        {% for s in states.sensor if s.attributes.device_class == 'humidity' %}
+          {% if area_id(s.entity_id) == 'tent'
+                and 'moisture' not in s.entity_id
+                and 'outdoor' not in s.entity_id
+                and 'co2' not in s.entity_id
+                and 'controller' not in s.entity_id
+                and 'sys_irrigation' not in labels(s.entity_id) %}
+            {% set v = s.state | float(none) %}
+            {% if v is not none %}{% set ns.vals = ns.vals + [v] %}{% endif %}
+          {% endif %}
+        {% endfor %}
+        {% set sane = ns.vals | select('>=', 5) | select('<=', 99) | list %}
+        {% if sane | length == 0 %}{{ none }}
+        {% elif sane | length <= 2 %}{{ sane | max | round(1) }}
+        {% else %}
+          {% set sorted = sane | sort | list %}
+          {% set mid = (sorted | length / 2) | int %}
+          {% set median = sorted[mid] if sorted | length is odd else
+             (sorted[mid - 1] + sorted[mid]) / 2 %}
+          {% set filtered = sane | select('>=', median - 10) | select('<=', median + 10) | list %}
+          {{ (filtered | max if filtered | length > 0 else median) | round(1) }}
+        {% endif %}
+
+    - name: "Tent Average Humidity Spread Low"
+      unique_id: tent_average_humidity_spread_low
+      unit_of_measurement: "%"
+      device_class: humidity
+      state_class: measurement
+      icon: mdi:water-minus
+      availability: >
+        {% set ns = namespace(n=0) %}
+        {% for s in states.sensor if s.attributes.device_class == 'humidity'
+              and s.state not in ['unknown', 'unavailable'] %}
+          {% if area_id(s.entity_id) == 'tent'
+                and 'moisture' not in s.entity_id
+                and 'outdoor' not in s.entity_id
+                and 'co2' not in s.entity_id
+                and 'controller' not in s.entity_id
+                and 'sys_irrigation' not in labels(s.entity_id) %}
+            {% set ns.n = ns.n + 1 %}
+          {% endif %}
+        {% endfor %}
+        {{ ns.n > 0 }}
+      state: >
+        {% set ns = namespace(vals=[]) %}
+        {% for s in states.sensor if s.attributes.device_class == 'humidity' %}
+          {% if area_id(s.entity_id) == 'tent'
+                and 'moisture' not in s.entity_id
+                and 'outdoor' not in s.entity_id
+                and 'co2' not in s.entity_id
+                and 'controller' not in s.entity_id
+                and 'sys_irrigation' not in labels(s.entity_id) %}
+            {% set v = s.state | float(none) %}
+            {% if v is not none %}{% set ns.vals = ns.vals + [v] %}{% endif %}
+          {% endif %}
+        {% endfor %}
+        {% set sane = ns.vals | select('>=', 5) | select('<=', 99) | list %}
+        {% if sane | length == 0 %}{{ none }}
+        {% elif sane | length <= 2 %}{{ sane | min | round(1) }}
+        {% else %}
+          {% set sorted = sane | sort | list %}
+          {% set mid = (sorted | length / 2) | int %}
+          {% set median = sorted[mid] if sorted | length is odd else
+             (sorted[mid - 1] + sorted[mid]) / 2 %}
+          {% set filtered = sane | select('>=', median - 10) | select('<=', median + 10) | list %}
+          {{ (filtered | min if filtered | length > 0 else median) | round(1) }}
+        {% endif %}
