@@ -3,9 +3,9 @@ tent_control_sensor_health:
     - id: tent_temp_divergence_alert
       alias: "Sensors — Tent Temp Divergence Alert"
       description: >
-        Fires when individual temperature sensors (canopy, flower, AC, camera)
-        disagree by more than input_number.tent_temp_divergence_threshold for
-        15 minutes. The median average can mask a stuck or failing sensor —
+        Fires when individual temperature sensors (canopy, flower, stem, AC,
+        camera) disagree by more than input_number.tent_temp_divergence_threshold
+        for 15 minutes. The median average can mask a stuck or failing sensor —
         this surfaces it.
       triggers:
         - trigger: state
@@ -26,8 +26,9 @@ tent_control_sensor_health:
               {{ now().strftime('%Y-%m-%d %H:%M:%S') }} — tent temp sensors
               disagree by more than
               {{ states('input_number.tent_temp_divergence_threshold') }}°C.
-              Canopy: {{ states('sensor.canopy_temperature_tent') }}°C,
-              Flower: {{ states('sensor.flower_temperature_tent') }}°C,
+              Canopy: {{ states('sensor.grow_tent_climate_canopy_temperature') }}°C,
+              Flower: {{ states('sensor.grow_tent_climate_flower_temperature') }}°C,
+              Stem: {{ states('sensor.grow_tent_climate_stem_temperature') }}°C,
               AC: {{ states('sensor.indoor_temperature_air_conditioner_tent') }}°C,
               Camera: {{ states('sensor.temperature_camera_tent_1') }}°C.
               Average: {{ states('sensor.tent_average_temperature') }}°C.
@@ -53,9 +54,9 @@ tent_control_sensor_health:
     - id: tent_humidity_divergence_alert
       alias: "Sensors — Tent Humidity Divergence Alert"
       description: >
-        Fires when individual humidity sensors (canopy, flower, AC, dehumidifier)
-        disagree by more than input_number.tent_humidity_divergence_threshold
-        for 15 minutes.
+        Fires when individual humidity sensors (canopy, flower, stem, AC,
+        dehumidifier) disagree by more than
+        input_number.tent_humidity_divergence_threshold for 15 minutes.
       triggers:
         - trigger: state
           entity_id: binary_sensor.tent_humidity_divergence
@@ -75,8 +76,9 @@ tent_control_sensor_health:
               {{ now().strftime('%Y-%m-%d %H:%M:%S') }} — tent humidity sensors
               disagree by more than
               {{ states('input_number.tent_humidity_divergence_threshold') }}%.
-              Canopy: {{ states('sensor.canopy_humidity_tent') }}%,
-              Flower: {{ states('sensor.flower_humidity_tent') }}%,
+              Canopy: {{ states('sensor.grow_tent_climate_canopy_humidity') }}%,
+              Flower: {{ states('sensor.grow_tent_climate_flower_humidity') }}%,
+              Stem: {{ states('sensor.grow_tent_climate_stem_humidity') }}%,
               AC: {{ states('sensor.indoor_humidity_air_conditioner_tent') }}%,
               Dehumidifier: {{ states('sensor.current_humidity_dehumidifier') }}%.
               Average: {{ states('sensor.tent_average_humidity') }}%.

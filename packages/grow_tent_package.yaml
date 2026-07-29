@@ -191,7 +191,7 @@ grow_tent:
       step: 0.5
       unit_of_measurement: "°C"
       icon: mdi:thermometer-alert
-    # Alert when max - min of canopy / flower / AC / camera temp sensors
+    # Alert when max - min of canopy / flower / stem / AC / camera temp sensors
     # exceeds this. Median average can mask a stuck or failing sensor.
 
     tent_humidity_divergence_threshold:
@@ -201,8 +201,8 @@ grow_tent:
       step: 1
       unit_of_measurement: "%"
       icon: mdi:water-alert
-    # Alert when max - min of canopy / flower / AC / dehumidifier RH sensors
-    # exceeds this.
+    # Alert when max - min of canopy / flower / stem / AC / dehumidifier RH
+    # sensors exceeds this.
 
   input_boolean:
     grow_tent_automation_enabled:
@@ -451,16 +451,20 @@ grow_tent:
                humidity in area 'tent' joins automatically. Excluded: soil /
                flood MOISTURE sensors ('moisture' in entity_id — they report
                device_class humidity too), anything labeled sys_irrigation,
-               'outdoor' ids, and the SCD41's piggyback RH ('co2' in entity_id
+               'outdoor' ids, the SCD41's piggyback RH ('co2' in entity_id
                — grow_tent_climate_tent_co2_humidity reads high; it is a CO2
-               sensor's internal element, not an air-quality RH probe).
-               New air RH sensors just need the Tent area. #}
+               sensor's internal element, not an air-quality RH probe), and the
+               climate board's Controller probe ('controller' in entity_id —
+               it measures the sealed control-box enclosure, not tent air).
+               New air RH sensors just need the Tent area.
+               Air RH in the tent = Canopy + Flower + Stem. #}
             {% set ns = namespace(vals=[]) %}
             {% for s in states.sensor if s.attributes.device_class == 'humidity' %}
               {% if area_id(s.entity_id) == 'tent'
                     and 'moisture' not in s.entity_id
                     and 'outdoor' not in s.entity_id
                     and 'co2' not in s.entity_id
+                    and 'controller' not in s.entity_id
                     and 'sys_irrigation' not in labels(s.entity_id) %}
                 {% set v = s.state | float(none) %}
                 {% if v is not none %}
@@ -503,6 +507,7 @@ grow_tent:
                     and 'moisture' not in s.entity_id
                     and 'outdoor' not in s.entity_id
                     and 'co2' not in s.entity_id
+                    and 'controller' not in s.entity_id
                     and 'sys_irrigation' not in labels(s.entity_id) %}
                 {% set ns.n = ns.n + 1 %}
               {% endif %}
@@ -524,15 +529,21 @@ grow_tent:
                sub_climate_humidifier = humidifier reservoir), the AC outdoor
                probe ('outdoor' in entity_id), the SCD41's piggyback temp
                ('co2' in entity_id — it carries a +4°C offset and is a CO2
-               sensor's internal die temp, not an air probe), and non-tent
-               areas (mom, house, printer). The median ±5°C filter below still
-               rejects junk readings (e.g. stale Blink camera temps). #}
+               sensor's internal die temp, not an air probe), the climate
+               board's Controller probe ('controller' in entity_id — it reads
+               the control-box enclosure, self-heated by two buck regulators,
+               so it runs hotter than tent air; it drives the controller
+               over-temp alert instead), and non-tent areas (mom, house,
+               printer). Air temp in the tent = Canopy + Flower + Stem.
+               The median ±5°C filter below still rejects junk readings
+               (e.g. stale Blink camera temps). #}
             {% set exclude = ['sys_irrigation', 'sub_climate_humidifier'] %}
             {% set ns = namespace(vals=[]) %}
             {% for s in states.sensor if s.attributes.device_class == 'temperature' %}
               {% if area_id(s.entity_id) == 'tent'
                     and 'outdoor' not in s.entity_id
                     and 'co2' not in s.entity_id
+                    and 'controller' not in s.entity_id
                     and labels(s.entity_id) | select('in', exclude) | list | length == 0 %}
                 {% set v = s.state | float(none) %}
                 {% if v is not none %}
@@ -577,6 +588,7 @@ grow_tent:
               {% if area_id(s.entity_id) == 'tent'
                     and 'outdoor' not in s.entity_id
                     and 'co2' not in s.entity_id
+                    and 'controller' not in s.entity_id
                     and labels(s.entity_id) | select('in', exclude) | list | length == 0 %}
                 {% set ns.n = ns.n + 1 %}
               {% endif %}
@@ -604,14 +616,24 @@ grow_tent:
 
     # Detects when individual temp sensors disagree by more than the threshold.
     # Median average masks a stuck/failing sensor — this surfaces it.
+    # REWIRED 2026-07-29: previously read canopy_temperature_tent /
+    # flower_temperature_tent, which were DELETED with the old grow-tent-env
+    # board. With the AC also unavailable that left one reading, the >= 2 guard
+    # below failed, and this sensor was permanently false — a dead check feeding
+    # a live banner key. Now reads the three real grow-tent-climate air probes.
+    # Controller is deliberately NOT here: it reads the self-heated enclosure and
+    # legitimately runs hotter, so it would trip divergence permanently.
+    # AC + camera are kept as opportunistic extras — the reject() filter below
+    # already tolerates them being dead.
         - name: "Tent Temperature Divergence"
           unique_id: tent_temperature_divergence
           device_class: problem
           icon: mdi:thermometer-alert
           state: >
             {% set raw = [
-              states('sensor.canopy_temperature_tent'),
-              states('sensor.flower_temperature_tent'),
+              states('sensor.grow_tent_climate_canopy_temperature'),
+              states('sensor.grow_tent_climate_flower_temperature'),
+              states('sensor.grow_tent_climate_stem_temperature'),
               states('sensor.indoor_temperature_air_conditioner_tent'),
               states('sensor.temperature_camera_tent_1')
             ] %}
@@ -625,14 +647,18 @@ grow_tent:
               false
             {% endif %}
 
+    # Same rewire as the temperature twin above — canopy_humidity_tent and
+    # flower_humidity_tent died with the old board, leaving this permanently
+    # false. Controller excluded for the same reason (enclosure, not tent air).
         - name: "Tent Humidity Divergence"
           unique_id: tent_humidity_divergence
           device_class: problem
           icon: mdi:water-alert
           state: >
             {% set raw = [
-              states('sensor.canopy_humidity_tent'),
-              states('sensor.flower_humidity_tent'),
+              states('sensor.grow_tent_climate_canopy_humidity'),
+              states('sensor.grow_tent_climate_flower_humidity'),
+              states('sensor.grow_tent_climate_stem_humidity'),
               states('sensor.indoor_humidity_air_conditioner_tent'),
               states('sensor.current_humidity_dehumidifier')
             ] %}

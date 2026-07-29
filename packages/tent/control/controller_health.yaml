@@ -1,0 +1,145 @@
+# Tent controller-enclosure health
+# ---------------------------------------------------------------------------
+# The grow-tent-climate board's 4th SHT41 ("Controller", mux ch3) sits in the
+# control-box enclosure on the light fixture, NOT in tent air. Two buck
+# regulators self-heat that box, so it always reads hotter than the tent — which
+# is why it is deliberately EXCLUDED from sensor.tent_average_temperature /
+# _humidity (see the exclusion comments in packages/grow_tent_package.yaml).
+# Its only jobs are its own dashboard card and the two alerts below.
+#
+# WHY THESE THRESHOLDS
+#   Temperature 50°C — the enclosure is PETG, and PETG is the binding limit
+#   here, not the electronics: PETG starts to creep/sag around 65-70°C while the
+#   ESP32-WROOM is rated to 85°C ambient. Normal operation should sit ~35-45°C,
+#   so 50°C is clear of routine running but leaves real lead time before
+#   anything deforms.
+#
+#   Humidity 85% — NOT a PETG limit. PETG's moisture sensitivity is a filament
+#   storage/printing problem; a finished printed part does not weaken in humid
+#   air. This threshold protects the ELECTRONICS: condensation on the PCB and
+#   long-term corrosion. The tent normally runs ~64-66% RH, so 85% will not nag.
+#
+# Both limits are input_numbers so they can be tuned from the UI without a
+# redeploy. Deliberately NO `initial:` — that would reset the value on every
+# HA restart and silently discard tuning (house convention, same as the ~34
+# other tent helpers). NOTE the consequence: a freshly-created input_number with
+# no stored state takes its `min:`, NOT the value you might expect, so both must
+# be set once via input_number.set_value after first deploy.
+# ---------------------------------------------------------------------------
+tent_control_controller_health:
+
+  input_number:
+    tent_controller_temp_max:
+      name: "Tent Controller Max Temp"
+      min: 30
+      max: 80
+      step: 1
+      unit_of_measurement: "°C"
+      icon: mdi:thermometer-alert
+    tent_controller_humidity_max:
+      name: "Tent Controller Max Humidity"
+      min: 50
+      max: 99
+      step: 1
+      unit_of_measurement: "%"
+      icon: mdi:water-alert
+
+  template:
+    - binary_sensor:
+        # 5-minute hysteresis both ways: the enclosure has real thermal mass, so
+        # anything shorter is noise, and it keeps the dashboard banner from
+        # flickering on a single stray reading.
+        - name: "Tent Controller Temp High"
+          unique_id: tent_controller_temp_high
+          device_class: problem
+          icon: mdi:thermometer-alert
+          delay_on: "00:05:00"
+          delay_off: "00:05:00"
+          # float(none) so unknown/unavailable yields none rather than 0 — a
+          # board reboot must not read as "0°C, all clear", nor as an alert.
+          state: >
+            {% set v = states('sensor.grow_tent_climate_controller_temperature') | float(none) %}
+            {% set lim = states('input_number.tent_controller_temp_max') | float(none) %}
+            {{ v is not none and lim is not none and v > lim }}
+
+        - name: "Tent Controller Humidity High"
+          unique_id: tent_controller_humidity_high
+          device_class: problem
+          icon: mdi:water-alert
+          delay_on: "00:05:00"
+          delay_off: "00:05:00"
+          state: >
+            {% set v = states('sensor.grow_tent_climate_controller_humidity') | float(none) %}
+            {% set lim = states('input_number.tent_controller_humidity_max') | float(none) %}
+            {{ v is not none and lim is not none and v > lim }}
+
+  automation:
+    - id: tent_controller_temp_high_alert
+      alias: "Controller — Enclosure Over Temperature"
+      description: >
+        Controller enclosure has been above input_number.tent_controller_temp_max
+        for 5 minutes. PETG softens well before the electronics are at risk, so
+        this is a "the box is about to sag" warning, not a chip warning.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.tent_controller_temp_high
+          to: "on"
+      actions:
+        - action: persistent_notification.create
+          data:
+            notification_id: tent_controller_temp
+            title: "Controller Enclosure HOT"
+            message: >
+              {{ now().strftime('%Y-%m-%d %H:%M:%S') }} — controller enclosure at
+              {{ states('sensor.grow_tent_climate_controller_temperature') | float(0) | round(1) }}°C,
+              above the {{ states('input_number.tent_controller_temp_max') | float(0) | round(0) }}°C limit.
+              PETG begins to creep around 65-70°C. Check the light fixture's heat
+              plume and that nothing is blocking the enclosure vents.
+      mode: single
+
+    - id: tent_controller_temp_recovered
+      alias: "Controller — Enclosure Temperature Cleared"
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.tent_controller_temp_high
+          to: "off"
+      actions:
+        - action: persistent_notification.dismiss
+          data:
+            notification_id: tent_controller_temp
+      mode: single
+
+    - id: tent_controller_humidity_high_alert
+      alias: "Controller — Enclosure Over Humidity"
+      description: >
+        Controller enclosure has been above
+        input_number.tent_controller_humidity_max for 5 minutes. This is a
+        condensation / corrosion risk to the board, not a risk to the plastic.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.tent_controller_humidity_high
+          to: "on"
+      actions:
+        - action: persistent_notification.create
+          data:
+            notification_id: tent_controller_humidity
+            title: "Controller Enclosure DAMP"
+            message: >
+              {{ now().strftime('%Y-%m-%d %H:%M:%S') }} — controller enclosure at
+              {{ states('sensor.grow_tent_climate_controller_humidity') | float(0) | round(1) }}% RH,
+              above the {{ states('input_number.tent_controller_humidity_max') | float(0) | round(0) }}% limit.
+              Condensation risk on the PCB. Check the enclosure seal and whether
+              tent RH has climbed.
+      mode: single
+
+    - id: tent_controller_humidity_recovered
+      alias: "Controller — Enclosure Humidity Cleared"
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.tent_controller_humidity_high
+          to: "off"
+      actions:
+        - action: persistent_notification.dismiss
+          data:
+            notification_id: tent_controller_humidity
+      mode: single
