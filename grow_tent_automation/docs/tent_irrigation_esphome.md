@@ -79,7 +79,7 @@ Device: `tent-irrigation-controller`
 | Flush Temperature | GPIO4 (1-wire) | Flush reservoir temp (Dallas, addr `0x6f000000455cab28`) — `sensor.flush_temperature_irrigation_tent` |
 | Pressure Pre-Regulator Tent | GPIO34 (ADC) | System pressure before regulator (PSI) |
 | Pressure Post-Regulator Tent | GPIO35 (ADC) | System pressure after regulator (PSI) |
-| Flow Rate Irrigation Tent | GPIO32 (pulse) | Flow rate (L/min) — sensor range: 0.5–20 L/min — entity: `sensor.flow_rate_irrigation_tent` |
+| Flow Rate Irrigation Tent | GPIO32 (pulse) | Flow rate (L/min) — sensor range: **1–100 L/min** — entity: `sensor.flow_rate_irrigation_tent`. Steady emitter flow (0.85 L/min) sits just below cut-in; see `Tent_Irrigation_Project.md` |
 | Flow Total Irrigation Tent | GPIO32 (pulse) | Cumulative volume (L) — entity: `sensor.flow_total_irrigation_tent` |
 
 **Dead-transducer floor (firmware, 2026-07-17):** each pressure sensor averages the raw ADC voltage (5-sample window at 2 s, published every 2 s) and publishes **NAN → `unknown` in HA** when the settled voltage is below 0.20 V — i.e. the transducer is disconnected, unpowered, or failed (a healthy one outputs 0.333 V at 0 psi). Before this, a dead transducer read a believable flat `0.0 psi` (the pre-reg transducer did exactly that for weeks). This replaces the earlier `binary_sensor.pressure_sensor_fault_irrigation_tent` badge, which had been removed from firmware. Informational only; no automation acts on pressure.

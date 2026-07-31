@@ -33,14 +33,17 @@
 | **Pressure** | Adjustable pressure regulator | |
 | | Pressure gauge #1 | On tee after filter (pre-regulator) |
 | | Pressure gauge #2 | On/after pressure regulator (post-regulator) |
-| **Sensors** | Pressure transducer | 1/8" NPT, 0-100 PSI, 5V DC, stainless steel |
-| | Hall flow sensor | 3/4", 30-500 L/min, 5V DC (see note) |
+| **Sensors** | Pressure transducer | 1/8" NPT, 0-100 PSI, 5V DC, stainless steel — ⚠️ firmware uses a 0-30 psi transfer function; confirm the installed range |
+| | Hall flow sensor | 3/4", 1-100 L/min, 5V DC (see note) |
 | **Electronics** | ESP32 | Microcontroller for sensor data |
 | | LM2596 buck converter | 12V → 5V DC for sensors |
 | | 10kΩ resistors (x2) | Voltage dividers |
 | | 20kΩ resistors (x2) | Voltage dividers |
-| **Pumps** | Flora Flex FSP-10001 | Submersible - 25 gal nutrient reservoir |
-| | DEKOPRO 1/4 HP | 1850 GPH, 27ft head (~11.7 PSI) - 15 gal flush reservoir |
+| **Pumps** | BOKYWOX 115 VAC diaphragm | 3 GPM, adjustable 30–50 psi switch — **FEED** (25 gal nutrient), external mount |
+| | Flora Flex FSP-10001 | 3/4 HP submersible, 17.34 psi max — **FLUSH** (20 gal), moved off feed duty |
+| | DEKOPRO 1/4 HP | 1850 GPH, 27 ft head (~11.7 PSI) — **RETIRED**, displaced by the FloraFlex |
+| **Reservoir equipment** | 400 GPH stir pump | **1 per reservoir** (2 total — feed and flush each have one) |
+| | Air pump + air stone(s) | ~60 L/min single pump, **routed to one reservoir at a time** by the servo pinch valve — never both |
 | **Air Bleed** | Flora Flex 1517 | Air bleed valve |
 | **Distribution** | ORB 8-Port Manifold (61008) | Qty: 4 |
 | **Emitters** | PCJ 0.5 GPH | Pressure compensating, Qty: 27 (3 per plant) |
@@ -51,12 +54,12 @@
 ## System Flow Diagram
 
 ```
-NUTRIENT: Flora Flex Pump → Check Valve ──────────┐
-                                                  │
-                                               [MERGE]
-                                                  │
-FLUSH: DEKOPRO 1/4HP Pump → Flush Valve ──────────┘
-                                                  ↓
+NUTRIENT: BOKYWOX Diaphragm Pump → Check Valve → Expansion Tank Tee ──┐
+                                                                     │
+                                                                  [MERGE]
+                                                                     │
+FLUSH: Flora Flex FSP-10001 → Flush Valve ───────────────────────────┘
+                                                                     ↓
 Ball Valve → Filter → Tee(Air Bleed↑) → Tee(Pressure Gauge #1↑) → Pressure Regulator → Tee(Pressure Gauge #2↑) → Main Valve → Check Valve → Ball Valve → ORBITS → Drain Valve
 ```
 
@@ -68,10 +71,11 @@ Ball Valve → Filter → Tee(Air Bleed↑) → Tee(Pressure Gauge #1↑) → Pr
 
 | Step | Component | Function |
 |------|-----------|----------|
-| 1 | Flora Flex Pump | Draws from 25 gal nutrient reservoir |
+| 1 | BOKYWOX Diaphragm Pump | Draws from 25 gal nutrient reservoir (external mount, suction strainer) |
 | 2 | Check Valve #1 | Prevents backflow to nutrient reservoir |
+| 2a | Expansion Tank Tee | Eastman 60008 mini tank — pulsation damping / hammer arrest |
 | 3 | **MERGE** | Flush line joins main line |
-| - | ↳ DEKOPRO 1/4HP Pump | Draws from 15 gal flush reservoir |
+| - | ↳ Flora Flex FSP-10001 | Draws from 20 gal flush reservoir |
 | - | ↳ Flush Valve | U.S. Solid 12V DC - controls flush water input |
 | 4 | Ball Valve | Main system shutoff |
 | 5 | Filter | 200 micron - protects downstream |
@@ -90,15 +94,37 @@ Ball Valve → Filter → Tee(Air Bleed↑) → Tee(Pressure Gauge #1↑) → Pr
 
 ## Flow Calculations
 
-- 27 emitters x 0.5 GPH = **13.5 GPH total system flow**
+- 27 emitters x 0.5 GPH = **13.5 GPH total system flow = 0.225 GPM = 0.85 L/min**
 - Nutrient reservoir: 25 gal / 13.5 GPH = ~1.85 hours continuous feed
-- Flush reservoir: 15 gal - for line filling and flush cycles
+- Flush reservoir: 20 gal - for line filling and flush cycles
+
+### ⚠️ Pressure does NOT change delivered volume
+
+The PCJ emitters are **pressure compensating** — they hold 0.5 GPH each across roughly
+**7–58 psi**. Total system flow is therefore pinned at **0.85 L/min at any pressure inside
+that band**, and measured flow (~1 L/min) already matches the design figure.
+
+Raising system pressure from ~12 psi to 25 psi buys **emitter-to-emitter uniformity and
+comfortable operation inside the PC band — not more water**. Feed `*_duration` helpers do
+**not** need shortening after the pump swap, and the flow-meter K-factor does not need
+re-deriving for a new flow rate.
+
+Corollary for pump sizing: the BOKYWOX passes ~6 L/min at 35 psi while the emitters accept
+0.85 L/min — a ~7x mismatch, so its demand switch **will** rapid-cycle. A bypass/recirc leg
+back to the feed reservoir (shedding ~5 L/min, tuned with a needle valve) is required, not
+optional. The mini expansion tank is far too small to absorb this on its own (~29 mL usable
+drawdown ≈ 1 s of run time).
 
 ---
 
 ## Detailed Component Specifications
 
-### Flora Flex FSP-10001 (3/4 HP Submersible Pump - Nutrient Reservoir)
+### Flora Flex FSP-10001 (3/4 HP Submersible Pump — FLUSH Reservoir)
+
+> **Moved off feed duty.** It can never exceed 17.34 psi dead-head, so it could not deliver the
+> 25 psi target at the emitters. It now runs the **20 gal flush reservoir**, where ~17 psi
+> dead-head (roughly 10–14 psi at the emitters after losses) still clears the PCJ emitters'
+> ~7 psi compensating minimum. Replaced on feed by the BOKYWOX diaphragm pump.
 
 | Spec | Value |
 |------|-------|
@@ -152,23 +178,38 @@ All solenoid valves in this system are the same model.
 
 ---
 
-### DEKOPRO 1/4 HP (Flush Reservoir)
+### BOKYWOX 115 VAC Diaphragm Demand Pump (FEED Reservoir)
+
+| Spec | Value |
+|------|-------|
+| Type | Self-priming diaphragm demand pump (Shurflo 2088 clone) |
+| Flow | 3 GPM (~11 L/min open flow) |
+| Pressure switch | Adjustable, 30–50 psi (settable down to ~10) |
+| Voltage | 115 VAC — plug control on the HS300 |
+| Mount | **External** to the reservoir (mains out of the water) |
+| Ports | Female-swivel-with-gasket, 1/2"-14 NPSM straight **male** thread |
+
+**Setup notes:**
+- Set cut-out **45–50 psi** (cut-in lands ~35) so the regulator keeps ≥10 psi of headroom
+  above its 25 psi setpoint. A 35 psi cut-out drops cut-in to ~25 and starves the regulator
+  at the bottom of every cycle.
+- Needs a **suction strainer + dip tube/bulkhead** — it is not submersible like the FloraFlex.
+- Needs a **bypass/recirc leg** — see the pressure-compensating note under Flow Calculations.
+- Thread adaptation to the 1/2" female NPT reducing couplings is a deliberate
+  **NPSM-male-into-NPT-female jimmy rig** (no sourceable NPSM adapters). Plastic male port,
+  brass female coupling. One-shot fit; hand tight + 1–1.5 turns only.
+
+---
+
+### DEKOPRO 1/4 HP — RETIRED
+
+Displaced by the FloraFlex on flush duty. Kept as a spare.
 
 | Spec | Value |
 |------|-------|
 | Flow | 1850 GPH |
 | Max Head | 27 ft (~11.7 PSI) |
 | Power | 1/4 HP |
-| Purpose | Push nutrients to plants, fill lines with clean water |
-
-**Pressure Budget (DEKOPRO):**
-
-| Stage | PSI Used | Remaining |
-|-------|----------|-----------|
-| Pump output | - | 11.7 PSI |
-| Check valves | ~1-2 PSI | ~10 PSI |
-| Filter + fittings | ~1-2 PSI | ~8-9 PSI |
-| At emitters | - | ~8-10 PSI |
 
 ---
 
@@ -199,21 +240,26 @@ All solenoid valves in this system are the same model.
 | Spec | Value |
 |------|-------|
 | Size | 3/4" |
-| Flow Range | 30-500 L/min (7.9-132 GPM) |
+| Flow Range | 1-100 L/min |
 | Voltage | 5V DC |
 | Output | Pulse signal |
+| K-factor | 62.72 pulses/L (bucket test 2026-05-10) |
 
-**⚠️ FLOW RANGE MISMATCH:**
-- Sensor minimum: 30 L/min (7.9 GPM)
-- System flow: 0.85 L/min (0.225 GPM / 13.5 GPH)
-- **System flow is ~35x below sensor's minimum detection threshold**
+*(An earlier revision of this doc listed a 30-500 L/min sensor. That part was never installed —
+it has always been the 1-100 L/min unit.)*
 
-**Current sensor limitations:**
-- Will NOT accurately measure normal irrigation flow
-- Could detect high-flow events (burst line, leak)
-- Not suitable for tracking nutrient delivery
+**⚠️ FLOW RANGE MISMATCH (still present, but mild):**
+- Sensor minimum: **1 L/min**
+- Steady emitter flow: **0.85 L/min** — just *below* cut-in
+- Pressurization bursts at the start of a feed read fine (2.49 L/min confirmed good)
 
-**Recommended alternative:** Low-flow sensor rated 0.3-6 L/min or 1-30 L/min (search: "low flow hall sensor" or "coffee machine flow sensor")
+**Consequence:** the meter sees the leading burst of each feed but under-reports or drops out
+during the steady portion. Adequate for the idle-flow watchdog and for "did a feed happen",
+not for accurate per-feed volume totalling.
+
+**Recommended replacement:** DIGITEN FL-308D (G3/8, 0.3-10 L/min, F=23.6Q, ±3%) — covers 0.85
+L/min properly. **Mount it downstream of the bypass tee**, otherwise it reads recirculation
+rather than delivery to the plants.
 
 ---
 
@@ -360,8 +406,10 @@ Location: `C:\Users\bbcbg\Pictures\Fusion 360\Irrigation`
 - Check valve after Main Valve protects all upstream components from backflow
 - Air bleed valve positioned at high point to release trapped air
 - Pressure gauge before regulator shows input pressure for diagnostics
-- PCJ emitters are pressure compensating - deliver consistent 0.5 GPH regardless of line length
+- PCJ emitters are pressure compensating - deliver consistent 0.5 GPH regardless of line length **or system pressure** (across ~7-58 psi). See the pressure/volume note under Flow Calculations — raising pressure improves uniformity, it does not increase delivered volume
 - 4 manifolds x 8 ports = 32 available, 27 in use (5 capped)
+- Each reservoir has the same fit-out: 1x 400 GPH stir pump, air stone(s), float switches, DS18B20 temp probe, and a fill valve
+- The ~60 L/min air pump is a **single source shared between both reservoirs, but not simultaneously** — the DS3225 servo pinch valve (in build) diverts the air to feed *or* flush, one at a time. Stir pumps are genuinely one-per-reservoir and independent
 
 ---
 
@@ -370,12 +418,13 @@ Location: `C:\Users\bbcbg\Pictures\Fusion 360\Irrigation`
 | Issue | Details | Status/Recommendation |
 |-------|---------|----------------------|
 | **Flush pump pressure** | ~~075DV needs 15 PSI min; DEKOPRO provides ~11.7 PSI~~ | **RESOLVED** - Using U.S. Solid 12V DC valves (no minimum pressure requirement) |
+| **Feed pump oversized** | BOKYWOX passes ~6 L/min at 35 psi; PC emitters accept 0.85 L/min (~7x mismatch) | Demand switch will rapid-cycle. **Bypass/recirc leg back to the feed reservoir is required**, tuned with a needle valve to shed ~5 L/min. Returns below the surface so it doesn't aerate/foam. Bonus: stirs the reservoir during every feed |
 | **Pipe sizing** | Flora Flex pump is 1"+ outlet | Need reducers to 3/4" |
 | **Low flow operation** | At 13.5 GPH (0.225 GPM), below 3 GPM threshold | Add 200 mesh filter upstream |
 | **12V controller** | U.S. Solid valves need 12V DC | Use relay module for control |
-| **Nutrient temp** | Flora Flex max 86°F | Keep reservoir cool, especially in tent |
+| **Flush water temp** | Flora Flex max 86°F — now applies to the flush reservoir, not the nutrient one | Keep flush reservoir cool |
 | **Check valve quality** | Must seal properly to prevent cross-contamination | Use spring-loaded, quality seals (Viton/EPDM) |
-| **Flow sensor range** | Sensor min 30 L/min; system flow 0.85 L/min | Current sensor won't measure normal flow; consider low-flow sensor (0.3-6 L/min) |
+| **Flow sensor range** | Sensor min 1 L/min; steady system flow 0.85 L/min | Reads the feed's leading burst but drops out on the steady portion. Replace with DIGITEN FL-308D (0.3-10 L/min) for accurate per-feed volume |
 
 ---
 
