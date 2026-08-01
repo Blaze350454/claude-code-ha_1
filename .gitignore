@@ -19,8 +19,10 @@ Pics/Backups Encryption Key.jpg
 home_assistant_backup_emergency_kit_*.txt
 dashboard_*_backup_*.json
 
-# Large CAD exports kept locally only (~23 MB, superseded by Fusion anyway)
-air_squeeze_valve/step/
+# CAD STEP exports kept locally only - large, don't delta-compress, and the
+# Fusion documents are the dimensional authority anyway. `git add -f` to
+# override for a specific file. SVG/PNG drawings are still tracked.
+*.step
 
 # Claude temp files
 tmpclaude-*
