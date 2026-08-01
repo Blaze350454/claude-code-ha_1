@@ -1,0 +1,12 @@
+{
+  "timestamp_utc": "20260716-093812Z",
+  "label": "pre-grow-tower-led-testing-controls",
+  "ha_url": "http://192.168.2.151:8123",
+  "ha_version": "2026.7.2",
+  "counts": {
+    "entity_registry": 1089,
+    "area_registry": 13,
+    "device_registry": 81,
+    "label_registry": 52
+  }
+}

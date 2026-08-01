@@ -1,0 +1,2919 @@
+[
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDF3SK2AMA34ZF54SYYR76XM"
+    ],
+    "config_entries_subentries": {
+      "01KDF3SK2AMA34ZF54SYYR76XM": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766812601.420293,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "5f966cd902c31734eb4173483a78cea4",
+    "identifiers": [
+      [
+        "sun",
+        "01KDF3SK2AMA34ZF54SYYR76XM"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": null,
+    "model": null,
+    "model_id": null,
+    "modified_at": 1766812601.420321,
+    "name": "Sun",
+    "name_by_user": null,
+    "primary_config_entry": "01KDF3SK2AMA34ZF54SYYR76XM",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDF3SK94HG9H4XQH65FGPHMS"
+    ],
+    "config_entries_subentries": {
+      "01KDF3SK94HG9H4XQH65FGPHMS": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [
+      [
+        "bluetooth",
+        "BC:FC:E7:29:BA:F8"
+      ]
+    ],
+    "created_at": 1766812601.636914,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "usb:v1D6Bp0246d0548",
+    "id": "a011c1e5a74feae2ecd171635cf39468",
+    "identifiers": [],
+    "labels": [],
+    "manufacturer": "Realtek",
+    "model": "ASUS USB-BT500 (0b05:190e)",
+    "model_id": null,
+    "modified_at": 1783621219.341373,
+    "name": "hci0 (BC:FC:E7:29:BA:F8)",
+    "name_by_user": null,
+    "primary_config_entry": "01KDF3SK94HG9H4XQH65FGPHMS",
+    "serial_number": null,
+    "sw_version": "6.8.0-134-generic",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDF3SK9CE5QF4MXES9B7BH4A"
+    ],
+    "config_entries_subentries": {
+      "01KDF3SK9CE5QF4MXES9B7BH4A": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://config/backup",
+    "connections": [],
+    "created_at": 1766812603.930877,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "3a9331b145c265d6800243a8a8d67696",
+    "identifiers": [
+      [
+        "backup",
+        "backup_manager"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Home Assistant",
+    "model": "Home Assistant Backup",
+    "model_id": null,
+    "modified_at": 1783822796.713314,
+    "name": "Backup",
+    "name_by_user": null,
+    "primary_config_entry": "01KDF3SK9CE5QF4MXES9B7BH4A",
+    "serial_number": null,
+    "sw_version": "2026.7.2",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDF3SPNSP28Q06VEQKJ022X2"
+    ],
+    "config_entries_subentries": {
+      "01KDF3SPNSP28Q06VEQKJ022X2": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766812605.245355,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "68c052375ba86583ec95fb1baf0dd4d7",
+    "identifiers": [
+      [
+        "cast",
+        "e27e91c89e7739df2a2ac71d78281c34"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "TCL",
+    "model": "Smart TV",
+    "model_id": null,
+    "modified_at": 1782359025.273528,
+    "name": "Loft TV",
+    "name_by_user": null,
+    "primary_config_entry": "01KDF3SPNSP28Q06VEQKJ022X2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDF3ZM1B89BQ5FBCX39F583N"
+    ],
+    "config_entries_subentries": {
+      "01KDF3ZM1B89BQ5FBCX39F583N": [
+        null
+      ]
+    },
+    "configuration_url": "https://www.met.no/en",
+    "connections": [],
+    "created_at": 1766812799.599128,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "40e58adfe6c7cf7f8ee70736d3953867",
+    "identifiers": [
+      [
+        "met",
+        "01KDF3ZM1B89BQ5FBCX39F583N"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Met.no",
+    "model": "Forecast",
+    "model_id": null,
+    "modified_at": 1766812799.599152,
+    "name": "Forecast",
+    "name_by_user": null,
+    "primary_config_entry": "01KDF3ZM1B89BQ5FBCX39F583N",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs",
+    "connections": [],
+    "created_at": 1766847408.228483,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "2420073b6ad54b718c37713c8368db8f",
+    "identifiers": [
+      [
+        "hacs",
+        "0717a0cd-745c-48fd-9b16-c8534c9704f9-bc944b0f-fd42-4a58-a072-ade38d1444cd"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "hacs.xyz",
+    "model": "",
+    "model_id": null,
+    "modified_at": 1766847408.228515,
+    "name": "HACS",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": "2.0.5",
+    "via_device_id": null
+  },
+  {
+    "area_id": "3d_printer",
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/588734673",
+    "connections": [],
+    "created_at": 1766856145.630054,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "d078ec5e9c7c340eeda9c8dc7eebf6d4",
+    "identifiers": [
+      [
+        "hacs",
+        "588734673"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "greghesp, AdrianGarside",
+    "model": "integration",
+    "model_id": null,
+    "modified_at": 1776968993.624132,
+    "name": "Bambu Lab",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDGMX9QCYND1QCJ9FBWZJ8NN"
+    ],
+    "config_entries_subentries": {
+      "01KDGMX9QCYND1QCJ9FBWZJ8NN": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [
+      [
+        "mac",
+        "44:1d:64:f1:48:90"
+      ]
+    ],
+    "created_at": 1766864103.361776,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "aeacb1fbf11220f2273cbeb7b4c448d8",
+    "identifiers": [],
+    "labels": [],
+    "manufacturer": "Espressif",
+    "model": "esp32dev",
+    "model_id": null,
+    "modified_at": 1783823204.625098,
+    "name": "Tent Irrigation Controller",
+    "name_by_user": null,
+    "primary_config_entry": "01KDGMX9QCYND1QCJ9FBWZJ8NN",
+    "serial_number": null,
+    "sw_version": "2026.6.5 (2026-07-11 23:23:33 -0300)",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/1018230174",
+    "connections": [],
+    "created_at": 1766909638.08695,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "8f3e426241e109c382b13edc92c42f83",
+    "identifiers": [
+      [
+        "hacs",
+        "1018230174"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "WJDDesigns",
+    "model": "plugin",
+    "model_id": null,
+    "modified_at": 1766909638.086972,
+    "name": "Ultra Card",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDJ0X8DWJKQ2YPCZD4HD2HHY"
+    ],
+    "config_entries_subentries": {
+      "01KDJ0X8DWJKQ2YPCZD4HD2HHY": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766910239.164718,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "9089014240e528b1222e52bd952727a9",
+    "identifiers": [
+      [
+        "mobile_app",
+        "32f364a2f68b51e6"
+      ]
+    ],
+    "labels": [
+      "phone"
+    ],
+    "manufacturer": "samsung",
+    "model": "SM-A166W",
+    "model_id": null,
+    "modified_at": 1769115907.192771,
+    "name": "SM-A166W",
+    "name_by_user": "Brenton's Phone",
+    "primary_config_entry": "01KDJ0X8DWJKQ2YPCZD4HD2HHY",
+    "serial_number": null,
+    "sw_version": "36",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/222118751",
+    "connections": [],
+    "created_at": 1766949908.250716,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "7a1c90a972165ccaccefd2408ed7dcdb",
+    "identifiers": [
+      [
+        "hacs",
+        "222118751"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "AlexxIT",
+    "model": "integration",
+    "model_id": null,
+    "modified_at": 1766949908.250745,
+    "name": "Sonoff LAN",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDK6X7T56367F9WJ6FNZ340A"
+    ],
+    "config_entries_subentries": {
+      "01KDK6X7T56367F9WJ6FNZ340A": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766955919.729306,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "182",
+    "id": "4c7a59b1d7d6bf0c4d9ff8d0ebe3a5f9",
+    "identifiers": [
+      [
+        "sonoff",
+        "10017ff9b7"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "SONOFF",
+    "model": "S40TPB",
+    "model_id": null,
+    "modified_at": 1780551476.12922,
+    "name": "Tent Valve Power",
+    "name_by_user": "AC Circulation Fan",
+    "primary_config_entry": "01KDK6X7T56367F9WJ6FNZ340A",
+    "serial_number": null,
+    "sw_version": "1.5.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": "pc",
+    "config_entries": [
+      "01KDK6X7T56367F9WJ6FNZ340A"
+    ],
+    "config_entries_subentries": {
+      "01KDK6X7T56367F9WJ6FNZ340A": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766955919.73097,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "182",
+    "id": "2f83fd7699b846210c7a1977bca2a7b1",
+    "identifiers": [
+      [
+        "sonoff",
+        "1001801919"
+      ]
+    ],
+    "labels": [
+      "pc"
+    ],
+    "manufacturer": "SONOFF",
+    "model": "S40TPB",
+    "model_id": null,
+    "modified_at": 1780551476.138634,
+    "name": "PC",
+    "name_by_user": "PC",
+    "primary_config_entry": "01KDK6X7T56367F9WJ6FNZ340A",
+    "serial_number": null,
+    "sw_version": "1.5.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDK6X7T56367F9WJ6FNZ340A"
+    ],
+    "config_entries_subentries": {
+      "01KDK6X7T56367F9WJ6FNZ340A": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766955919.732413,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "182",
+    "id": "84f4f5e88b6606310fd585ae303fe2f1",
+    "identifiers": [
+      [
+        "sonoff",
+        "10017fee1e"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "SONOFF",
+    "model": "S40TPB",
+    "model_id": null,
+    "modified_at": 1780551476.147149,
+    "name": "Tent Controller",
+    "name_by_user": "Tent Controller",
+    "primary_config_entry": "01KDK6X7T56367F9WJ6FNZ340A",
+    "serial_number": null,
+    "sw_version": "1.5.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": "3d_printer",
+    "config_entries": [
+      "01KDK6X7T56367F9WJ6FNZ340A"
+    ],
+    "config_entries_subentries": {
+      "01KDK6X7T56367F9WJ6FNZ340A": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766955919.733711,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "182",
+    "id": "d4ac62ba39a81423afe16c773ec9b1ce",
+    "identifiers": [
+      [
+        "sonoff",
+        "10017fec62"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "SONOFF",
+    "model": "S40TPB",
+    "model_id": null,
+    "modified_at": 1780551476.155266,
+    "name": "Prusa",
+    "name_by_user": null,
+    "primary_config_entry": "01KDK6X7T56367F9WJ6FNZ340A",
+    "serial_number": null,
+    "sw_version": "1.5.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDK6X7T56367F9WJ6FNZ340A"
+    ],
+    "config_entries_subentries": {
+      "01KDK6X7T56367F9WJ6FNZ340A": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766955919.73696,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "182",
+    "id": "3a75cf233212afb8f22279861b506cd8",
+    "identifiers": [
+      [
+        "sonoff",
+        "10017fff91"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "SONOFF",
+    "model": "S40TPB",
+    "model_id": null,
+    "modified_at": 1780551476.163071,
+    "name": "Circulation Fans",
+    "name_by_user": null,
+    "primary_config_entry": "01KDK6X7T56367F9WJ6FNZ340A",
+    "serial_number": null,
+    "sw_version": "1.5.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDK6X7T56367F9WJ6FNZ340A"
+    ],
+    "config_entries_subentries": {
+      "01KDK6X7T56367F9WJ6FNZ340A": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766955919.738546,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "182",
+    "id": "d889f88c3779ec52649755e6b7aa4dfc",
+    "identifiers": [
+      [
+        "sonoff",
+        "1001804756"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "SONOFF",
+    "model": "S40TPB",
+    "model_id": null,
+    "modified_at": 1780551476.171491,
+    "name": "Duct Fan",
+    "name_by_user": null,
+    "primary_config_entry": "01KDK6X7T56367F9WJ6FNZ340A",
+    "serial_number": null,
+    "sw_version": "1.5.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDK6X7T56367F9WJ6FNZ340A"
+    ],
+    "config_entries_subentries": {
+      "01KDK6X7T56367F9WJ6FNZ340A": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766955919.73981,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "182",
+    "id": "35e95e9d6a7c0b3123ee73a119e553cd",
+    "identifiers": [
+      [
+        "sonoff",
+        "10017fe92a"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "SONOFF",
+    "model": "S40TPB",
+    "model_id": null,
+    "modified_at": 1780551476.17998,
+    "name": "HLG",
+    "name_by_user": null,
+    "primary_config_entry": "01KDK6X7T56367F9WJ6FNZ340A",
+    "serial_number": null,
+    "sw_version": "1.5.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDK6X7T56367F9WJ6FNZ340A"
+    ],
+    "config_entries_subentries": {
+      "01KDK6X7T56367F9WJ6FNZ340A": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766955919.741051,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "182",
+    "id": "d8e43850ec0bf713de0cb4c5675b235a",
+    "identifiers": [
+      [
+        "sonoff",
+        "1001801377"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "SONOFF",
+    "model": "S40TPB",
+    "model_id": null,
+    "modified_at": 1780551476.18793,
+    "name": "Chilled",
+    "name_by_user": null,
+    "primary_config_entry": "01KDK6X7T56367F9WJ6FNZ340A",
+    "serial_number": null,
+    "sw_version": "1.5.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": "3d_printer",
+    "config_entries": [
+      "01KDK61QMY4TQSDJCSHSWP7DJP"
+    ],
+    "config_entries_subentries": {
+      "01KDK61QMY4TQSDJCSHSWP7DJP": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766956171.602369,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "1.0",
+    "id": "94ccd1c16df9e9ef9015fecaaef85f53",
+    "identifiers": [
+      [
+        "matter",
+        "serial_788CB594C140"
+      ],
+      [
+        "matter",
+        "deviceid_50CE55094F84F6DC-0000000000000002-MatterNodeDevice"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Kasa",
+    "model": "Kasa Smart Wi-Fi Plug",
+    "model_id": "257",
+    "modified_at": 1776968993.696324,
+    "name": "Kasa Smart Wi-Fi Plug",
+    "name_by_user": "Bambu",
+    "primary_config_entry": "01KDK61QMY4TQSDJCSHSWP7DJP",
+    "serial_number": "788CB594C140",
+    "sw_version": "1.0.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDPMN71Y1GEFPYEK1JJKD5Y2"
+    ],
+    "config_entries_subentries": {
+      "01KDPMN71Y1GEFPYEK1JJKD5Y2": [
+        null
+      ]
+    },
+    "configuration_url": "https://weather.gc.ca/",
+    "connections": [],
+    "created_at": 1767065165.471962,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "3ffdefa8ad7e042edc47ed8ec33bc35e",
+    "identifiers": [
+      [
+        "environment_canada",
+        "01KDPMN71Y1GEFPYEK1JJKD5Y2"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Environment Canada",
+    "model": null,
+    "model_id": null,
+    "modified_at": 1767065182.330505,
+    "name": "Antigonish",
+    "name_by_user": "Weather Antigonish",
+    "primary_config_entry": "01KDPMN71Y1GEFPYEK1JJKD5Y2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/522634019",
+    "connections": [],
+    "created_at": 1767155934.753749,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "761661c55a8912653ea513c86b467efc",
+    "identifiers": [
+      [
+        "hacs",
+        "522634019"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "pkissling",
+    "model": "plugin",
+    "model_id": null,
+    "modified_at": 1767155934.753777,
+    "name": "Clock Weather Card",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/444350375",
+    "connections": [],
+    "created_at": 1767158139.123104,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "edc13ece4dc700b5cfb3408ad46126aa",
+    "identifiers": [
+      [
+        "hacs",
+        "444350375"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "piitaya",
+    "model": "plugin",
+    "model_id": null,
+    "modified_at": 1767158139.123131,
+    "name": "Mushroom",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/146194325",
+    "connections": [],
+    "created_at": 1767161279.809889,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "c62d9f2294ce9b56523705583dcee771",
+    "identifiers": [
+      [
+        "hacs",
+        "146194325"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "custom-cards",
+    "model": "plugin",
+    "model_id": null,
+    "modified_at": 1767161279.809916,
+    "name": "button-card",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/871730343",
+    "connections": [],
+    "created_at": 1767161371.391398,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "cdaba8c0f6d3f608aaaf77f2f0faee20",
+    "identifiers": [
+      [
+        "hacs",
+        "871730343"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "selvalt7",
+    "model": "plugin",
+    "model_id": null,
+    "modified_at": 1767161371.391422,
+    "name": "Modern Circular Gauge",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDT0YD7WNAF8XF6AS3V4R723"
+    ],
+    "config_entries_subentries": {
+      "01KDT0YD7WNAF8XF6AS3V4R723": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [
+      [
+        "mac",
+        "58:cf:79:da:47:b4"
+      ]
+    ],
+    "created_at": 1767178712.501396,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "16b1ba8b866b42ed9de21d07f42148d9",
+    "identifiers": [],
+    "labels": [],
+    "manufacturer": "Espressif",
+    "model": "esp32-c3-devkitm-1",
+    "model_id": null,
+    "modified_at": 1783933032.143991,
+    "name": "grow-tent-one",
+    "name_by_user": null,
+    "primary_config_entry": "01KDT0YD7WNAF8XF6AS3V4R723",
+    "serial_number": null,
+    "sw_version": "2026.6.5 (2026-07-13 05:51:42 -0300)",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDT0ZC80PCD2TY4MXKFB2RA5"
+    ],
+    "config_entries_subentries": {
+      "01KDT0ZC80PCD2TY4MXKFB2RA5": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [
+      [
+        "mac",
+        "58:cf:79:da:3c:80"
+      ]
+    ],
+    "created_at": 1767178744.256777,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "8c4b2ecc70002d6c17d38bac66fdeb69",
+    "identifiers": [],
+    "labels": [],
+    "manufacturer": "Espressif",
+    "model": "esp32-c3-devkitm-1",
+    "model_id": null,
+    "modified_at": 1783933206.758457,
+    "name": "Grow Tent Two",
+    "name_by_user": null,
+    "primary_config_entry": "01KDT0ZC80PCD2TY4MXKFB2RA5",
+    "serial_number": null,
+    "sw_version": "2026.6.5 (2026-07-13 05:52:35 -0300)",
+    "via_device_id": null
+  },
+  {
+    "area_id": "outside",
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.778257,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "72669cdb6fb8629ffa2a072911f23bb1",
+    "identifiers": [
+      [
+        "blink",
+        "G8T250022344122D"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": null,
+    "model_id": null,
+    "modified_at": 1782985826.11254,
+    "name": "blink Outdoor",
+    "name_by_user": null,
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T250022344122D",
+    "sw_version": "16.0.37",
+    "via_device_id": null
+  },
+  {
+    "area_id": "outside",
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.778797,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "11bfd6cc10e66f4d6fa7c8579c11792f",
+    "identifiers": [
+      [
+        "blink",
+        "G8T1V70120827QFQ"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": null,
+    "model_id": null,
+    "modified_at": 1782985826.112814,
+    "name": "blink Indoor",
+    "name_by_user": null,
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T1V70120827QFQ",
+    "sw_version": "16.0.37",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.779526,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "5ae513c6adc21392f807171b42513eba",
+    "identifiers": [
+      [
+        "blink",
+        "G8T1GH0123440EJE"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "",
+    "model_id": null,
+    "modified_at": 1783998525.078848,
+    "name": "Camera Tent 1",
+    "name_by_user": "Camera Tent 1",
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T1GH0123440EJE",
+    "sw_version": "10.73",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.780188,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "27474c9ab0bb6c1cbcc1a4050fe9ca89",
+    "identifiers": [
+      [
+        "blink",
+        "G8T1GH0123440EUB"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "",
+    "model_id": null,
+    "modified_at": 1783998525.079145,
+    "name": "Camera Tent 2",
+    "name_by_user": "Camera Tent 2",
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T1GH0123440EUB",
+    "sw_version": "10.73",
+    "via_device_id": null
+  },
+  {
+    "area_id": "outside",
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.780824,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "9cdb42ab099e1a1867b789cd4deb587c",
+    "identifiers": [
+      [
+        "blink",
+        "G8T1GH0123440ENE"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "",
+    "model_id": null,
+    "modified_at": 1783998525.079427,
+    "name": "Garden",
+    "name_by_user": null,
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T1GH0123440ENE",
+    "sw_version": "10.67",
+    "via_device_id": null
+  },
+  {
+    "area_id": "outside",
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.78142,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "106fbb6d2e30ed4635a62ca1278e33ad",
+    "identifiers": [
+      [
+        "blink",
+        "G8T1TW0225130C94"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "doorbell",
+    "model_id": null,
+    "modified_at": 1783998525.082763,
+    "name": "Front Door",
+    "name_by_user": null,
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T1TW0225130C94",
+    "sw_version": "12.87",
+    "via_device_id": null
+  },
+  {
+    "area_id": "outside",
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.782742,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "33458d1a67a423a3f756dd359c1d3739",
+    "identifiers": [
+      [
+        "blink",
+        "G8T1GH0123440EPV"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "",
+    "model_id": null,
+    "modified_at": 1783998525.080037,
+    "name": "Front Driveway",
+    "name_by_user": null,
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T1GH0123440EPV",
+    "sw_version": "10.73",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.783344,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "38fe6936b439c3f5be9134ad1178b4dc",
+    "identifiers": [
+      [
+        "blink",
+        "G8T190012133034G"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "mini",
+    "model_id": null,
+    "modified_at": 1783998525.080372,
+    "name": "Garage",
+    "name_by_user": null,
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T190012133034G",
+    "sw_version": "9.90",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.796354,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "bf71fb6afee7fa69edf0556fddcf7dd5",
+    "identifiers": [
+      [
+        "blink",
+        "G8T190012133066A"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "mini",
+    "model_id": null,
+    "modified_at": 1783998525.080708,
+    "name": "Hall",
+    "name_by_user": null,
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T190012133066A",
+    "sw_version": "9.91",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.796992,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "305d0e679e9b3cd65306c8b6e614469c",
+    "identifiers": [
+      [
+        "blink",
+        "G8T19000126405TN"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "mini",
+    "model_id": null,
+    "modified_at": 1783998525.081018,
+    "name": "Front",
+    "name_by_user": null,
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T19000126405TN",
+    "sw_version": "9.89",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.797623,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "74094eb9a0e77cc032bfc81997825d00",
+    "identifiers": [
+      [
+        "blink",
+        "G8T190012133065F"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "mini",
+    "model_id": null,
+    "modified_at": 1783998525.081337,
+    "name": "Bath Room",
+    "name_by_user": null,
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T190012133065F",
+    "sw_version": "9.89",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.798214,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "6e6e2dc04395624272472b070def17c9",
+    "identifiers": [
+      [
+        "blink",
+        "G8T19001230406CR"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "mini",
+    "model_id": null,
+    "modified_at": 1783998525.081666,
+    "name": "Bedroom",
+    "name_by_user": null,
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T19001230406CR",
+    "sw_version": "9.92",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.79904,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "0e306717a13d34f5485067312ee9491e",
+    "identifiers": [
+      [
+        "blink",
+        "G8T19001230413DQ"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "mini",
+    "model_id": null,
+    "modified_at": 1783998525.082109,
+    "name": "Kitchen",
+    "name_by_user": null,
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T19001230413DQ",
+    "sw_version": "9.89",
+    "via_device_id": null
+  },
+  {
+    "area_id": "outside",
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1767246022.799654,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "eec35113ba63246b5fcb35c60f7b10a9",
+    "identifiers": [
+      [
+        "blink",
+        "G8T1TW0225130EHW"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "doorbell",
+    "model_id": null,
+    "modified_at": 1783998525.082449,
+    "name": "Back Door",
+    "name_by_user": null,
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T1TW0225130EHW",
+    "sw_version": "12.87",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDK61QMY4TQSDJCSHSWP7DJP"
+    ],
+    "config_entries_subentries": {
+      "01KDK61QMY4TQSDJCSHSWP7DJP": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766949414.805057,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "1.0",
+    "id": "027eed9ee662c4fb3e845c832051b7d8",
+    "identifiers": [
+      [
+        "matter",
+        "serial_DC6279DB94B8"
+      ],
+      [
+        "matter",
+        "deviceid_50CE55094F84F6DC-0000000000000006-MatterNodeDevice"
+      ],
+      [
+        "matter",
+        "deviceid_50CE55094F84F6DC-0000000000000001-MatterNodeDevice"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Kasa",
+    "model": "Kasa Smart Wi-Fi Plug",
+    "model_id": "257",
+    "modified_at": 1776908750.507539,
+    "name": "Kasa Smart Wi-Fi Plug",
+    "name_by_user": "Blank 2",
+    "primary_config_entry": "01KDK61QMY4TQSDJCSHSWP7DJP",
+    "serial_number": "DC6279DB94B8",
+    "sw_version": "1.0.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDK61QMY4TQSDJCSHSWP7DJP"
+    ],
+    "config_entries_subentries": {
+      "01KDK61QMY4TQSDJCSHSWP7DJP": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1768129762.269831,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "1.0",
+    "id": "9dd72354a9a624a677378b2acd5fe7c1",
+    "identifiers": [
+      [
+        "matter",
+        "serial_788CB594BE84"
+      ],
+      [
+        "matter",
+        "deviceid_50CE55094F84F6DC-0000000000000007-MatterNodeDevice"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Kasa",
+    "model": "Kasa Smart Wi-Fi Plug",
+    "model_id": "257",
+    "modified_at": 1773484325.504988,
+    "name": "Kasa Smart Wi-Fi Plug",
+    "name_by_user": "Blank 3",
+    "primary_config_entry": "01KDK61QMY4TQSDJCSHSWP7DJP",
+    "serial_number": "788CB594BE84",
+    "sw_version": "1.0.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDK61QMY4TQSDJCSHSWP7DJP"
+    ],
+    "config_entries_subentries": {
+      "01KDK61QMY4TQSDJCSHSWP7DJP": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1768142146.836693,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "1.0",
+    "id": "ca3101f189b8b6f561548e722fed0a72",
+    "identifiers": [
+      [
+        "matter",
+        "deviceid_50CE55094F84F6DC-0000000000000008-MatterNodeDevice"
+      ],
+      [
+        "matter",
+        "serial_BC071DA29853"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Kasa",
+    "model": "Kasa Smart Wi-Fi Plug",
+    "model_id": "257",
+    "modified_at": 1776920593.663545,
+    "name": "Kasa Smart Wi-Fi Plug",
+    "name_by_user": "Air Conditioner Tent",
+    "primary_config_entry": "01KDK61QMY4TQSDJCSHSWP7DJP",
+    "serial_number": "BC071DA29853",
+    "sw_version": "1.0.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDFQ42EY6GYKP35VKP29H0QH"
+    ],
+    "config_entries_subentries": {
+      "01KDFQ42EY6GYKP35VKP29H0QH": [
+        null
+      ]
+    },
+    "configuration_url": "https://drive.google.com/drive/folders/1vAweIiXtzI_ZiVTNtNPuAhSrFEmKVdpF",
+    "connections": [],
+    "created_at": 1768195467.022807,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "ff7ce2b63e5dafd973e3ae47b4dd10bb",
+    "identifiers": [
+      [
+        "google_drive",
+        "bbcbggr@gmail.com"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Google",
+    "model": "Google Drive",
+    "model_id": null,
+    "modified_at": 1768195467.022836,
+    "name": "bbcbggr@gmail.com",
+    "name_by_user": null,
+    "primary_config_entry": "01KDFQ42EY6GYKP35VKP29H0QH",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDK61QMY4TQSDJCSHSWP7DJP"
+    ],
+    "config_entries_subentries": {
+      "01KDK61QMY4TQSDJCSHSWP7DJP": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1768204397.406855,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "1.0",
+    "id": "5bc452a4fa2b233f2551286049de98e8",
+    "identifiers": [
+      [
+        "matter",
+        "deviceid_50CE55094F84F6DC-0000000000000009-MatterNodeDevice"
+      ],
+      [
+        "matter",
+        "serial_DC6279DB9F8C"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Kasa",
+    "model": "Kasa Smart Wi-Fi Plug",
+    "model_id": "257",
+    "modified_at": 1773484186.666738,
+    "name": "Kasa Smart Wi-Fi Plug",
+    "name_by_user": "Blank 1",
+    "primary_config_entry": "01KDK61QMY4TQSDJCSHSWP7DJP",
+    "serial_number": "DC6279DB9F8C",
+    "sw_version": "1.0.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDK61QMY4TQSDJCSHSWP7DJP"
+    ],
+    "config_entries_subentries": {
+      "01KDK61QMY4TQSDJCSHSWP7DJP": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1768223240.302114,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "1.0",
+    "id": "64230739e63d841f97fe0b3820c63ebc",
+    "identifiers": [
+      [
+        "matter",
+        "serial_DC6279895606"
+      ],
+      [
+        "matter",
+        "deviceid_50CE55094F84F6DC-000000000000000A-MatterNodeDevice"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Kasa",
+    "model": "Kasa Smart Outdoor Plug",
+    "model_id": "258",
+    "modified_at": 1776920593.656213,
+    "name": "Kasa Smart Outdoor Plug",
+    "name_by_user": "Irrigation Multi - Plug",
+    "primary_config_entry": "01KDK61QMY4TQSDJCSHSWP7DJP",
+    "serial_number": "DC6279895606",
+    "sw_version": "1.0.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/151280062",
+    "connections": [],
+    "created_at": 1768226803.172531,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "9fadb8b84f2060230f5819c92374a7cc",
+    "identifiers": [
+      [
+        "hacs",
+        "151280062"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "kalkih",
+    "model": "plugin",
+    "model_id": null,
+    "modified_at": 1768226803.172559,
+    "name": "mini-graph-card",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": "pc",
+    "config_entries": [
+      "01KF0CY2S80VHK3ZHQNXDYMQMN"
+    ],
+    "config_entries_subentries": {
+      "01KF0CY2S80VHK3ZHQNXDYMQMN": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [
+      [
+        "mac",
+        "78:93:c3:22:9f:61"
+      ],
+      [
+        "upnp",
+        "uuid:ff3c3ffe-7776-4f76-a9ee-e7ee7be6bffb"
+      ]
+    ],
+    "created_at": 1768466352.940209,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "6468f9b2154a392913ddad62c48f570c",
+    "identifiers": [],
+    "labels": [],
+    "manufacturer": "Microsoft Corporation",
+    "model": "Windows Media Player",
+    "model_id": null,
+    "modified_at": 1768466358.525319,
+    "name": "Loft TV",
+    "name_by_user": null,
+    "primary_config_entry": null,
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": "pc",
+    "config_entries": [
+      "01KF0D2BG1188QWQ0NHPR99FCR"
+    ],
+    "config_entries_subentries": {
+      "01KF0D2BG1188QWQ0NHPR99FCR": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [
+      [
+        "mac",
+        "78:93:c3:22:9f:62"
+      ]
+    ],
+    "created_at": 1768466493.103726,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "a4372d2f9ae9c0d101e720cc08e8520a",
+    "identifiers": [
+      [
+        "androidtv_remote",
+        "78:93:c3:22:9f:62"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "TCL",
+    "model": "Smart TV",
+    "model_id": null,
+    "modified_at": 1768466507.043803,
+    "name": "Loft TV",
+    "name_by_user": null,
+    "primary_config_entry": "01KF0D2BG1188QWQ0NHPR99FCR",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KF0D3RKJHXPE07TVQXPC11EZ"
+    ],
+    "config_entries_subentries": {
+      "01KF0D3RKJHXPE07TVQXPC11EZ": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [
+      [
+        "upnp",
+        "uuid:75802409-bccb-40e7-8e6c-fa095ecce13e"
+      ],
+      [
+        "mac",
+        "0c:ac:8a:71:a4:4b"
+      ]
+    ],
+    "created_at": 1768466539.389076,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "5430a66c6728550dd019ce8f1bf8480c",
+    "identifiers": [
+      [
+        "upnp",
+        "uuid:75802409-bccb-40e7-8e6c-fa095ecce13e::urn:schemas-upnp-org:device:InternetGatewayDevice:2"
+      ],
+      [
+        "upnp_serial_number",
+        "000"
+      ],
+      [
+        "upnp_host",
+        "192.168.2.1"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Sagemcom",
+    "model": "5690",
+    "model_id": null,
+    "modified_at": 1783998515.53965,
+    "name": "Giga Hub 4000E Internet Gateway Device",
+    "name_by_user": null,
+    "primary_config_entry": "01KF0D3RKJHXPE07TVQXPC11EZ",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/799096673",
+    "connections": [],
+    "created_at": 1768598546.601043,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "29d1e0d98e677beb44566acd4c50fd4b",
+    "identifiers": [
+      [
+        "hacs",
+        "799096673"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "wuwentao, rokam, chemelli74, Necroneco",
+    "model": "integration",
+    "model_id": null,
+    "modified_at": 1768598546.601071,
+    "name": "Midea AC LAN",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KF4C0PT8ME8RPXVA89A1Q2GM"
+    ],
+    "config_entries_subentries": {
+      "01KF4C0PT8ME8RPXVA89A1Q2GM": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1768599608.162232,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "f12751c76fa5c4fd44d0b19d203997ba",
+    "identifiers": [
+      [
+        "midea_ac_lan",
+        "150633094780035"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Midea",
+    "model": "Dehumidifier 00000Q1C (0)",
+    "model_id": null,
+    "modified_at": 1778319935.526385,
+    "name": "Tent Dehumidifier",
+    "name_by_user": "Tent Dehumidifier",
+    "primary_config_entry": "01KF4C0PT8ME8RPXVA89A1Q2GM",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KF4C7DDZS6903BYRG52QZ5YY"
+    ],
+    "config_entries_subentries": {
+      "01KF4C7DDZS6903BYRG52QZ5YY": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1768599827.904474,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "7b08c7ecf2f3fdb4627fc3bd7bb82f61",
+    "identifiers": [
+      [
+        "midea_ac_lan",
+        "150633095145222"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Midea",
+    "model": "Air Conditioner 00000Q11 (769)",
+    "model_id": null,
+    "modified_at": 1778319935.527939,
+    "name": "Air Conditioner Tent",
+    "name_by_user": "Tent Air Conditioner",
+    "primary_config_entry": "01KF4C7DDZS6903BYRG52QZ5YY",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDK61QMY4TQSDJCSHSWP7DJP"
+    ],
+    "config_entries_subentries": {
+      "01KDK61QMY4TQSDJCSHSWP7DJP": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1769014367.986858,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "1.0",
+    "id": "9f6abec3dd1bb24125a59d2986aa4c28",
+    "identifiers": [
+      [
+        "matter",
+        "serial_BC071DA2A180"
+      ],
+      [
+        "matter",
+        "deviceid_50CE55094F84F6DC-000000000000000C-MatterNodeDevice"
+      ],
+      [
+        "matter",
+        "deviceid_50CE55094F84F6DC-000000000000000B-MatterNodeDevice"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Kasa",
+    "model": "Kasa Smart Wi-Fi Plug",
+    "model_id": "257",
+    "modified_at": 1778319935.524116,
+    "name": "Kasa Smart Wi-Fi Plug",
+    "name_by_user": "Tent Humidifier",
+    "primary_config_entry": "01KDK61QMY4TQSDJCSHSWP7DJP",
+    "serial_number": "BC071DA2A180",
+    "sw_version": "1.0.0",
+    "via_device_id": null
+  },
+  {
+    "area_id": "3d_printer",
+    "config_entries": [
+      "01KJP1XK0KJ3XKA5P7X3882K7V"
+    ],
+    "config_entries_subentries": {
+      "01KJP1XK0KJ3XKA5P7X3882K7V": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766856704.051762,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "AP04",
+    "id": "9fb182f8c493dec86eac802d351f35d5",
+    "identifiers": [
+      [
+        "bambu_lab",
+        "01P09C470802548"
+      ]
+    ],
+    "labels": [
+      "bambu"
+    ],
+    "manufacturer": "Bambu Lab",
+    "model": "P1S",
+    "model_id": null,
+    "modified_at": 1778137906.767901,
+    "name": "P1S_01P09C470802548",
+    "name_by_user": "Bambu",
+    "primary_config_entry": "01KJP1XK0KJ3XKA5P7X3882K7V",
+    "serial_number": "01P09C470802548",
+    "sw_version": "01.10.00.00",
+    "via_device_id": null
+  },
+  {
+    "area_id": "3d_printer",
+    "config_entries": [
+      "01KJP1XK0KJ3XKA5P7X3882K7V"
+    ],
+    "config_entries_subentries": {
+      "01KJP1XK0KJ3XKA5P7X3882K7V": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766856704.051296,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "",
+    "id": "4bb89286ed343af17baa34fa37c91b30",
+    "identifiers": [
+      [
+        "bambu_lab",
+        "01P09C470802548_ExternalSpool"
+      ]
+    ],
+    "labels": [
+      "bambu"
+    ],
+    "manufacturer": "Bambu Lab",
+    "model": "External Spool",
+    "model_id": null,
+    "modified_at": 1776968993.696431,
+    "name": "P1S_01P09C470802548_ExternalSpool",
+    "name_by_user": "Bambu External Spool",
+    "primary_config_entry": "01KJP1XK0KJ3XKA5P7X3882K7V",
+    "serial_number": null,
+    "sw_version": "",
+    "via_device_id": "9fb182f8c493dec86eac802d351f35d5"
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDF3ZKYBSVB5V11GWQN10EHD"
+    ],
+    "config_entries_subentries": {
+      "01KDF3ZKYBSVB5V11GWQN10EHD": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1773298429.358811,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "779d1933917718ace3e0b98fdaaa948d",
+    "identifiers": [
+      [
+        "google_translate",
+        "01KDF3ZKYBSVB5V11GWQN10EHD"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Google",
+    "model": "Google Translate TTS",
+    "model_id": null,
+    "modified_at": 1773298429.358838,
+    "name": "Google Translate en com",
+    "name_by_user": null,
+    "primary_config_entry": "01KDF3ZKYBSVB5V11GWQN10EHD",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KM0PMZV8QS3MQ8TM0V98VZP7"
+    ],
+    "config_entries_subentries": {
+      "01KM0PMZV8QS3MQ8TM0V98VZP7": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [
+      [
+        "mac",
+        "10:5a:95:89:c0:74"
+      ]
+    ],
+    "created_at": 1773042089.136996,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "2.0",
+    "id": "0fcd2598b991e9c34ada7834acc81788",
+    "identifiers": [
+      [
+        "tplink",
+        "10:5A:95:89:C0:74"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "TP-Link",
+    "model": "HS300",
+    "model_id": null,
+    "modified_at": 1778292917.667903,
+    "name": "TP-LINK_Power Strip_C074",
+    "name_by_user": "Tent Irrigation Power Strip",
+    "primary_config_entry": "01KM0PMZV8QS3MQ8TM0V98VZP7",
+    "serial_number": null,
+    "sw_version": "1.1.2 Build 241220 Rel.171333",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KM0PMZV8QS3MQ8TM0V98VZP7"
+    ],
+    "config_entries_subentries": {
+      "01KM0PMZV8QS3MQ8TM0V98VZP7": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1773042089.165558,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "2.0",
+    "id": "735560cc10107158dd65285a58caacb9",
+    "identifiers": [
+      [
+        "tplink",
+        "10:5A:95:89:C0:74_8006D38A476E2DFA2A6D5AE5FD2D02A324F4F85E00"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "TP-Link",
+    "model": "Socket for HS300(US)",
+    "model_id": null,
+    "modified_at": 1776920593.656311,
+    "name": "TP-LINK_Power Strip_C074 Kasa_Smart Plug_C074_1",
+    "name_by_user": "Air Pump",
+    "primary_config_entry": "01KM0PMZV8QS3MQ8TM0V98VZP7",
+    "serial_number": null,
+    "sw_version": "1.1.2 Build 241220 Rel.171333",
+    "via_device_id": "0fcd2598b991e9c34ada7834acc81788"
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KM0PMZV8QS3MQ8TM0V98VZP7"
+    ],
+    "config_entries_subentries": {
+      "01KM0PMZV8QS3MQ8TM0V98VZP7": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1773042089.168319,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "2.0",
+    "id": "454345ee28da97b58f0f0deabb342502",
+    "identifiers": [
+      [
+        "tplink",
+        "10:5A:95:89:C0:74_8006D38A476E2DFA2A6D5AE5FD2D02A324F4F85E01"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "TP-Link",
+    "model": "Socket for HS300(US)",
+    "model_id": null,
+    "modified_at": 1776908750.509948,
+    "name": "TP-LINK_Power Strip_C074 Plug 2",
+    "name_by_user": null,
+    "primary_config_entry": "01KM0PMZV8QS3MQ8TM0V98VZP7",
+    "serial_number": null,
+    "sw_version": "1.1.2 Build 241220 Rel.171333",
+    "via_device_id": "0fcd2598b991e9c34ada7834acc81788"
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KM0PMZV8QS3MQ8TM0V98VZP7"
+    ],
+    "config_entries_subentries": {
+      "01KM0PMZV8QS3MQ8TM0V98VZP7": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1773042089.171194,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "2.0",
+    "id": "2922b416afd53695533c77215894c9c0",
+    "identifiers": [
+      [
+        "tplink",
+        "10:5A:95:89:C0:74_8006D38A476E2DFA2A6D5AE5FD2D02A324F4F85E02"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "TP-Link",
+    "model": "Socket for HS300(US)",
+    "model_id": null,
+    "modified_at": 1776908750.510545,
+    "name": "TP-LINK_Power Strip_C074 Plug 3",
+    "name_by_user": null,
+    "primary_config_entry": "01KM0PMZV8QS3MQ8TM0V98VZP7",
+    "serial_number": null,
+    "sw_version": "1.1.2 Build 241220 Rel.171333",
+    "via_device_id": "0fcd2598b991e9c34ada7834acc81788"
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KM0PMZV8QS3MQ8TM0V98VZP7"
+    ],
+    "config_entries_subentries": {
+      "01KM0PMZV8QS3MQ8TM0V98VZP7": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1773042089.17397,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "2.0",
+    "id": "f426ded6aa3b7153a748f2bbeb0fbce6",
+    "identifiers": [
+      [
+        "tplink",
+        "10:5A:95:89:C0:74_8006D38A476E2DFA2A6D5AE5FD2D02A324F4F85E03"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "TP-Link",
+    "model": "Socket for HS300(US)",
+    "model_id": null,
+    "modified_at": 1776908750.511203,
+    "name": "TP-LINK_Power Strip_C074 Kasa_Smart Plug_C074_4",
+    "name_by_user": null,
+    "primary_config_entry": "01KM0PMZV8QS3MQ8TM0V98VZP7",
+    "serial_number": null,
+    "sw_version": "1.1.2 Build 241220 Rel.171333",
+    "via_device_id": "0fcd2598b991e9c34ada7834acc81788"
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KM0PMZV8QS3MQ8TM0V98VZP7"
+    ],
+    "config_entries_subentries": {
+      "01KM0PMZV8QS3MQ8TM0V98VZP7": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1773042089.176989,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "2.0",
+    "id": "0137bd0af40cdebc5ad980ac5974086a",
+    "identifiers": [
+      [
+        "tplink",
+        "10:5A:95:89:C0:74_8006D38A476E2DFA2A6D5AE5FD2D02A324F4F85E04"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "TP-Link",
+    "model": "Socket for HS300(US)",
+    "model_id": null,
+    "modified_at": 1776908750.51213,
+    "name": "TP-LINK_Power Strip_C074 Plug 5",
+    "name_by_user": null,
+    "primary_config_entry": "01KM0PMZV8QS3MQ8TM0V98VZP7",
+    "serial_number": null,
+    "sw_version": "1.1.2 Build 241220 Rel.171333",
+    "via_device_id": "0fcd2598b991e9c34ada7834acc81788"
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KM0PMZV8QS3MQ8TM0V98VZP7"
+    ],
+    "config_entries_subentries": {
+      "01KM0PMZV8QS3MQ8TM0V98VZP7": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1773042089.179666,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "2.0",
+    "id": "09498c04bbcd3516db0d71711fda9166",
+    "identifiers": [
+      [
+        "tplink",
+        "10:5A:95:89:C0:74_8006D38A476E2DFA2A6D5AE5FD2D02A324F4F85E05"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "TP-Link",
+    "model": "Socket for HS300(US)",
+    "model_id": null,
+    "modified_at": 1776908750.513363,
+    "name": "TP-LINK_Power Strip_C074 Plug 6",
+    "name_by_user": null,
+    "primary_config_entry": "01KM0PMZV8QS3MQ8TM0V98VZP7",
+    "serial_number": null,
+    "sw_version": "1.1.2 Build 241220 Rel.171333",
+    "via_device_id": "0fcd2598b991e9c34ada7834acc81788"
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/942051047",
+    "connections": [],
+    "created_at": 1774529294.100743,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "134dc4296bfe699f96294eafb27c7171",
+    "identifiers": [
+      [
+        "hacs",
+        "942051047"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "thomasloven",
+    "model": "integration",
+    "model_id": null,
+    "modified_at": 1774529294.100768,
+    "name": "Custom Icons",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/1194828288",
+    "connections": [],
+    "created_at": 1776276172.66354,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "aceab64f2219c747f069d92a0868b456",
+    "identifiers": [
+      [
+        "hacs",
+        "1194828288"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "djdevil",
+    "model": "plugin",
+    "model_id": null,
+    "modified_at": 1776276172.66358,
+    "name": "AlertTicker Card",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/456201687",
+    "connections": [],
+    "created_at": 1776708269.321358,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "f25e953667b24cc110b90a2ae0f32721",
+    "identifiers": [
+      [
+        "hacs",
+        "456201687"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "piitaya",
+    "model": "theme",
+    "model_id": null,
+    "modified_at": 1776708269.321381,
+    "name": "Mushroom Themes",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/190927524",
+    "connections": [],
+    "created_at": 1776708300.042051,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "bacd0c138a71e59a513d03da69037113",
+    "identifiers": [
+      [
+        "hacs",
+        "190927524"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "thomasloven",
+    "model": "plugin",
+    "model_id": null,
+    "modified_at": 1776708300.042075,
+    "name": "card-mod",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": "mom_grow",
+    "config_entries": [
+      "01KPY9T0CFAE5GRX8743T8ZZ9N"
+    ],
+    "config_entries_subentries": {
+      "01KPY9T0CFAE5GRX8743T8ZZ9N": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [
+      [
+        "mac",
+        "dc:62:79:89:56:06"
+      ]
+    ],
+    "created_at": 1776985899.635439,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "1.0",
+    "id": "ed25779acf79eb913ee51e6568b9f483",
+    "identifiers": [
+      [
+        "tplink",
+        "803A9E6E1A83892469114FA1818D6275234C3922"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "TP-Link",
+    "model": "EP40M",
+    "model_id": null,
+    "modified_at": 1777067101.044607,
+    "name": "Unnamed EP40M",
+    "name_by_user": "Mom Grow",
+    "primary_config_entry": "01KPY9T0CFAE5GRX8743T8ZZ9N",
+    "serial_number": null,
+    "sw_version": "1.1.0 Build 240415 Rel.171219",
+    "via_device_id": null
+  },
+  {
+    "area_id": "mom_grow",
+    "config_entries": [
+      "01KPY9T0CFAE5GRX8743T8ZZ9N"
+    ],
+    "config_entries_subentries": {
+      "01KPY9T0CFAE5GRX8743T8ZZ9N": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1776985899.636114,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "1.0",
+    "id": "76a6494126d4b9c188ca2204280a2777",
+    "identifiers": [
+      [
+        "tplink",
+        "803A9E6E1A83892469114FA1818D6275234C392201"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "TP-Link",
+    "model": "None",
+    "model_id": null,
+    "modified_at": 1777067101.044929,
+    "name": "Unnamed EP40M Kasa Smart_Plug_2",
+    "name_by_user": "Mom Grow Lights",
+    "primary_config_entry": "01KPY9T0CFAE5GRX8743T8ZZ9N",
+    "serial_number": null,
+    "sw_version": "1.1.0 Build 240415 Rel.171219",
+    "via_device_id": "ed25779acf79eb913ee51e6568b9f483"
+  },
+  {
+    "area_id": "mom_grow",
+    "config_entries": [
+      "01KPY9T0CFAE5GRX8743T8ZZ9N"
+    ],
+    "config_entries_subentries": {
+      "01KPY9T0CFAE5GRX8743T8ZZ9N": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1776985899.636466,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "1.0",
+    "id": "578b0e507ea10a6a0381e23d0b8b2734",
+    "identifiers": [
+      [
+        "tplink",
+        "803A9E6E1A83892469114FA1818D6275234C392200"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "TP-Link",
+    "model": "None",
+    "model_id": null,
+    "modified_at": 1777067101.045139,
+    "name": "Unnamed EP40M Kasa Smart_Plug_1",
+    "name_by_user": "Mom Grow 1",
+    "primary_config_entry": "01KPY9T0CFAE5GRX8743T8ZZ9N",
+    "serial_number": null,
+    "sw_version": "1.1.0 Build 240415 Rel.171219",
+    "via_device_id": "ed25779acf79eb913ee51e6568b9f483"
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/331701152",
+    "connections": [],
+    "created_at": 1777916689.345903,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "384c741f31c19136a33f93c04f041ed4",
+    "identifiers": [
+      [
+        "hacs",
+        "331701152"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "RomRider",
+    "model": "plugin",
+    "model_id": null,
+    "modified_at": 1777916689.345927,
+    "name": "apexcharts-card",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2"
+    ],
+    "config_entries_subentries": {
+      "01KDG4ZQVGYKMP2YA6GQGHEXJ2": [
+        null
+      ]
+    },
+    "configuration_url": "homeassistant://hacs/repository/413812496",
+    "connections": [],
+    "created_at": 1777964477.624208,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "3abdc45a6d568988ad30e0d0a06a0019",
+    "identifiers": [
+      [
+        "hacs",
+        "413812496"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "dbuezas",
+    "model": "plugin",
+    "model_id": null,
+    "modified_at": 1777964477.624272,
+    "name": "Plotly Graph Card",
+    "name_by_user": null,
+    "primary_config_entry": "01KDG4ZQVGYKMP2YA6GQGHEXJ2",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": "3d_printer",
+    "config_entries": [
+      "01KJP1XK0KJ3XKA5P7X3882K7V"
+    ],
+    "config_entries_subentries": {
+      "01KJP1XK0KJ3XKA5P7X3882K7V": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1766856704.054839,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": "N3F05",
+    "id": "447b48b30854ead639f9c18721dc0115",
+    "identifiers": [
+      [
+        "bambu_lab",
+        "19C06A521501090"
+      ]
+    ],
+    "labels": [
+      "bambu"
+    ],
+    "manufacturer": "Bambu Lab",
+    "model": "AMS 2 Pro",
+    "model_id": null,
+    "modified_at": 1778137906.771097,
+    "name": "P1S_01P09C470802548_AMS_1",
+    "name_by_user": "Bambu AMS 2",
+    "primary_config_entry": "01KJP1XK0KJ3XKA5P7X3882K7V",
+    "serial_number": null,
+    "sw_version": "03.00.21.29",
+    "via_device_id": "9fb182f8c493dec86eac802d351f35d5"
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KM9BTM1BYDX7VTG1JX2AJ35W"
+    ],
+    "config_entries_subentries": {
+      "01KM9BTM1BYDX7VTG1JX2AJ35W": [
+        "01KR2EEGC5MCP3W4ZS94EY4V5G"
+      ]
+    },
+    "configuration_url": "https://github.com/Blaze350454/claude-code-ha_1",
+    "connections": [],
+    "created_at": 1778199937.178634,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "e65498807b00fc4c21ec9c0a30fda1aa",
+    "identifiers": [
+      [
+        "github",
+        "Blaze350454/claude-code-ha_1"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "GitHub",
+    "model": null,
+    "model_id": null,
+    "modified_at": 1778199937.178734,
+    "name": "Blaze350454/claude-code-ha_1",
+    "name_by_user": null,
+    "primary_config_entry": "01KM9BTM1BYDX7VTG1JX2AJ35W",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KRB5DNP2JHJSRSABK6DG028Y"
+    ],
+    "config_entries_subentries": {
+      "01KRB5DNP2JHJSRSABK6DG028Y": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1778491250.379266,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "ad25b5084f9f8f49c9a5e6aed8698111",
+    "identifiers": [
+      [
+        "systemmonitor",
+        "01KRB5DNP2JHJSRSABK6DG028Y"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "System Monitor",
+    "model": null,
+    "model_id": null,
+    "modified_at": 1778491250.379294,
+    "name": "System Monitor",
+    "name_by_user": null,
+    "primary_config_entry": "01KRB5DNP2JHJSRSABK6DG028Y",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": "front_sunroom",
+    "config_entries": [
+      "01KV3V6VSQMS6T54T7J6BW4BNR"
+    ],
+    "config_entries_subentries": {
+      "01KV3V6VSQMS6T54T7J6BW4BNR": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [
+      [
+        "mac",
+        "08:a6:f7:b0:99:1c"
+      ]
+    ],
+    "created_at": 1781466886.191333,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "3dc6b96ec7a68dd6cd70480cc45a6b11",
+    "identifiers": [],
+    "labels": [],
+    "manufacturer": "Espressif",
+    "model": "esp32dev",
+    "model_id": null,
+    "modified_at": 1784175509.276987,
+    "name": "Grow Tower",
+    "name_by_user": null,
+    "primary_config_entry": "01KV3V6VSQMS6T54T7J6BW4BNR",
+    "serial_number": null,
+    "sw_version": "2026.6.5 (2026-07-16 01:15:40 -0300)",
+    "via_device_id": null
+  },
+  {
+    "area_id": "tent",
+    "config_entries": [
+      "01KDW1465MWPMVKTH9CWSNY8VV"
+    ],
+    "config_entries_subentries": {
+      "01KDW1465MWPMVKTH9CWSNY8VV": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [],
+    "created_at": 1782420957.738266,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "a05aadb1933bffa20d5c68512acc123e",
+    "identifiers": [
+      [
+        "blink",
+        "G8T1GH0123440ELG"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "Blink",
+    "model": "",
+    "model_id": null,
+    "modified_at": 1783998525.079763,
+    "name": "Camera Tent Overhead ",
+    "name_by_user": "Camera Tent Overhead",
+    "primary_config_entry": "01KDW1465MWPMVKTH9CWSNY8VV",
+    "serial_number": "G8T1GH0123440ELG",
+    "sw_version": "10.73",
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KM9BTM1BYDX7VTG1JX2AJ35W"
+    ],
+    "config_entries_subentries": {
+      "01KM9BTM1BYDX7VTG1JX2AJ35W": [
+        null
+      ]
+    },
+    "configuration_url": "https://github.com/Blaze350454",
+    "connections": [],
+    "created_at": 1783822802.789684,
+    "disabled_by": null,
+    "entry_type": "service",
+    "hw_version": null,
+    "id": "c6bd162bc894d14099253e983815c04f",
+    "identifiers": [
+      [
+        "github",
+        "67812256"
+      ]
+    ],
+    "labels": [],
+    "manufacturer": "GitHub",
+    "model": null,
+    "model_id": null,
+    "modified_at": 1783822802.789713,
+    "name": "Blaze350454",
+    "name_by_user": null,
+    "primary_config_entry": "01KM9BTM1BYDX7VTG1JX2AJ35W",
+    "serial_number": null,
+    "sw_version": null,
+    "via_device_id": null
+  },
+  {
+    "area_id": null,
+    "config_entries": [
+      "01KXAHC1QRESVT0JPBT9A5BSDC"
+    ],
+    "config_entries_subentries": {
+      "01KXAHC1QRESVT0JPBT9A5BSDC": [
+        null
+      ]
+    },
+    "configuration_url": null,
+    "connections": [
+      [
+        "mac",
+        "78:42:1c:2e:b4:14"
+      ]
+    ],
+    "created_at": 1783838934.90504,
+    "disabled_by": null,
+    "entry_type": null,
+    "hw_version": null,
+    "id": "6574a7e2cd66d97fc01c0210e31e69cc",
+    "identifiers": [],
+    "labels": [],
+    "manufacturer": "Espressif",
+    "model": "esp32dev",
+    "model_id": null,
+    "modified_at": 1783841721.35194,
+    "name": "Test ESP32",
+    "name_by_user": null,
+    "primary_config_entry": "01KXAHC1QRESVT0JPBT9A5BSDC",
+    "serial_number": null,
+    "sw_version": "2026.6.5 (2026-07-12 04:34:28 -0300)",
+    "via_device_id": null
+  }
+]
