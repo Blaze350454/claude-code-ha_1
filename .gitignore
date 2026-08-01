@@ -22,6 +22,10 @@ dashboard_*_backup_*.json
 # Claude temp files
 tmpclaude-*
 
+# Per-machine Claude Code state (not shared config)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
 # Local skill symlinks (point to in-repo .agents/skills/)
 .claude/skills/caveman
 .claude/skills/flash-esp32
