@@ -1,5 +1,15 @@
 # Flood-Table Drain-Corner Filter — slotted corner dam (v2, bolt-mounted)
 
+> **⚠ STATUS: THIS README IS STALE. Do not build from it.**
+>
+> - **Dimensional authority is the Fusion 360 document "Flood Table Drain Filter
+>   v29"** (verified, print-prep pending), not this file and not
+>   `cad/flood_table_filter.py`. Both are kept as history only.
+> - **The table model itself misreports grid height.** Never trust a collision check
+>   taken against it without confirming the real measurement first.
+> - **The STEP export is not tracked** (gitignored via `*.step`); it lives in `step/`
+>   on the build machine. The SVG is tracked and still useful for a quick look.
+
 Replacement for the small window-screen corner filter that keeps **blinding (clogging)** in
 the flood-table drain corner. A **slotted "dam"** walls off the drain corner; it is
 **bolted to the two walls with M3 hardware and siliconed to the floor**, so the only path to

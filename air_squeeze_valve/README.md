@@ -1,5 +1,18 @@
 # Air Squeeze Valve v4 — twin-servo pinch valves (one unit per hose)
 
+> **⚠ STATUS: THIS README IS STALE. Do not build from it.**
+>
+> - **Dimensional authority is the Fusion 360 document "Servo Air Valve"**, not this
+>   file and not the CadQuery scripts in `cad/`. Both are kept as history only.
+> - **The built design is v6 (2026-07-15), not the v4 described below.** v6 uses
+>   **ONE DS3225** with a symmetric cam driving **two mirrored lever stations** — not
+>   the two independent servos this README specifies. Because both-closed became
+>   physically impossible, the firmware interlock was deleted and **GPIO5 was freed**.
+>   `lever_station_v6_spec.md` is the closest thing here to current.
+> - **STEP exports are not tracked** (gitignored via `*.step`) — ~23 MB of binary that
+>   does not delta-compress, in a public repo. They live in `step/` on the build
+>   machine. Nothing is missing from your clone; regenerate from `cad/` if needed.
+
 Air routing for the VIVOHOME VH181 → feed / flush reservoirs. **v4 architecture: each
 hose gets its own compact pinch-valve UNIT** — a DS3225 servo turning a single-lobe cam
 that drives a guided pinch pin (printed roller nose) squeezing the hose against a printed

@@ -2,6 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠ THIS REPO IS PUBLIC
+
+The remote is **`https://github.com/Blaze350454/claude-code-ha_1` — a public repo.**
+Everything pushed here is world-readable immediately.
+
+- **Never commit a credential value.** All secrets live in gitignored files only —
+  see **`docs/secrets_and_credentials.md`** for the full list, the HA token rotation
+  runbook, and the history-audit recipe.
+- `.gitignore` does not untrack an already-committed file, and does nothing about
+  history. Use `git rm --cached <path>` (keeps the local file) plus an ignore rule.
+- If a secret does get pushed, **rotate it first**. A revoked credential in public
+  history is inert; a history rewrite is disruptive and un-publishes nothing.
+- This applies to CAD, logs and dashboards too — large binaries and stray debug
+  output have no business in a public repo. STEP exports are gitignored (`*.step`)
+  and kept on the build machine.
+
 ## Project Overview
 
 **Grow Home** is the umbrella repo for all of the home garden/grow automation projects — a single home for tooling and configs that grows as new grow systems (tent, tower, future builds) are added over time. It currently holds these independent but related sub-projects:
@@ -46,6 +62,19 @@ Every HA entity/device/automation/script/helper follows the v1 tagging taxonomy 
 Migration tooling lives in this repo:
 - `tag_migration_phase1a.py` — idempotent migrator (dry-run default, `--apply` commits)
 - `registry_export.py` — pre/post-migration JSON snapshots under `migration_snapshots/<timestamp>[_label]/`
+- `tag_migration_grow_tower_*.py` — seven per-concern Grow Tower migrators (sensors,
+  led_numbers, color_select, color_text, led_testing_controls, pump_labels,
+  alert_labels), same idempotent dry-run-by-default pattern
+
+**Workflow:** always `python registry_export.py --label <pre-something>` first, then
+run the migrator dry, read the diff, then `--apply`. These scripts read `HA_URL` /
+`HA_TOKEN` from `.cursor/mcp.json` at runtime — that file is gitignored and holds a
+real token, so never commit it (see `docs/secrets_and_credentials.md`).
+
+**Entity-ID gotcha:** HA prefixes the *area name* onto entity IDs created on an
+area-assigned device, so a freshly flashed ESP produces e.g.
+`binary_sensor.front_sunroom_grow_tower_water_level_low`. The migrators strip that
+prefix — expect to re-run one after any reflash that adds entities.
 
 ## Home Assistant / Grow System Context
 
