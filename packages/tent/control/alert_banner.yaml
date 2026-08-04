@@ -177,9 +177,12 @@ tent_control_alert_banner:
             {% set off = state_attr('sensor.tent_offline_systems','systems') or [] %}
             {% set down = off | map(attribute='key') | list %}
             {% set ns = namespace(e=[]) %}
+            {# --- TIER 0: house-wide outage supersedes any tent reachability
+                   error. Also fires when the tent itself is on a powered
+                   outlet but the rest of the house is not. --- #}
+            {% if is_state('binary_sensor.house_power_outage','on') %}{% set ns.e = ns.e + [1] %}
             {# --- TIER 1: reachability. 2+ groups down collapses to one error. --- #}
-            {% if off | length >= 2 %}{% set ns.e = ns.e + [1] %}
-            {% elif off | length == 1 %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% elif off | length >= 1 %}{% set ns.e = ns.e + [1] %}{% endif %}
             {# --- TIER 2: real faults, each gated on its source being online. --- #}
             {% if 'irrig_offline' not in down %}
               {% if is_state('binary_sensor.feed_reservoir_dry','on') and (is_state('switch.feed_pump_irrigation_tent','on') or is_state('valve.feed_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [1] %}{% endif %}
@@ -202,8 +205,17 @@ tent_control_alert_banner:
               {% set off = state_attr('sensor.tent_offline_systems','systems') or [] %}
               {% set down = off | map(attribute='key') | list %}
               {% set ns = namespace(e=[]) %}
+              {# --- TIER 0: house-wide power/network outage. The tent is a
+                     victim here, not the cause, so do not lead with TENT
+                     OFFLINE — name the real event and its blast radius. --- #}
+              {% if is_state('binary_sensor.house_power_outage','on') %}
+                {% set kind = state_attr('binary_sensor.house_power_outage','kind') %}
+                {% set areas = state_attr('binary_sensor.house_power_outage','areas') %}
+                {% set hsince = state_attr('binary_sensor.house_power_outage','since') %}
+                {% set hdetail = state_attr('binary_sensor.house_power_outage','detail') %}
+                {% set ns.e = ns.e + [{'key':'power_outage','msg': kind ~ ' OUTAGE — ' ~ states('sensor.house_offline_witnesses') ~ ' systems across ' ~ areas ~ ' unreachable since ' ~ hsince ~ ': ' ~ hdetail ~ '. This is one event, not several faults — the tent is a victim of it. Readings from these systems are stale and are not being alerted on.'}] %}
               {# --- TIER 1 --- #}
-              {% if off | length >= 2 %}
+              {% elif off | length >= 2 %}
                 {% set since = (off | map(attribute='ts') | min | as_datetime | as_local).strftime('%H:%M') %}
                 {% set ns.e = ns.e + [{'key':'tent_offline','msg':'TENT OFFLINE — ' ~ (off | length) ~ ' systems unreachable since ' ~ since ~ ': ' ~ (off | map(attribute='label') | join(', ')) ~ '. Almost certainly a power or network outage — check that before treating anything else as a fault. Readings from these systems are stale and are not being alerted on.'}] %}
               {% elif off | length == 1 %}
