@@ -210,10 +210,10 @@ tent_control_alert_banner:
                      OFFLINE — name the real event and its blast radius. --- #}
               {% if is_state('binary_sensor.house_power_outage','on') %}
                 {% set kind = state_attr('binary_sensor.house_power_outage','kind') %}
-                {% set areas = state_attr('binary_sensor.house_power_outage','areas') %}
+                {% set hchains = state_attr('binary_sensor.house_power_outage','chains') %}
                 {% set hsince = state_attr('binary_sensor.house_power_outage','since') %}
                 {% set hdetail = state_attr('binary_sensor.house_power_outage','detail') %}
-                {% set ns.e = ns.e + [{'key':'power_outage','msg': kind ~ ' OUTAGE — ' ~ states('sensor.house_offline_witnesses') ~ ' systems across ' ~ areas ~ ' unreachable since ' ~ hsince ~ ': ' ~ hdetail ~ '. This is one event, not several faults — the tent is a victim of it. Readings from these systems are stale and are not being alerted on.'}] %}
+                {% set ns.e = ns.e + [{'key':'power_outage','msg': kind ~ ' OUTAGE — ' ~ hchains ~ ' separate power chains dropped together at ' ~ hsince ~ ': ' ~ hdetail ~ '. This is one event, not several faults — the tent is a victim of it. Readings from these systems are stale and are not being alerted on.'}] %}
               {# --- TIER 1 --- #}
               {% elif off | length >= 2 %}
                 {% set since = (off | map(attribute='ts') | min | as_datetime | as_local).strftime('%H:%M') %}

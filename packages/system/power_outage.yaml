@@ -1,56 +1,62 @@
 # House-wide power / network outage detection
 # ---------------------------------------------------------------------------
 # WHY THIS EXISTS (2026-08-04)
-# An area power cut took out the tent, the mom-grow area, the AC circulation
-# fan, the duct fan and the 3D printer at 15:15. HA itself is on a UPS, so it
-# stayed up and watched it happen — but it had no concept of "the house lost
-# power". It reported a pile of unrelated-looking per-device faults, and the
-# tent banner could only say TENT OFFLINE, which points the finger at the tent
-# when the tent is a victim, not a cause.
+# An area power cut took out the tent, the mom-grow area and the house fans at
+# 15:15. HA is on a UPS, so it stayed up and watched it happen — but it had no
+# concept of "the house lost power". It reported a pile of unrelated-looking
+# per-device faults, and the tent banner could only say TENT OFFLINE, which
+# points the finger at the tent when the tent is a victim, not a cause.
 #
-# The signal is simultaneity across AREAS: several independent mains devices in
-# different rooms going unreachable together is a power event, not N faults.
+#   sensor.house_offline_witnesses   -> count of power chains unreachable;
+#                                       `witnesses` attribute lists them.
+#   binary_sensor.house_power_outage -> on when >=3 chains dropped TOGETHER.
+#                                       `kind` says POWER vs POWER OR NETWORK.
 #
-#   sensor.house_offline_witnesses -> count of witness groups unreachable;
-#                                     `witnesses` attribute lists them.
-#   binary_sensor.house_power_outage -> on when the pattern is house-wide.
-#                                     `kind` says POWER vs POWER OR NETWORK.
+# THE MODEL: CHAINS + SIMULTANEITY (not rooms)
+# The signal is >=3 INDEPENDENT POWER CHAINS dropping at the same time.
 #
-# WITNESSES
-# Each witness is one device/circuit that is normally powered 24/7, tagged with
-# the area it sits in. They were chosen from 7 days of recorder history — every
-# one below was >=94% available over that window. Anything flakier generates
-# false alarms: media_player.loft_tv was rejected at 61.6% because the TV sleeps.
-# If you add a witness, check its real availability first, and give it an
-# honest `area`.
+# A chain = everything fed from one supply. Devices sharing a supply cannot
+# fail independently, so they are worth exactly ONE vote no matter how many
+# entities they own:
+#   * grow-tent-one + grow-tent-two + grow-tent-climate share a supply -> 1 vote
+#   * tent-irrigation-controller is on its own                         -> 1 vote
+#   * a set of smart plugs is one strip/supply, so 4 of 8 dropping     -> 1 vote
+# This is why a single ESP32 dying, taking 26 entities with it, can never trip
+# this on its own.
 #
-# A WITNESS MUST BE ON UNPROTECTED MAINS. Anything on the UPS cannot witness a
-# power cut — it stays up by design, so it can never report the event, and if it
-# ever DOES drop (unplugged, powered off) it contributes a bogus area toward the
-# threshold. Currently on UPS, and therefore permanently ineligible:
+# Rooms/areas were deliberately REMOVED from the test (they were in the first
+# cut of this file). Chunks of the smart house get unplugged when not in use,
+# so "devices in N rooms are offline" is a normal resting state here, not an
+# event. SIMULTANEITY is what separates the two: something unplugged last week
+# carries a week-old timestamp and will never cluster with a live event.
+#
+# WITNESS SELECTION
+# Chains were checked against 7 days of recorder history — every member below
+# was >=94% available. Flakier entities generate false alarms:
+# media_player.loft_tv was rejected at 61.6% because the TV sleeps.
+#
+# A CHAIN MUST BE ON UNPROTECTED MAINS. Anything on the UPS cannot witness a
+# power cut — it stays up by design, so it can never report the event, and if
+# it ever DOES drop (unplugged, powered off) it casts a bogus vote. Currently
+# on UPS, and therefore permanently ineligible:
 #   * both PCs + displays
 #   * the Brentons WiFi router
-#   * both 3D printers  <- switch.bambu was a witness until 2026-08-04, removed
-# During an area outage the house also runs a generator, but it feeds only a few
-# isolated outlets and none of the grow equipment is on them.
+#   * both 3D printers   <- switch.bambu was a witness briefly, removed 08-04
+# During an area outage the house also runs a generator, but it feeds only a
+# few isolated outlets and none of the grow equipment is on them.
 #
-# SCOPE HONESTY: `area` here means room, not circuit. Tent + mom-grow going dark
-# together satisfies the >=2 area test whether that was the whole street or one
-# shared breaker. Both are genuine power events and `kind` is POWER either way —
-# this sensor does not claim to tell you which, and shouldn't be read as doing so.
-#
-# WHAT MAKES THIS NOT FIRE ON AN HA RESTART
-# Three independent guards, because a restart is the classic false positive:
-# after one, EVERY entity has last_changed = restart time, so the whole house
-# looks like it dropped simultaneously (this is exactly what made the 08-04
-# banner mis-date the outage as 15:50, the restart, instead of 15:15).
-#   1. grace       - a witness must be dead OFFLINE_GRACE_S continuously before
-#                    it counts. Devices that reconnect after a restart never
-#                    reach it.
-#   2. start guard - suppressed entirely for START_GRACE_S after HA boots,
-#                    covering integrations that are slow to set up.
-#   3. area count  - a single board dropping 20 entities is still ONE witness
-#                    in ONE area and can never trip this on its own.
+# WHAT STOPS AN HA RESTART FAKING AN OUTAGE
+# This is the classic false positive and it is why the code looks paranoid:
+# after a restart EVERY entity carries last_changed = restart time, so the
+# whole house looks like it dropped in the same instant. That is exactly what
+# made the 08-04 banner mis-date the outage as 15:50 (the restart) instead of
+# 15:15 (the truth). Three guards:
+#   1. grace        - a chain must be dead OFFLINE_GRACE_S continuously before
+#                     it counts, so reboots and OTA flashes never qualify.
+#   2. restart blind - a chain whose drop-time sits within RESTART_BLIND_S of
+#                     the last HA start is IGNORED for clustering. Its true
+#                     onset is unknowable, so it is not evidence of simultaneity.
+#   3. start guard  - suppressed entirely for START_GRACE_S after HA boots.
 #
 # now() in the templates makes HA re-render every minute, which is what lets
 # the grace periods expire without anything else changing state.
@@ -58,9 +64,9 @@
 system_power_outage:
 
   input_datetime:
-    # Stamped by the automation below on every HA start. Used only for the
-    # start guard. Its initial value is deliberately ancient so that a fresh
-    # install fails OPEN (detector active) rather than silently suppressed.
+    # Stamped by the automation below on every HA start. Used by the restart
+    # blind spot + start guard. Its initial value is deliberately ancient so a
+    # fresh install fails OPEN (detector active) rather than silently muted.
     ha_last_start:
       name: "HA Last Start"
       icon: mdi:restart
@@ -71,9 +77,15 @@ system_power_outage:
   template:
     - sensor:
         # ------------------------------------------------------------------
-        # How many witness groups are unreachable right now.
+        # How many power chains are unreachable right now.
         #
-        # NOTE the witness table is written twice, once for the state (count)
+        # A chain's `ts` is the MOST RECENT drop among its dead members, not
+        # the earliest: that answers "when did something in this chain go
+        # down", which is what clustering needs. Using the earliest would let
+        # one long-unplugged member anchor the whole chain in the past and
+        # hide a live event.
+        #
+        # NOTE the chain table is written twice, once for the state (count)
         # and once for the `witnesses` attribute (the detail). Keep them in
         # sync. It is NOT safe to have the state read state_attr() of its own
         # `witnesses`: HA renders state before attributes, so a self-reference
@@ -85,24 +97,29 @@ system_power_outage:
           icon: mdi:transmission-tower-off
           state: >
             {% set grace = 180 %}
-            {% set witnesses = [
-                 ('tent_irrig',   'tent',    ['binary_sensor.feed_empty_irrigation_tent'],
+            {% set chains = [
+                 ('tent_esps',    ['sensor.tent_grow_tent_one_wifi_signal',
+                                   'sensor.tent_grow_tent_two_wifi_signal',
+                                   'sensor.grow_tent_climate_canopy_temperature'],
                   ['unavailable','unknown']),
-                 ('tent_climate', 'tent',    ['sensor.grow_tent_climate_canopy_temperature'],
+                 ('tent_irrig',   ['binary_sensor.feed_empty_irrigation_tent'],
                   ['unavailable','unknown']),
-                 ('tent_strip',   'tent',    ['binary_sensor.tp_link_power_strip_c074_cloud_connection'],
+                 ('tent_strip',   ['binary_sensor.tp_link_power_strip_c074_cloud_connection'],
                   ['off','unavailable','unknown']),
-                 ('tent_lights',  'tent',    ['light.hlg','light.chilled'],
+                 ('tent_lights',  ['light.hlg','light.chilled'],
                   ['unavailable','unknown']),
-                 ('mom_grow',     'mom_grow',['switch.mom_grow_1','switch.mom_grow_lights'],
+                 ('mom_grow',     ['switch.mom_grow_1','switch.mom_grow_lights'],
                   ['unavailable','unknown']),
-                 ('ac_fan',       'house',   ['switch.ac_circulation_fan'],
+                 ('kasa_outdoor', ['switch.kasa_smart_outdoor_plug_switch_1',
+                                   'switch.kasa_smart_outdoor_plug_switch_2'],
                   ['unavailable','unknown']),
-                 ('duct_fan',     'house',   ['switch.duct_fan'],
+                 ('ac_fan',       ['switch.ac_circulation_fan'],
+                  ['unavailable','unknown']),
+                 ('duct_fan',     ['switch.duct_fan'],
                   ['unavailable','unknown'])
                ] %}
             {% set ns = namespace(n=0) %}
-            {% for key, area, ents, bad in witnesses %}
+            {% for key, ents, bad in chains %}
               {% set g = namespace(dead=0) %}
               {% for e in ents %}
                 {% set st = states[e] %}
@@ -117,31 +134,37 @@ system_power_outage:
           attributes:
             witnesses: >
               {% set grace = 180 %}
-              {% set witnesses = [
-                   ('tent_irrig',   'Tent irrigation ESP32',   'tent',
+              {% set chains = [
+                   ('tent_esps',    'Tent ESP trio (one/two/climate)',
+                    ['sensor.tent_grow_tent_one_wifi_signal',
+                     'sensor.tent_grow_tent_two_wifi_signal',
+                     'sensor.grow_tent_climate_canopy_temperature'],
+                    ['unavailable','unknown']),
+                   ('tent_irrig',   'Tent irrigation ESP32',
                     ['binary_sensor.feed_empty_irrigation_tent'],
                     ['unavailable','unknown']),
-                   ('tent_climate', 'Tent climate board',      'tent',
-                    ['sensor.grow_tent_climate_canopy_temperature'],
-                    ['unavailable','unknown']),
-                   ('tent_strip',   'Tent feed/flush strip',   'tent',
+                   ('tent_strip',   'Tent feed/flush strip (HS300 c074)',
                     ['binary_sensor.tp_link_power_strip_c074_cloud_connection'],
                     ['off','unavailable','unknown']),
-                   ('tent_lights',  'Tent grow lights',        'tent',
+                   ('tent_lights',  'Tent grow lights (HLG + Chilled)',
                     ['light.hlg','light.chilled'],
                     ['unavailable','unknown']),
-                   ('mom_grow',     'Mom-grow lights',         'mom_grow',
+                   ('mom_grow',     'Mom-grow Kasa plug pair',
                     ['switch.mom_grow_1','switch.mom_grow_lights'],
                     ['unavailable','unknown']),
-                   ('ac_fan',       'AC circulation fan',      'house',
+                   ('kasa_outdoor', 'Irrigation multi-plug (Kasa outdoor)',
+                    ['switch.kasa_smart_outdoor_plug_switch_1',
+                     'switch.kasa_smart_outdoor_plug_switch_2'],
+                    ['unavailable','unknown']),
+                   ('ac_fan',       'AC circulation fan',
                     ['switch.ac_circulation_fan'],
                     ['unavailable','unknown']),
-                   ('duct_fan',     'Duct fan',                'house',
+                   ('duct_fan',     'Duct fan',
                     ['switch.duct_fan'],
                     ['unavailable','unknown'])
                  ] %}
               {% set ns = namespace(off=[]) %}
-              {% for key, label, area, ents, bad in witnesses %}
+              {% for key, label, ents, bad in chains %}
                 {% set g = namespace(dead=[], ts=0) %}
                 {% for e in ents %}
                   {% set st = states[e] %}
@@ -149,12 +172,13 @@ system_power_outage:
                         and (now() - st.last_changed).total_seconds() >= grace %}
                     {% set g.dead = g.dead + [e] %}
                     {% set t = st.last_changed.timestamp() %}
-                    {% set g.ts = t if g.ts == 0 else [g.ts, t] | min %}
+                    {% set g.ts = [g.ts, t] | max %}
                   {% endif %}
                 {% endfor %}
                 {% if g.dead | length > 0 %}
                   {% set ns.off = ns.off + [{
-                       'key': key, 'label': label, 'area': area, 'ts': g.ts,
+                       'key': key, 'label': label,
+                       'members': g.dead | length, 'ts': g.ts,
                        'since': (g.ts | as_datetime | as_local).strftime('%H:%M')
                      }] %}
                 {% endif %}
@@ -163,21 +187,21 @@ system_power_outage:
 
     - binary_sensor:
         # ------------------------------------------------------------------
-        # House-wide outage. Reads the sensor above (cross-entity, so no
-        # stale-by-one-render problem) and applies the three guards.
+        # On when >=3 chains dropped within SIMUL_WINDOW_S of each other.
+        #
+        # Finds the largest cluster of chains sharing a drop-time, rather than
+        # just counting chains that are down. That is the whole point: eight
+        # chains down at eight different times over three weeks is a house
+        # with things unplugged; three chains down in the same two minutes is
+        # an outage.
         #
         # POWER vs POWER OR NETWORK: the Blink tent cameras are battery
-        # powered but cloud connected. If mains witnesses are dead while the
-        # cameras still report, the network and internet are up and only mains
-        # was lost -> POWER. If the cameras are dark too, the outage took the
-        # router/internet with it (or is itself a network failure) and we
-        # cannot tell the two apart from in here -> POWER OR NETWORK.
-        # This is the test that identified the 08-04 event as power in minutes.
-        #
-        # The Brentons WiFi router is on the UPS, so WiFi surviving a power cut
-        # is the EXPECTED case, not a lucky one — which is what makes a POWER
-        # verdict trustworthy here. Cameras going dark therefore means something
-        # bigger: the modem/ISP is down, or the UPS has run flat. Neither is
+        # powered but cloud connected. Mains chains dead while the cameras
+        # still report -> only mains was lost -> POWER. Cameras dark too ->
+        # POWER OR NETWORK. The Brentons router is on the UPS, so WiFi
+        # surviving a cut is the EXPECTED case, which is what makes a POWER
+        # verdict trustworthy; cameras going dark means something bigger (the
+        # modem/ISP is down, or the UPS has run flat). Neither is
         # distinguishable from inside HA, hence the deliberately vague label.
         # ------------------------------------------------------------------
         - name: "House Power Outage"
@@ -185,19 +209,29 @@ system_power_outage:
           device_class: problem
           icon: mdi:flash-off
           state: >
-            {% set min_witnesses = 3 %}
-            {% set min_areas = 2 %}
+            {% set min_chains = 3 %}
+            {% set window = 180 %}
             {% set start_grace = 300 %}
+            {% set blind = 90 %}
             {% set w = state_attr('sensor.house_offline_witnesses','witnesses') or [] %}
-            {% set areas = w | map(attribute='area') | unique | list %}
             {# input_datetime stores LOCAL time; as_timestamp() on its raw string
                misparses it as UTC. Its own `timestamp` attribute is already a
                correct epoch — use that, never the state string. #}
             {% set started = state_attr('input_datetime.ha_last_start','timestamp') | float(0) %}
-            {% set up = now().timestamp() - started %}
-            {{ (w | length >= min_witnesses)
-               and (areas | length >= min_areas)
-               and (up >= start_grace) }}
+            {% set ns = namespace(c=[]) %}
+            {% for x in w %}
+              {% if ((x.ts - started) | abs) > blind %}{% set ns.c = ns.c + [x.ts] %}{% endif %}
+            {% endfor %}
+            {% set best = namespace(n=0) %}
+            {% for a in ns.c %}
+              {% set g = namespace(n=0) %}
+              {% for b in ns.c %}
+                {% if ((b - a) | abs) <= window %}{% set g.n = g.n + 1 %}{% endif %}
+              {% endfor %}
+              {% if g.n > best.n %}{% set best.n = g.n %}{% endif %}
+            {% endfor %}
+            {{ best.n >= min_chains
+               and (now().timestamp() - started) >= start_grace }}
           attributes:
             kind: >
               {% set cams = ['sensor.temperature_camera_tent_1',
@@ -210,29 +244,75 @@ system_power_outage:
                 {% endif %}
               {% endfor %}
               {{ 'POWER' if ns.up > 0 else 'POWER OR NETWORK' }}
-            areas: >
-              {{ (state_attr('sensor.house_offline_witnesses','witnesses') or [])
-                 | map(attribute='area') | unique | list | join(', ') }}
-            since: >
+            # Chains in the largest simultaneous cluster — the ones that make
+            # up the actual event, as opposed to everything merely offline.
+            chains: >
+              {% set window = 180 %}
+              {% set blind = 90 %}
               {% set w = state_attr('sensor.house_offline_witnesses','witnesses') or [] %}
-              {{ (w | map(attribute='ts') | min | as_datetime | as_local).strftime('%H:%M')
-                 if w | length > 0 else 'n/a' }}
+              {% set started = state_attr('input_datetime.ha_last_start','timestamp') | float(0) %}
+              {% set ns = namespace(c=[]) %}
+              {% for x in w %}
+                {% if ((x.ts - started) | abs) > blind %}{% set ns.c = ns.c + [x] %}{% endif %}
+              {% endfor %}
+              {% set best = namespace(n=0, m=[]) %}
+              {% for a in ns.c %}
+                {% set g = namespace(m=[]) %}
+                {% for b in ns.c %}
+                  {% if ((b.ts - a.ts) | abs) <= window %}{% set g.m = g.m + [b] %}{% endif %}
+                {% endfor %}
+                {% if g.m | length > best.n %}{% set best.n = g.m | length %}{% set best.m = g.m %}{% endif %}
+              {% endfor %}
+              {{ best.n }}
+            since: >
+              {% set window = 180 %}
+              {% set blind = 90 %}
+              {% set w = state_attr('sensor.house_offline_witnesses','witnesses') or [] %}
+              {% set started = state_attr('input_datetime.ha_last_start','timestamp') | float(0) %}
+              {% set ns = namespace(c=[]) %}
+              {% for x in w %}
+                {% if ((x.ts - started) | abs) > blind %}{% set ns.c = ns.c + [x] %}{% endif %}
+              {% endfor %}
+              {% set best = namespace(n=0, m=[]) %}
+              {% for a in ns.c %}
+                {% set g = namespace(m=[]) %}
+                {% for b in ns.c %}
+                  {% if ((b.ts - a.ts) | abs) <= window %}{% set g.m = g.m + [b] %}{% endif %}
+                {% endfor %}
+                {% if g.m | length > best.n %}{% set best.n = g.m | length %}{% set best.m = g.m %}{% endif %}
+              {% endfor %}
+              {{ (best.m | map(attribute='ts') | min | as_datetime | as_local).strftime('%H:%M')
+                 if best.n > 0 else 'n/a' }}
             detail: >
-              {{ (state_attr('sensor.house_offline_witnesses','witnesses') or [])
-                 | map(attribute='label') | join(', ') }}
+              {% set window = 180 %}
+              {% set blind = 90 %}
+              {% set w = state_attr('sensor.house_offline_witnesses','witnesses') or [] %}
+              {% set started = state_attr('input_datetime.ha_last_start','timestamp') | float(0) %}
+              {% set ns = namespace(c=[]) %}
+              {% for x in w %}
+                {% if ((x.ts - started) | abs) > blind %}{% set ns.c = ns.c + [x] %}{% endif %}
+              {% endfor %}
+              {% set best = namespace(n=0, m=[]) %}
+              {% for a in ns.c %}
+                {% set g = namespace(m=[]) %}
+                {% for b in ns.c %}
+                  {% if ((b.ts - a.ts) | abs) <= window %}{% set g.m = g.m + [b] %}{% endif %}
+                {% endfor %}
+                {% if g.m | length > best.n %}{% set best.n = g.m | length %}{% set best.m = g.m %}{% endif %}
+              {% endfor %}
+              {{ best.m | map(attribute='label') | join(', ') }}
 
   automation:
     # ----------------------------------------------------------------------
-    # Stamp HA's start time for the start guard above. Without this the guard
-    # cannot know how long HA has been up, and a slow integration setup after
-    # a restart could read as an outage.
+    # Stamp HA's start time. Without it the restart blind spot and the start
+    # guard cannot work, and a restart reads as a house-wide simultaneous drop.
     # ----------------------------------------------------------------------
     - id: power_outage_stamp_ha_start
       alias: "Power Outage — Stamp HA Start Time"
       description: >
-        Records when HA last booted into input_datetime.ha_last_start. Used
-        only to suppress outage detection for the first few minutes after a
-        restart, when everything looks simultaneously offline.
+        Records when HA last booted into input_datetime.ha_last_start, so
+        outage detection can ignore drop-times that are really just the
+        restart re-stamping every entity.
       mode: single
       triggers:
         - trigger: homeassistant
@@ -251,9 +331,8 @@ system_power_outage:
     - id: power_outage_detected
       alias: "Power Outage — Detected"
       description: >
-        Fires when several mains devices across two or more areas have been
-        unreachable past the grace period. HA runs on a UPS, so it survives
-        the cut and can report it.
+        Fires when 3+ independent power chains drop within minutes of each
+        other. HA runs on a UPS, so it survives the cut and can report it.
       mode: single
       triggers:
         - trigger: state
@@ -264,7 +343,7 @@ system_power_outage:
         - variables:
             kind: "{{ state_attr('binary_sensor.house_power_outage','kind') }}"
             since: "{{ state_attr('binary_sensor.house_power_outage','since') }}"
-            areas: "{{ state_attr('binary_sensor.house_power_outage','areas') }}"
+            chains: "{{ state_attr('binary_sensor.house_power_outage','chains') }}"
             detail: "{{ state_attr('binary_sensor.house_power_outage','detail') }}"
         - action: notify.send_message
           target:
@@ -272,17 +351,16 @@ system_power_outage:
           data:
             title: "{{ kind }} OUTAGE"
             message: >-
-              {{ states('sensor.house_offline_witnesses') }} systems across
-              {{ areas }} went unreachable at {{ since }}: {{ detail }}.
-              HA is on UPS and still up. Readings from these systems are stale
-              and are not being alerted on.
+              {{ chains }} separate power chains dropped together at
+              {{ since }}: {{ detail }}. HA is on UPS and still up. Readings
+              from these systems are stale and are not being alerted on.
         - action: persistent_notification.create
           data:
             notification_id: house_power_outage
             title: "{{ kind }} OUTAGE — since {{ since }}"
             message: >-
-              **{{ states('sensor.house_offline_witnesses') }} systems** across
-              **{{ areas }}** unreachable since **{{ since }}**.
+              **{{ chains }} separate power chains** dropped together at
+              **{{ since }}**.
 
               {{ detail }}
 
@@ -291,7 +369,7 @@ system_power_outage:
 
     - id: power_outage_cleared
       alias: "Power Outage — Cleared"
-      description: Fires when every witness group is reachable again.
+      description: Fires when the simultaneous-drop pattern has resolved.
       mode: single
       triggers:
         - trigger: state
@@ -308,6 +386,6 @@ system_power_outage:
           data:
             title: "Power restored"
             message: >-
-              All monitored systems are reachable again as of
+              The simultaneous-outage pattern cleared as of
               {{ now().strftime('%H:%M') }}. Check that pumps, lights and the
               feed schedule resumed as expected.
