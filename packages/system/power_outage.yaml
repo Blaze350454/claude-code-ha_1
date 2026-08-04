@@ -19,10 +19,23 @@
 # share a supply, or share the integration/cloud path that reports them. Each
 # chain is worth exactly ONE vote no matter how many entities it owns:
 #   * grow-tent-one + grow-tent-two + grow-tent-climate share a supply -> 1 vote
-#   * tent-irrigation-controller is on its own                         -> 1 vote
+#   * the HS300 strip AND the irrigation ESP32 it powers               -> 1 vote
 #   * all 8 Sonoff plugs are ONE vote, so 4 of 8 dropping is still     -> 1 vote
 # This is why a single ESP32 dying, taking 26 entities with it, can never trip
 # this on its own.
+#
+# >>> PLANNED CHANGE — SPLIT tent_hs300 WHEN THE ESP32 MOVES <<<
+# The irrigation ESP32 is currently powered from an HS300 outlet, so the strip
+# and the ESP32 cannot fail independently and share one vote. The user intends
+# to move the ESP32 onto its own smart plug. WHEN THAT HAPPENS, split the
+# `tent_hs300` chain back into two, in BOTH tables below:
+#     ('tent_strip', ['sensor.tp_link_power_strip_c074_voltage'],
+#      ['unavailable','unknown']),
+#     ('tent_irrig', ['binary_sensor.feed_empty_irrigation_tent'],
+#      ['unavailable','unknown']),
+# That restores a 6th independent vote. Until then, counting them separately
+# would double-count one power source and make a single strip failure look
+# like two-thirds of an outage.
 #
 # The Sonoff grouping is the important one and it is about CORRELATED FAILURE,
 # not shared wiring: the 8 plugs are 8 physically separate devices, but they
@@ -47,6 +60,15 @@
 # Chains were checked against 7 days of recorder history — every member below
 # was >=94% available. Flakier entities generate false alarms:
 # media_player.loft_tv was rejected at 61.6% because the TV sleeps.
+#
+# The `bad` list is per CHAIN, so every member of a chain must agree on what
+# "dead" looks like. That is why the HS300 is represented by its VOLTAGE sensor
+# rather than binary_sensor.*_cloud_connection: the cloud sensor needs 'off' in
+# its bad list, but 'off' on its chain-mate binary_sensor.feed_empty_irrigation_tent
+# is a perfectly normal reading (device_class moisture — 'on' means liquid
+# PRESENT), so a shared 'off' would have silently marked a healthy ESP32 dead.
+# Voltage simply goes unavailable when the strip loses power, which is exactly
+# the question being asked, and needs no special case.
 #
 # A CHAIN MUST BE ON UNPROTECTED MAINS. Anything on the UPS cannot witness a
 # power cut — it stays up by design, so it can never report the event, and if
@@ -115,10 +137,9 @@ system_power_outage:
                                    'sensor.tent_grow_tent_two_wifi_signal',
                                    'sensor.grow_tent_climate_canopy_temperature'],
                   ['unavailable','unknown']),
-                 ('tent_irrig',   ['binary_sensor.feed_empty_irrigation_tent'],
+                 ('tent_hs300',   ['sensor.tp_link_power_strip_c074_voltage',
+                                   'binary_sensor.feed_empty_irrigation_tent'],
                   ['unavailable','unknown']),
-                 ('tent_strip',   ['binary_sensor.tp_link_power_strip_c074_cloud_connection'],
-                  ['off','unavailable','unknown']),
                  ('sonoff_plugs', ['switch.hlg','switch.chilled',
                                    'switch.ac_circulation_fan',
                                    'switch.circulation_fans',
@@ -153,12 +174,10 @@ system_power_outage:
                      'sensor.tent_grow_tent_two_wifi_signal',
                      'sensor.grow_tent_climate_canopy_temperature'],
                     ['unavailable','unknown']),
-                   ('tent_irrig',   'Tent irrigation ESP32',
-                    ['binary_sensor.feed_empty_irrigation_tent'],
+                   ('tent_hs300',   'HS300 strip + irrigation ESP32',
+                    ['sensor.tp_link_power_strip_c074_voltage',
+                     'binary_sensor.feed_empty_irrigation_tent'],
                     ['unavailable','unknown']),
-                   ('tent_strip',   'Tent feed/flush strip (HS300 c074)',
-                    ['binary_sensor.tp_link_power_strip_c074_cloud_connection'],
-                    ['off','unavailable','unknown']),
                    ('sonoff_plugs', 'Sonoff plug set (8)',
                     ['switch.hlg','switch.chilled',
                      'switch.ac_circulation_fan','switch.circulation_fans',
