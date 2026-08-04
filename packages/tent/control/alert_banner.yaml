@@ -2,6 +2,9 @@
 # ---------------------------------------------------------------------------
 # Backend for the flashing "ERROR !!" header card on the tent dashboard.
 #
+#   sensor.tent_offline_systems -> count of tent SYSTEMS currently unreachable;
+#                                  `systems` attribute lists them. This is the
+#                                  single source of truth for "is it offline".
 #   sensor.tent_error_list      -> count of active errors; `errors` attribute
 #                                  is a list of {key, msg} for every real fault
 #                                  currently detected across the tent.
@@ -11,6 +14,30 @@
 #                                  (different) error key breaks through.
 #   script.tent_alert_snooze    -> hide the current errors for the duration
 #                                  picked in input_select.tent_alert_snooze_duration.
+#
+# OUTAGE COLLAPSING (added 2026-08-04)
+# ------------------------------------
+# A power cut used to spray the banner with a dozen unrelated-looking errors —
+# controller offline, strip offline, lights offline, reservoirs "DRY", sensors
+# "disagree" — none of which were real faults; they were all one fact wearing
+# many hats. The list is now two tiers:
+#
+#   TIER 1 (reachability) — four device groups, tracked in
+#   sensor.tent_offline_systems. Each must be dead for OFFLINE_GRACE_S before it
+#   counts, so a reboot / OTA flash / HA restart does not flash the banner.
+#     * >= 2 groups down  -> ONE error, key `tent_offline`, naming them all.
+#       That is a power or network outage, not N faults, and one snooze covers
+#       the whole thing.
+#     * exactly 1 down    -> that group's own specific error, as before. A lone
+#       device dropping IS worth naming.
+#
+#   TIER 2 (real faults) — each one is GATED on its source group being online,
+#   because a reading you cannot take is not a reading that is wrong. Reservoir
+#   dry is meaningless with the ESP32 dark; sensors "disagreeing" is meaningless
+#   with the climate board dark.
+#
+# Camera battery is deliberately ungated — the Blink cams are battery + cloud
+# and stay alive through a tent power cut, so a low battery is still real news.
 #
 # To add/remove what counts as an error, edit the detection block below — it is
 # duplicated in the sensor state (count) and its `errors` attribute (the list);
@@ -53,41 +80,154 @@ tent_control_alert_banner:
 
   template:
     - sensor:
+        # ------------------------------------------------------------------
+        # TIER 1 — which tent systems are unreachable right now.
+        #
+        # One proxy entity per device group: everything on a given board or
+        # strip goes unavailable together, so a single entity is a sufficient
+        # test (same proxy the offline watchdog uses).
+        #
+        # A group only counts as offline once its proxy has been dead for
+        # OFFLINE_GRACE_S continuously. That covers an OTA flash, an ESP
+        # reboot, and the first minutes after an HA restart (restored entities
+        # get last_changed = restart time), none of which are outages.
+        #
+        # now() in the template makes HA re-render this every minute on its
+        # own, which is what lets the grace period expire without anything
+        # else having to change state.
+        # ------------------------------------------------------------------
+        # NOTE the group table + loop is written twice, once for the state
+        # (count) and once for the `systems` attribute (the detail) — the same
+        # keep-in-sync rule as tent_error_list below. It is NOT safe to make the
+        # state read state_attr() of its own `systems`: HA renders state before
+        # attributes, so a self-reference serves the PREVIOUS render's value and
+        # the count silently trails the list by an update.
+        - name: "Tent Offline Systems"
+          unique_id: tent_offline_systems
+          icon: mdi:lan-disconnect
+          state: >
+            {% set grace = 180 %}
+            {% set groups = [
+                 ('irrig_offline',   ['binary_sensor.feed_empty_irrigation_tent'],
+                  ['unavailable','unknown']),
+                 ('climate_offline', ['sensor.grow_tent_climate_canopy_temperature'],
+                  ['unavailable','unknown']),
+                 ('power_strip',     ['binary_sensor.tp_link_power_strip_c074_cloud_connection'],
+                  ['off','unavailable','unknown']),
+                 ('lights_offline',  ['light.hlg','light.chilled'],
+                  ['unavailable','unknown'])
+               ] %}
+            {% set ns = namespace(n=0) %}
+            {% for key, ents, bad in groups %}
+              {% set g = namespace(dead=0) %}
+              {% for e in ents %}
+                {% set st = states[e] %}
+                {% if st is not none and st.state in bad
+                      and (now() - st.last_changed).total_seconds() >= grace %}
+                  {% set g.dead = g.dead + 1 %}
+                {% endif %}
+              {% endfor %}
+              {% if g.dead > 0 %}{% set ns.n = ns.n + 1 %}{% endif %}
+            {% endfor %}
+            {{ ns.n }}
+          attributes:
+            systems: >
+              {% set grace = 180 %}
+              {% set groups = [
+                   ('irrig_offline',   'Irrigation controller (ESP32)',
+                    ['binary_sensor.feed_empty_irrigation_tent'],
+                    ['unavailable','unknown']),
+                   ('climate_offline', 'Climate sensor board (grow-tent-climate)',
+                    ['sensor.grow_tent_climate_canopy_temperature'],
+                    ['unavailable','unknown']),
+                   ('power_strip',     'Feed/flush power strip (HS300 c074)',
+                    ['binary_sensor.tp_link_power_strip_c074_cloud_connection'],
+                    ['off','unavailable','unknown']),
+                   ('lights_offline',  'Grow lights',
+                    ['light.hlg','light.chilled'],
+                    ['unavailable','unknown'])
+                 ] %}
+              {% set ns = namespace(off=[]) %}
+              {% for key, label, ents, bad in groups %}
+                {% set g = namespace(dead=[], ts=0) %}
+                {% for e in ents %}
+                  {% set st = states[e] %}
+                  {% if st is not none and st.state in bad
+                        and (now() - st.last_changed).total_seconds() >= grace %}
+                    {% set g.dead = g.dead + [e] %}
+                    {% set t = st.last_changed.timestamp() %}
+                    {% set g.ts = t if g.ts == 0 else [g.ts, t] | min %}
+                  {% endif %}
+                {% endfor %}
+                {% if g.dead | length > 0 %}
+                  {% set ns.off = ns.off + [{
+                       'key': key, 'label': label, 'ts': g.ts,
+                       'since': (g.ts | as_datetime | as_local).strftime('%H:%M')
+                     }] %}
+                {% endif %}
+              {% endfor %}
+              {{ ns.off }}
+
         - name: "Tent Error List"
           unique_id: tent_error_list
           icon: mdi:alert-circle
           # State = number of active errors. Keep this detection block in sync
           # with the `errors` attribute block below.
           state: >
+            {% set off = state_attr('sensor.tent_offline_systems','systems') or [] %}
+            {% set down = off | map(attribute='key') | list %}
             {% set ns = namespace(e=[]) %}
-            {% if is_state('binary_sensor.feed_empty_irrigation_tent','unavailable') %}{% set ns.e = ns.e + [1] %}{% endif %}
-            {% if states('binary_sensor.tp_link_power_strip_c074_cloud_connection') in ['off','unavailable'] %}{% set ns.e = ns.e + [1] %}{% endif %}
-            {% if is_state('binary_sensor.feed_reservoir_dry','on') and (is_state('switch.feed_pump_irrigation_tent','on') or is_state('valve.feed_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [1] %}{% endif %}
-            {% if is_state('binary_sensor.flush_reservoir_dry','on') and (is_state('switch.flush_pump_irrigation_tent','on') or is_state('valve.flush_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {# --- TIER 1: reachability. 2+ groups down collapses to one error. --- #}
+            {% if off | length >= 2 %}{% set ns.e = ns.e + [1] %}
+            {% elif off | length == 1 %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {# --- TIER 2: real faults, each gated on its source being online. --- #}
+            {% if 'irrig_offline' not in down %}
+              {% if is_state('binary_sensor.feed_reservoir_dry','on') and (is_state('switch.feed_pump_irrigation_tent','on') or is_state('valve.feed_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [1] %}{% endif %}
+              {% if is_state('binary_sensor.flush_reservoir_dry','on') and (is_state('switch.flush_pump_irrigation_tent','on') or is_state('valve.flush_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% endif %}
             {# Climate checks disabled 2026-06-28 (AC/dehum/humidifier intentionally offline
                during commissioning). To re-enable, restore here AND in the errors block:
                climate_ok off; climate.air_conditioner_tent / humidifier.dehumidifier_tent /
                switch.tent_humidifier == unavailable. #}
-            {% if states('light.hlg') == 'unavailable' or states('light.chilled') == 'unavailable' %}{% set ns.e = ns.e + [1] %}{% endif %}
-            {% if is_state('binary_sensor.tent_temperature_divergence','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
-            {% if is_state('binary_sensor.tent_humidity_divergence','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
-            {% if is_state('binary_sensor.tent_controller_temp_high','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
-            {% if is_state('binary_sensor.tent_controller_humidity_high','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% if 'climate_offline' not in down %}
+              {% if is_state('binary_sensor.tent_temperature_divergence','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
+              {% if is_state('binary_sensor.tent_humidity_divergence','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
+              {% if is_state('binary_sensor.tent_controller_temp_high','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
+              {% if is_state('binary_sensor.tent_controller_humidity_high','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% endif %}
             {% for c in ['tent_1','tent_2','tent_overhead'] %}{% if is_state('binary_sensor.battery_camera_' ~ c,'on') %}{% set ns.e = ns.e + [1] %}{% endif %}{% endfor %}
             {{ ns.e | length }}
           attributes:
             errors: >
+              {% set off = state_attr('sensor.tent_offline_systems','systems') or [] %}
+              {% set down = off | map(attribute='key') | list %}
               {% set ns = namespace(e=[]) %}
-              {% if is_state('binary_sensor.feed_empty_irrigation_tent','unavailable') %}{% set ns.e = ns.e + [{'key':'irrig_offline','msg':'Irrigation controller (ESP32) offline — float/valve/sensor data lost'}] %}{% endif %}
-              {% if states('binary_sensor.tp_link_power_strip_c074_cloud_connection') in ['off','unavailable'] %}{% set ns.e = ns.e + [{'key':'power_strip','msg':'Feed/flush power strip (HS300 c074) offline'}] %}{% endif %}
-              {% if is_state('binary_sensor.feed_reservoir_dry','on') and (is_state('switch.feed_pump_irrigation_tent','on') or is_state('valve.feed_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [{'key':'feed_dry','msg':'Feed reservoir DRY while feeding'}] %}{% endif %}
-              {% if is_state('binary_sensor.flush_reservoir_dry','on') and (is_state('switch.flush_pump_irrigation_tent','on') or is_state('valve.flush_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [{'key':'flush_dry','msg':'Flush reservoir DRY while flushing'}] %}{% endif %}
+              {# --- TIER 1 --- #}
+              {% if off | length >= 2 %}
+                {% set since = (off | map(attribute='ts') | min | as_datetime | as_local).strftime('%H:%M') %}
+                {% set ns.e = ns.e + [{'key':'tent_offline','msg':'TENT OFFLINE — ' ~ (off | length) ~ ' systems unreachable since ' ~ since ~ ': ' ~ (off | map(attribute='label') | join(', ')) ~ '. Almost certainly a power or network outage — check that before treating anything else as a fault. Readings from these systems are stale and are not being alerted on.'}] %}
+              {% elif off | length == 1 %}
+                {% set o = off[0] %}
+                {% set detail = {
+                     'irrig_offline':   'Irrigation controller (ESP32) offline — float/valve/sensor data lost',
+                     'climate_offline': 'Climate sensor board (grow-tent-climate) offline — tent temp/RH data lost',
+                     'power_strip':     'Feed/flush power strip (HS300 c074) offline',
+                     'lights_offline':  'Grow light offline'
+                   } %}
+                {% set ns.e = ns.e + [{'key': o.key, 'msg': detail.get(o.key, o.label ~ ' offline') ~ ' (since ' ~ o.since ~ ')'}] %}
+              {% endif %}
+              {# --- TIER 2 --- #}
+              {% if 'irrig_offline' not in down %}
+                {% if is_state('binary_sensor.feed_reservoir_dry','on') and (is_state('switch.feed_pump_irrigation_tent','on') or is_state('valve.feed_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [{'key':'feed_dry','msg':'Feed reservoir DRY while feeding'}] %}{% endif %}
+                {% if is_state('binary_sensor.flush_reservoir_dry','on') and (is_state('switch.flush_pump_irrigation_tent','on') or is_state('valve.flush_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [{'key':'flush_dry','msg':'Flush reservoir DRY while flushing'}] %}{% endif %}
+              {% endif %}
               {# Climate checks disabled 2026-06-28 — see note in the state block above. #}
-              {% if states('light.hlg') == 'unavailable' or states('light.chilled') == 'unavailable' %}{% set ns.e = ns.e + [{'key':'lights_offline','msg':'Grow light offline'}] %}{% endif %}
-              {% if is_state('binary_sensor.tent_temperature_divergence','on') %}{% set ns.e = ns.e + [{'key':'temp_divergence','msg':'Tent temperature sensors disagree — one may be failing'}] %}{% endif %}
-              {% if is_state('binary_sensor.tent_humidity_divergence','on') %}{% set ns.e = ns.e + [{'key':'humid_divergence','msg':'Tent humidity sensors disagree — one may be failing'}] %}{% endif %}
-              {% if is_state('binary_sensor.tent_controller_temp_high','on') %}{% set ns.e = ns.e + [{'key':'controller_temp','msg':'Controller enclosure HOT — ' ~ (states('sensor.grow_tent_climate_controller_temperature') | float(0) | round(1)) ~ '°C (limit ' ~ (states('input_number.tent_controller_temp_max') | float(0) | round(0)) ~ '°C) — PETG may soften'}] %}{% endif %}
-              {% if is_state('binary_sensor.tent_controller_humidity_high','on') %}{% set ns.e = ns.e + [{'key':'controller_humidity','msg':'Controller CONDENSATION RISK — box ' ~ (states('sensor.grow_tent_climate_controller_temperature') | float(0) | round(1)) ~ '°C / ' ~ (states('sensor.grow_tent_climate_controller_humidity') | float(0) | round(1)) ~ '% RH vs tent dewpoint ' ~ states('sensor.tent_dewpoint') ~ '°C'}] %}{% endif %}
+              {% if 'climate_offline' not in down %}
+                {% if is_state('binary_sensor.tent_temperature_divergence','on') %}{% set ns.e = ns.e + [{'key':'temp_divergence','msg':'Tent temperature sensors disagree — one may be failing'}] %}{% endif %}
+                {% if is_state('binary_sensor.tent_humidity_divergence','on') %}{% set ns.e = ns.e + [{'key':'humid_divergence','msg':'Tent humidity sensors disagree — one may be failing'}] %}{% endif %}
+                {% if is_state('binary_sensor.tent_controller_temp_high','on') %}{% set ns.e = ns.e + [{'key':'controller_temp','msg':'Controller enclosure HOT — ' ~ (states('sensor.grow_tent_climate_controller_temperature') | float(0) | round(1)) ~ '°C (limit ' ~ (states('input_number.tent_controller_temp_max') | float(0) | round(0)) ~ '°C) — PETG may soften'}] %}{% endif %}
+                {% if is_state('binary_sensor.tent_controller_humidity_high','on') %}{% set ns.e = ns.e + [{'key':'controller_humidity','msg':'Controller CONDENSATION RISK — box ' ~ (states('sensor.grow_tent_climate_controller_temperature') | float(0) | round(1)) ~ '°C / ' ~ (states('sensor.grow_tent_climate_controller_humidity') | float(0) | round(1)) ~ '% RH vs tent dewpoint ' ~ states('sensor.tent_dewpoint') ~ '°C'}] %}{% endif %}
+              {% endif %}
               {% for c in ['tent_1','tent_2','tent_overhead'] %}{% if is_state('binary_sensor.battery_camera_' ~ c,'on') %}{% set ns.e = ns.e + [{'key':'cam_batt_' ~ c,'msg':'Camera ' ~ c ~ ' battery low'}] %}{% endif %}{% endfor %}
               {{ ns.e }}
 

@@ -144,6 +144,18 @@
       unit_of_measurement: "%"
       state_class: measurement
       icon: mdi:gauge
+      # UNAVAILABLE, NOT ZERO, WHEN THE ESP32 IS DARK (added 2026-08-04).
+      # Without this the state block below reads every float as "not on" when
+      # the controller drops, computes raw = 0, and the tank reports 0% /
+      # "Empty" — so a power cut looked exactly like a drained reservoir. That
+      # fired the dry-reservoir phone alerts, tripped the dashboard DRY banner,
+      # and defeated the int(99) offline guard on binary_sensor.feed_reservoir_dry
+      # (the guard only ever sees a number, because this sensor always produced
+      # one). One float is a sufficient proxy — the whole board drops together,
+      # same proxy watchdog_irrigation_critical_offline uses.
+      availability: >
+        {{ states('binary_sensor.feed_empty_irrigation_tent')
+           not in ['unavailable', 'unknown'] }}
       state: >
         {% set prev = this.state | int(0) %}
         {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
@@ -189,6 +201,11 @@
       unit_of_measurement: "%"
       state_class: measurement
       icon: mdi:gauge
+      # See the note on Feed Level above — offline must read as "no data", not
+      # as an empty tank.
+      availability: >
+        {{ states('binary_sensor.flush_empty_irrigation_tent')
+           not in ['unavailable', 'unknown'] }}
       state: >
         {% set prev = this.state | int(0) %}
         {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
@@ -222,6 +239,11 @@
 # false-trip. int(99) means an unavailable level (ESP offline) is NOT dry —
 # controller-offline is its own error. Change what "dry" means HERE and all
 # consumers follow.
+#
+# That int(99) guard was dead code until 2026-08-04: the level sensors above
+# never went unavailable, they computed 0 from unavailable floats, so an offline
+# controller read as a genuinely empty tank. They now carry an `availability:`
+# block, which is what makes this guard do its job.
 - binary_sensor:
     - name: "Feed Reservoir Dry"
       unique_id: feed_reservoir_dry
