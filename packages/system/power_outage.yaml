@@ -22,8 +22,22 @@
 # one below was >=94% available over that window. Anything flakier generates
 # false alarms: media_player.loft_tv was rejected at 61.6% because the TV sleeps.
 # If you add a witness, check its real availability first, and give it an
-# honest `area` — the area count is what separates "house outage" from "one
-# room's breaker".
+# honest `area`.
+#
+# A WITNESS MUST BE ON UNPROTECTED MAINS. Anything on the UPS cannot witness a
+# power cut — it stays up by design, so it can never report the event, and if it
+# ever DOES drop (unplugged, powered off) it contributes a bogus area toward the
+# threshold. Currently on UPS, and therefore permanently ineligible:
+#   * both PCs + displays
+#   * the Brentons WiFi router
+#   * both 3D printers  <- switch.bambu was a witness until 2026-08-04, removed
+# During an area outage the house also runs a generator, but it feeds only a few
+# isolated outlets and none of the grow equipment is on them.
+#
+# SCOPE HONESTY: `area` here means room, not circuit. Tent + mom-grow going dark
+# together satisfies the >=2 area test whether that was the whole street or one
+# shared breaker. Both are genuine power events and `kind` is POWER either way —
+# this sensor does not claim to tell you which, and shouldn't be read as doing so.
 #
 # WHAT MAKES THIS NOT FIRE ON AN HA RESTART
 # Three independent guards, because a restart is the classic false positive:
@@ -85,8 +99,6 @@ system_power_outage:
                  ('ac_fan',       'house',   ['switch.ac_circulation_fan'],
                   ['unavailable','unknown']),
                  ('duct_fan',     'house',   ['switch.duct_fan'],
-                  ['unavailable','unknown']),
-                 ('printer',      'printer', ['switch.bambu'],
                   ['unavailable','unknown'])
                ] %}
             {% set ns = namespace(n=0) %}
@@ -126,9 +138,6 @@ system_power_outage:
                     ['unavailable','unknown']),
                    ('duct_fan',     'Duct fan',                'house',
                     ['switch.duct_fan'],
-                    ['unavailable','unknown']),
-                   ('printer',      'Bambu printer',           'printer',
-                    ['switch.bambu'],
                     ['unavailable','unknown'])
                  ] %}
               {% set ns = namespace(off=[]) %}
@@ -164,6 +173,12 @@ system_power_outage:
         # router/internet with it (or is itself a network failure) and we
         # cannot tell the two apart from in here -> POWER OR NETWORK.
         # This is the test that identified the 08-04 event as power in minutes.
+        #
+        # The Brentons WiFi router is on the UPS, so WiFi surviving a power cut
+        # is the EXPECTED case, not a lucky one — which is what makes a POWER
+        # verdict trustworthy here. Cameras going dark therefore means something
+        # bigger: the modem/ISP is down, or the UPS has run flat. Neither is
+        # distinguishable from inside HA, hence the deliberately vague label.
         # ------------------------------------------------------------------
         - name: "House Power Outage"
           unique_id: house_power_outage
