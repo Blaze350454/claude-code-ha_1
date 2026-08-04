@@ -15,14 +15,27 @@
 # THE MODEL: CHAINS + SIMULTANEITY (not rooms)
 # The signal is >=3 INDEPENDENT POWER CHAINS dropping at the same time.
 #
-# A chain = everything fed from one supply. Devices sharing a supply cannot
-# fail independently, so they are worth exactly ONE vote no matter how many
-# entities they own:
+# A chain = a set of devices that cannot fail independently — because they
+# share a supply, or share the integration/cloud path that reports them. Each
+# chain is worth exactly ONE vote no matter how many entities it owns:
 #   * grow-tent-one + grow-tent-two + grow-tent-climate share a supply -> 1 vote
 #   * tent-irrigation-controller is on its own                         -> 1 vote
-#   * a set of smart plugs is one strip/supply, so 4 of 8 dropping     -> 1 vote
+#   * all 8 Sonoff plugs are ONE vote, so 4 of 8 dropping is still     -> 1 vote
 # This is why a single ESP32 dying, taking 26 entities with it, can never trip
 # this on its own.
+#
+# The Sonoff grouping is the important one and it is about CORRELATED FAILURE,
+# not shared wiring: the 8 plugs are 8 physically separate devices, but they
+# report through one integration and one cloud/LAN path, so a Sonoff outage
+# drops all of them at once for reasons that have nothing to do with power.
+# Before they were grouped, HLG, Chilled, the AC circulation fan and the duct
+# fan were four independent votes — a single Sonoff hiccup would have cleared
+# the 3-chain threshold on its own and cried outage. Now it is one vote and
+# cannot.
+#
+# Of the 8, PC and Prusa are fed FROM THE UPS, so they never drop in a power
+# cut and never actually cast the vote — but that is exactly what makes them
+# the sharpest POWER-vs-NETWORK test in the system (see the binary_sensor).
 #
 # Rooms/areas were deliberately REMOVED from the test (they were in the first
 # cut of this file). Chunks of the smart house get unplugged when not in use,
@@ -106,16 +119,16 @@ system_power_outage:
                   ['unavailable','unknown']),
                  ('tent_strip',   ['binary_sensor.tp_link_power_strip_c074_cloud_connection'],
                   ['off','unavailable','unknown']),
-                 ('tent_lights',  ['light.hlg','light.chilled'],
+                 ('sonoff_plugs', ['switch.hlg','switch.chilled',
+                                   'switch.ac_circulation_fan',
+                                   'switch.circulation_fans',
+                                   'switch.duct_fan','switch.controller_tent',
+                                   'switch.pc','switch.prusa'],
                   ['unavailable','unknown']),
                  ('mom_grow',     ['switch.mom_grow_1','switch.mom_grow_lights'],
                   ['unavailable','unknown']),
                  ('kasa_outdoor', ['switch.kasa_smart_outdoor_plug_switch_1',
                                    'switch.kasa_smart_outdoor_plug_switch_2'],
-                  ['unavailable','unknown']),
-                 ('ac_fan',       ['switch.ac_circulation_fan'],
-                  ['unavailable','unknown']),
-                 ('duct_fan',     ['switch.duct_fan'],
                   ['unavailable','unknown'])
                ] %}
             {% set ns = namespace(n=0) %}
@@ -146,8 +159,11 @@ system_power_outage:
                    ('tent_strip',   'Tent feed/flush strip (HS300 c074)',
                     ['binary_sensor.tp_link_power_strip_c074_cloud_connection'],
                     ['off','unavailable','unknown']),
-                   ('tent_lights',  'Tent grow lights (HLG + Chilled)',
-                    ['light.hlg','light.chilled'],
+                   ('sonoff_plugs', 'Sonoff plug set (8)',
+                    ['switch.hlg','switch.chilled',
+                     'switch.ac_circulation_fan','switch.circulation_fans',
+                     'switch.duct_fan','switch.controller_tent',
+                     'switch.pc','switch.prusa'],
                     ['unavailable','unknown']),
                    ('mom_grow',     'Mom-grow Kasa plug pair',
                     ['switch.mom_grow_1','switch.mom_grow_lights'],
@@ -155,12 +171,6 @@ system_power_outage:
                    ('kasa_outdoor', 'Irrigation multi-plug (Kasa outdoor)',
                     ['switch.kasa_smart_outdoor_plug_switch_1',
                      'switch.kasa_smart_outdoor_plug_switch_2'],
-                    ['unavailable','unknown']),
-                   ('ac_fan',       'AC circulation fan',
-                    ['switch.ac_circulation_fan'],
-                    ['unavailable','unknown']),
-                   ('duct_fan',     'Duct fan',
-                    ['switch.duct_fan'],
                     ['unavailable','unknown'])
                  ] %}
               {% set ns = namespace(off=[]) %}
@@ -195,14 +205,23 @@ system_power_outage:
         # with things unplugged; three chains down in the same two minutes is
         # an outage.
         #
-        # POWER vs POWER OR NETWORK: the Blink tent cameras are battery
-        # powered but cloud connected. Mains chains dead while the cameras
-        # still report -> only mains was lost -> POWER. Cameras dark too ->
-        # POWER OR NETWORK. The Brentons router is on the UPS, so WiFi
-        # surviving a cut is the EXPECTED case, which is what makes a POWER
-        # verdict trustworthy; cameras going dark means something bigger (the
-        # modem/ISP is down, or the UPS has run flat). Neither is
+        # POWER vs POWER OR NETWORK, from two independent references that ride
+        # out a mains cut:
+        #
+        #   1. switch.pc + switch.prusa are Sonoff plugs fed FROM THE UPS. They
+        #      are the sharpest test available, because they share vendor,
+        #      integration, cloud path and WiFi with the six mains Sonoff plugs
+        #      and differ ONLY in power source. Six dead while these two report
+        #      cannot be the Sonoff integration or the network — it is power.
+        #      (Confirmed on the 08-04 outage: exactly that split.)
+        #   2. The Blink tent cameras are battery powered but cloud connected,
+        #      so they also prove the network and internet are still up.
+        #
+        # Either alive -> POWER. Both dark -> POWER OR NETWORK: something bigger
+        # (modem/ISP down, or the UPS has run flat), and the two are not
         # distinguishable from inside HA, hence the deliberately vague label.
+        # The Brentons router is itself on the UPS, so WiFi surviving a cut is
+        # the EXPECTED case — which is what makes a POWER verdict trustworthy.
         # ------------------------------------------------------------------
         - name: "House Power Outage"
           unique_id: house_power_outage
@@ -234,11 +253,14 @@ system_power_outage:
                and (now().timestamp() - started) >= start_grace }}
           attributes:
             kind: >
-              {% set cams = ['sensor.temperature_camera_tent_1',
+              {# Two independent references that survive a mains cut. Either one
+                 alive means the drop was about power, not connectivity. #}
+              {% set refs = ['sensor.temperature_camera_tent_1',
                              'sensor.temperature_camera_tent_2',
-                             'sensor.temperature_camera_tent_overhead'] %}
+                             'sensor.temperature_camera_tent_overhead',
+                             'switch.pc','switch.prusa'] %}
               {% set ns = namespace(up=0) %}
-              {% for c in cams %}
+              {% for c in refs %}
                 {% if states(c) not in ['unavailable','unknown','none'] %}
                   {% set ns.up = ns.up + 1 %}
                 {% endif %}
