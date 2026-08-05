@@ -79,8 +79,45 @@ prefix — expect to re-run one after any reflash that adds entities.
 ## Home Assistant / Grow System Context
 
 - HA instance: `http://192.168.2.151:8123`
-- HS300 power strip pumps are controlled via a custom cloud-API service running on the Ubuntu VM (port 8765), not via the native TP-Link integration (firmware broke local auth).
-- KP303 (`192.168.2.182`, MAC suffix `c074`, HA name "Power Strip Tent") is currently an unplugged spare — integration kept for future use; outlets renamed `Blank 4/5/6`. Works via native TP-Link integration when powered. (MAC verified 2026-06-16 — an earlier `53db` here was wrong; don't "correct" it back.)
+- **HS300 "Tent Irrigation Power Strip"** — `192.168.2.182`, MAC suffix `c074`,
+  model **HS300**, 6 sockets. This is the **live feed/flush strip** carrying the
+  feed/flush/stir/air/table-drain pumps *and* the outlet powering the irrigation
+  ESP32 (`switch.irrigation_controller_tent`).
+  (MAC verified 2026-06-16 — an earlier `53db` here was wrong; don't "correct" it back.)
+  - **Corrected 2026-08-05:** this entry previously described `.182`/`c074` as an
+    *unplugged KP303 spare*. That was wrong — it is the live HS300, and **no KP303
+    exists in the device registry at all**. Verified against
+    `.storage/core.device_registry` (model `HS300`, sockets `Socket for HS300(US)`).
+  - **Corrected 2026-08-05:** the pumps are **NOT** driven by a custom cloud-API
+    service on port 8765. That service is gone — nothing listens on 8765 and no
+    unit exists. Every pump switch is `platform=tplink`, i.e. the **native TP-Link
+    integration**. Don't go looking for the 8765 service.
+  - **Recovery when the strip goes `unavailable` but still pings:** Tapo app →
+    toggle **Third-Party Services OFF then ON**. An HA reload does *not* fix it.
+    Zero kasa retries in the log alongside a pingable strip is the signature.
 - ESP32 device `tent-irrigation-controller` exposes float switches, solenoid valves, and DS18B20 sensors to HA via ESPHome.
 - Full irrigation entity IDs and HS300 outlet mappings: see `MEMORY.md` and `grow_tent_automation/docs/tent_irrigation_esphome.md`.
 - HA config on host VM: `/home/homeadmin/homeassistant/.config/configuration.yaml`
+
+### Power topology (matters for every "everything is offline" diagnosis)
+
+- **On UPS:** the Proxmox host / HA VM, both PCs + displays, the **Brentons WiFi
+  router**, and both 3D printers. HA therefore *survives* a house power cut and can
+  observe it. WiFi survives too, by design.
+- **During an area outage** the house runs a generator feeding only a few isolated
+  outlets — **no grow equipment is on them**, so the tent stays dark for the duration.
+- **A mass simultaneous `unavailable` across the grow gear is the EXPECTED signature
+  of a normal area outage.** It is not a fault, not a GFCI trip, and not a network
+  failure. Don't chase it as one.
+- `binary_sensor.house_power_outage` detects this — see
+  `docs/power_outage_detection.md` in the **homeassistant-config** repo.
+- **Diagnosing power vs network:** `switch.pc` / `switch.prusa` are Sonoff plugs fed
+  *from the UPS*; the other six Sonoff plugs are on mains. Six dead while those two
+  still report cannot be Sonoff and cannot be the network — it is power. The
+  battery+cloud Blink tent cams are the second reference (and a live tent
+  thermometer when everything else is dark).
+- **`ping` from the Windows PC is useless here** — it sits on a different segment and
+  cannot reach the grow devices even when they are healthy. Sweep from the HA VM.
+- **After an HA restart every entity carries `last_changed` = restart time.** So any
+  "offline since HH:MM" is the *restart*, not the outage, and simultaneity across
+  entities is meaningless. Get true onset from the **recorder history API**.
