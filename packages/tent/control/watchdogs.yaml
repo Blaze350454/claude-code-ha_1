@@ -45,7 +45,10 @@ tent_control_watchdogs:
           power_strip_c074: "HS300 power strip [c074 — Tent Irrigation Power Strip] cloud connection lost"
         hint:
           esp32_controller: "Check device power + wifi. ESPHome dashboard: http://192.168.2.14:6052"
-          power_strip_c074: "Check HS300 cloud-API service on HA VM (:8765) and the strip itself."
+          # The old hint pointed at a cloud-API service on :8765. That service is
+          # GONE (nothing listens on 8765, no unit exists) — the strip runs on the
+          # NATIVE tplink integration now. Verified 2026-08-05.
+          power_strip_c074: "Known fix: Tapo app -> toggle Third-Party Services OFF then ON. An HA reload does NOT fix this. If the strip pings but HA shows no kasa retries in the log, that is this exact fault."
       actions:
         - action: notify.send_message
           target:
