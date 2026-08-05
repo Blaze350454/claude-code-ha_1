@@ -24,7 +24,18 @@ Everything pushed here is world-readable immediately.
 
 1. **MCP Server** (`mcp_server/`) — A FastMCP server that combines semantic search over crawled documentation with live Home Assistant control via REST API. Consumed by AI agents (Claude Code, Cursor) over stdio.
 2. **ESPHome MCP** (`esphome_mcp/`) — A separate, self-contained MCP server specifically for ESPHome documentation. Has its own `pyproject.toml` and `uv` environment.
-3. **Grow Tent Automation** (`grow_tent_automation/`) — HA YAML configs for the tent irrigation system. `grow_tent_package.yaml` is the main HA package. Hardware/entity documentation is in `docs/tent_irrigation_esphome.md`.
+3. **Grow Tent Automation** (`grow_tent_automation/`) — HA YAML configs for the tent irrigation system. Hardware/entity documentation is in `docs/tent_irrigation_esphome.md`.
+
+   ⚠ **`grow_tent_automation/grow_tent_package.yaml` is NOT the live package** —
+   it is a 374-line snapshot untouched since the initial commit (1cab613,
+   2026-05-26). The package Home Assistant actually loads is
+   **`packages/grow_tent_package.yaml` in the `homeassistant-config` repo**
+   (796 lines, checked out on the HA VM at `~/homeassistant/.config`). The two
+   have diverged hard: the local copy has none of the tent-average / VPD /
+   dewpoint / divergence templates and still references
+   `sensor.temperature_camera_tent`, an entity that does not exist. **Edit the
+   `homeassistant-config` copy; never deploy this one.** (Corrected 2026-08-05,
+   after this file's "main HA package" claim sent a session to the wrong file.)
 
 New grow projects (e.g. the hydro tower, plant scales, CO2 sensor builds tracked in `MEMORY.md`) are added here as additional sub-directories rather than as separate repos.
 
