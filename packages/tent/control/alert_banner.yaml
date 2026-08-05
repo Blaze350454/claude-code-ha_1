@@ -36,8 +36,11 @@
 #   dry is meaningless with the ESP32 dark; sensors "disagreeing" is meaningless
 #   with the climate board dark.
 #
-# Camera battery is deliberately ungated — the Blink cams are battery + cloud
-# and stay alive through a tent power cut, so a low battery is still real news.
+# Camera checks are deliberately ungated — the Blink cams are battery + cloud
+# and stay alive through a tent power cut, so a dead camera is still real news.
+# tent_1's battery FLAG is skipped (rechargeable cells read low forever); a
+# 12h no-report liveness check covers all three instead. Full reasoning sits
+# with the check itself in the errors block.
 #
 # To add/remove what counts as an error, edit the detection block below — it is
 # duplicated in the sensor state (count) and its `errors` attribute (the list);
@@ -198,7 +201,14 @@ tent_control_alert_banner:
               {% if is_state('binary_sensor.tent_controller_temp_high','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
               {% if is_state('binary_sensor.tent_controller_humidity_high','on') %}{% set ns.e = ns.e + [1] %}{% endif %}
             {% endif %}
-            {% for c in ['tent_1','tent_2','tent_overhead'] %}{% if is_state('binary_sensor.battery_camera_' ~ c,'on') %}{% set ns.e = ns.e + [1] %}{% endif %}{% endfor %}
+            {# Cameras: battery flag (skipping rechargeable cams) + a liveness
+               check. See the errors block below for the full reasoning. #}
+            {% set batt_skip = ['tent_1'] %}
+            {% for c in ['tent_1','tent_2','tent_overhead'] %}
+              {% if c not in batt_skip and is_state('binary_sensor.battery_camera_' ~ c,'on') %}{% set ns.e = ns.e + [1] %}{% endif %}
+              {% set st = states['sensor.wi_fi_signal_strength_camera_' ~ c] %}
+              {% if st is not none and (st.state in ['unavailable','unknown'] or (now() - st.last_reported).total_seconds() > 43200) %}{% set ns.e = ns.e + [1] %}{% endif %}
+            {% endfor %}
             {{ ns.e | length }}
           attributes:
             errors: >
@@ -240,7 +250,27 @@ tent_control_alert_banner:
                 {% if is_state('binary_sensor.tent_controller_temp_high','on') %}{% set ns.e = ns.e + [{'key':'controller_temp','msg':'Controller enclosure HOT — ' ~ (states('sensor.grow_tent_climate_controller_temperature') | float(0) | round(1)) ~ '°C (limit ' ~ (states('input_number.tent_controller_temp_max') | float(0) | round(0)) ~ '°C) — PETG may soften'}] %}{% endif %}
                 {% if is_state('binary_sensor.tent_controller_humidity_high','on') %}{% set ns.e = ns.e + [{'key':'controller_humidity','msg':'Controller CONDENSATION RISK — box ' ~ (states('sensor.grow_tent_climate_controller_temperature') | float(0) | round(1)) ~ '°C / ' ~ (states('sensor.grow_tent_climate_controller_humidity') | float(0) | round(1)) ~ '% RH vs tent dewpoint ' ~ states('sensor.tent_dewpoint') ~ '°C'}] %}{% endif %}
               {% endif %}
-              {% for c in ['tent_1','tent_2','tent_overhead'] %}{% if is_state('binary_sensor.battery_camera_' ~ c,'on') %}{% set ns.e = ns.e + [{'key':'cam_batt_' ~ c,'msg':'Camera ' ~ c ~ ' battery low'}] %}{% endif %}{% endfor %}
+              {# CAMERA BATTERY — tent_1 is skipped on purpose (2026-08-05).
+                 It runs a fully-charged NiMH rechargeable, which sits at ~1.2V
+                 per cell (~2.4V pack) against the ~1.5V/cell (~3.0V) lithium
+                 AAs Blink calibrates its threshold for. Blink therefore reports
+                 a healthy pack as low, permanently. Blink exposes NO voltage or
+                 percentage — only this binary flag (verified 2026-08-05) — so
+                 there is nothing to re-threshold: the only choices are ignore it
+                 or carry a false error forever.
+                 Ignoring a battery flag would normally create a blind spot, so
+                 the LIVENESS check below replaces it: when a battery actually
+                 dies the camera stops reporting altogether, which is a more
+                 reliable signal than the flag ever was, and it works regardless
+                 of cell chemistry. 12h is deliberately generous — the timelapse
+                 wakes each camera roughly every 90 min, so 12h of silence is
+                 real. Put tent_1 back on lithiums -> drop it from batt_skip. #}
+              {% set batt_skip = ['tent_1'] %}
+              {% for c in ['tent_1','tent_2','tent_overhead'] %}
+                {% if c not in batt_skip and is_state('binary_sensor.battery_camera_' ~ c,'on') %}{% set ns.e = ns.e + [{'key':'cam_batt_' ~ c,'msg':'Camera ' ~ c ~ ' battery low'}] %}{% endif %}
+                {% set st = states['sensor.wi_fi_signal_strength_camera_' ~ c] %}
+                {% if st is not none and (st.state in ['unavailable','unknown'] or (now() - st.last_reported).total_seconds() > 43200) %}{% set ns.e = ns.e + [{'key':'cam_dead_' ~ c,'msg':'Camera ' ~ c ~ ' has not reported in ' ~ (((now() - st.last_reported).total_seconds() / 3600) | round(1)) ~ 'h — battery may be flat or the camera is offline'}] %}{% endif %}
+              {% endfor %}
               {{ ns.e }}
 
     - binary_sensor:
