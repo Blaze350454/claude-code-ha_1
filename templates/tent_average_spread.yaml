@@ -21,11 +21,20 @@
 # must change it in the other, or the "high" can come from a probe the average
 # itself threw away. Current rules, both files:
 #   temperature: area=tent, device_class temperature, NOT outdoor / co2 /
-#                controller, NOT labelled sys_irrigation or
+#                controller / camera, NOT labelled sys_irrigation or
 #                sub_climate_humidifier; sane range 5-50C; band median +/- 5C
 #   humidity:    area=tent, device_class humidity, NOT moisture / outdoor / co2 /
 #                controller, NOT labelled sys_irrigation; sane range 5-99%;
 #                band median +/- 10%
+#
+# CAMERA EXCLUSION ADDED 2026-08-05. The Blink cam temps had been passing the
+# +/- 5C band all along (they sit only 1-3.6C off the SHT41s), so "Spread High"
+# was reporting a camera BODY temperature -- 25.6C, last updated 14h earlier --
+# as the tent's air high, and the daily max latched it as the day's record.
+# That is precisely the failure this file's header claims it prevents; the band
+# was never tight enough to do it. Exclude non-air probes BY NAME, not by band.
+# (There is no camera twin on the humidity side -- Blink cams report no RH,
+# which is why the humidity average was correct while temperature was not.)
 # (No pressure twins: the tent has no pressure source and
 # sensor.tent_average_pressure was deleted 2026-07-24 by design.)
 
@@ -46,6 +55,7 @@
                 and 'outdoor' not in s.entity_id
                 and 'co2' not in s.entity_id
                 and 'controller' not in s.entity_id
+                and 'camera' not in s.entity_id
                 and labels(s.entity_id) | select('in', exclude) | list | length == 0 %}
             {% set ns.n = ns.n + 1 %}
           {% endif %}
@@ -59,6 +69,7 @@
                 and 'outdoor' not in s.entity_id
                 and 'co2' not in s.entity_id
                 and 'controller' not in s.entity_id
+                and 'camera' not in s.entity_id
                 and labels(s.entity_id) | select('in', exclude) | list | length == 0 %}
             {% set v = s.state | float(none) %}
             {% if v is not none %}
@@ -95,6 +106,7 @@
                 and 'outdoor' not in s.entity_id
                 and 'co2' not in s.entity_id
                 and 'controller' not in s.entity_id
+                and 'camera' not in s.entity_id
                 and labels(s.entity_id) | select('in', exclude) | list | length == 0 %}
             {% set ns.n = ns.n + 1 %}
           {% endif %}
@@ -108,6 +120,7 @@
                 and 'outdoor' not in s.entity_id
                 and 'co2' not in s.entity_id
                 and 'controller' not in s.entity_id
+                and 'camera' not in s.entity_id
                 and labels(s.entity_id) | select('in', exclude) | list | length == 0 %}
             {% set v = s.state | float(none) %}
             {% if v is not none %}

@@ -3,10 +3,12 @@ tent_control_sensor_health:
     - id: tent_temp_divergence_alert
       alias: "Sensors — Tent Temp Divergence Alert"
       description: >
-        Fires when individual temperature sensors (canopy, flower, stem, AC,
-        camera) disagree by more than input_number.tent_temp_divergence_threshold
+        Fires when individual temperature sensors (canopy, flower, stem, AC)
+        disagree by more than input_number.tent_temp_divergence_threshold
         for 15 minutes. The median average can mask a stuck or failing sensor —
         this surfaces it.
+        The Blink camera was dropped from the comparison 2026-08-05 — it
+        measures the camera body, not air, and false-tripped this on its own.
       triggers:
         - trigger: state
           entity_id: binary_sensor.tent_temperature_divergence
@@ -29,8 +31,7 @@ tent_control_sensor_health:
               Canopy: {{ states('sensor.grow_tent_climate_canopy_temperature') }}°C,
               Flower: {{ states('sensor.grow_tent_climate_flower_temperature') }}°C,
               Stem: {{ states('sensor.grow_tent_climate_stem_temperature') }}°C,
-              AC: {{ states('sensor.indoor_temperature_air_conditioner_tent') }}°C,
-              Camera: {{ states('sensor.temperature_camera_tent_1') }}°C.
+              AC: {{ states('sensor.indoor_temperature_air_conditioner_tent') }}°C.
               Average: {{ states('sensor.tent_average_temperature') }}°C.
               One sensor may be stuck or failing.
       mode: single
