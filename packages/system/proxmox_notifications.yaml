@@ -82,19 +82,22 @@ system_proxmox_notifications:
             # previous notification instead of stacking duplicates.
             notification_id: "proxmox_notify_{{ pve_type }}_{{ pve_job }}"
             title: "Proxmox {{ pve_severity | upper }} — {{ pve_title }}"
-            message: >-
+            # `|-` (literal) NOT `>-` (folded). Folded style collapses newlines
+            # into spaces, which renders the ``` fence inline as
+            # "``` message ```" instead of as a code block. Verified against a
+            # real test notification.
+            message: |-
               **{{ pve_title }}**
 
-              Severity: `{{ pve_severity }}` · Type: `{{ pve_type }}` · Host: `{{ pve_host }}`
-              {% if pve_job %}· Job: `{{ pve_job }}`{% endif %}
+              Severity: `{{ pve_severity }}` · Type: `{{ pve_type }}` · Host: `{{ pve_host }}`{% if pve_job %} · Job: `{{ pve_job }}`{% endif %}
 
               ```
               {{ pve_message }}
               ```
+              {%- if pve_type == 'vzdump' %}
 
-              {% if pve_type == 'vzdump' %}
               Backup fault. Check `df -h /var/lib/vz/dump` on 192.168.2.100 (dedicated
               295 GB pve-backups volume) and `ls -lh /var/lib/vz/dump` — a run that wrote
               only a .log and no .vma.zst failed. See sensor.proxmox_backup_age for how
               stale the newest archive now is.
-              {% endif %}
+              {%- endif %}
