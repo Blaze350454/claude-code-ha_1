@@ -1,0 +1,195 @@
+system_proxmox_backups:
+  # ------------------------------------------------------------------------
+  # Proxmox VM backup (vzdump) age monitor
+  #
+  # WHY THIS EXISTS: on 2026-08-06 we found the weekly vzdump of VM 101 (this
+  # HA VM) had been failing every single run since 2026-06-14 — eight
+  # consecutive weeks — with `vma_queue_write: write error - Broken pipe`,
+  # caused by `local` storage hitting 100% full. Nobody noticed because
+  # Proxmox's only notification target was `mail-to-root`, i.e. local mail on
+  # the Proxmox host that nothing ever reads. The newest usable archive was
+  # two months old.
+  #
+  # This is the blind-spot fix: HA polls the Proxmox storage-content API and
+  # alerts when the newest archive gets stale. Note it is deliberately
+  # SEPARATE from `watchdog_ha_backup_and_database` in host_health.yaml —
+  # that one watches HA's *own* internal backups
+  # (sensor.backup_last_successful_automatic_backup). This one watches the
+  # whole-VM images that let you rebuild the box from bare metal.
+  #
+  # AUTH: Proxmox API token for user `ha-monitor@pve`, privsep 0, holding the
+  # custom role `HABackupMonitor` on `/` (propagating). The token string lives
+  # in secrets.yaml on the VM (gitignored) as `proxmox_api_token`, formatted:
+  #   PVEAPIToken=ha-monitor@pve!ha=<uuid>
+  # verify_ssl is false because Proxmox serves 8006 with a self-signed cert.
+  #
+  # PERMISSION GOTCHA — the whole reason this took several attempts. Listing
+  # *backup* volumes is NOT covered by an audit-only role. From
+  # PVE::Storage::check_volume_access in /usr/share/perl5/PVE/Storage.pm:
+  #
+  #     } elsif ($vtype eq 'backup' && $ownervm) {
+  #         $rpcenv->check($user, "/storage/$sid", ['Datastore.AllocateSpace']);
+  #         $rpcenv->check($user, "/vms/$ownervm", ['VM.Backup']);
+  #
+  # So it needs `Datastore.AllocateSpace` (NOT Datastore.Audit) plus
+  # `VM.Backup`. PVEAuditor has neither, and — critically — the API then
+  # returns HTTP 200 with an EMPTY list rather than a 403. A permissions
+  # problem is indistinguishable from "no backups exist" unless you know this.
+  # Hence role HABackupMonitor =
+  #   Datastore.Audit, Datastore.AllocateSpace, VM.Audit, VM.Backup, Sys.Audit
+  #
+  # Note this means the token is NOT strictly read-only: VM.Backup +
+  # Datastore.AllocateSpace let it *create* backups and allocate space. It
+  # cannot delete backups (needs Datastore.Allocate) or modify VM config.
+  # That is a Proxmox design constraint of the content API, not a choice here.
+  #
+  # Debug tip: root@pam bypasses all of these checks, so `pvesh get
+  # /nodes/proxmox/storage/local/content --content backup` succeeding as root
+  # proves nothing about whether the token can see them. Test with the token.
+  #
+  # If this sensor ever reads 0 backups while archives clearly exist on disk,
+  # suspect the token role BEFORE suspecting the backup job.
+  # ------------------------------------------------------------------------
+  rest:
+    - resource: "https://192.168.2.100:8006/api2/json/nodes/proxmox/storage/local/content?content=backup"
+      verify_ssl: false
+      headers:
+        Authorization: !secret proxmox_api_token
+      # Backups are weekly; polling every 30 min is far more than enough and
+      # keeps the Proxmox API essentially idle.
+      scan_interval: 1800
+      sensor:
+        # Timestamp of the NEWEST archive. `ctime` is unix epoch seconds.
+        # Goes unavailable (rather than 'unknown') when the API is
+        # unreachable or returns no archives — the unreachable case is picked
+        # up by its own trigger in the automation below.
+        - name: "Proxmox Backup Last"
+          unique_id: proxmox_backup_last
+          device_class: timestamp
+          availability: >-
+            {{ value_json.data is defined and (value_json.data | count) > 0 }}
+          value_template: >-
+            {{ (value_json.data | map(attribute='ctime') | max)
+               | as_datetime | as_local | isoformat }}
+
+        # How many archives are retained. With prune-backups keep-last=3 on
+        # the `local` storage this should sit at 3 once steady-state.
+        - name: "Proxmox Backup Count"
+          unique_id: proxmox_backup_count
+          availability: "{{ value_json.data is defined }}"
+          state_class: measurement
+          unit_of_measurement: "backups"
+          value_template: "{{ value_json.data | count }}"
+
+        # Total bytes across retained archives, in GB. Useful for spotting
+        # the dump volume trending toward full BEFORE it breaks backups
+        # again. The dedicated pve-backups volume is 295 GB.
+        - name: "Proxmox Backup Total Size"
+          unique_id: proxmox_backup_total_size
+          availability: "{{ value_json.data is defined }}"
+          device_class: data_size
+          state_class: measurement
+          unit_of_measurement: GB
+          value_template: >-
+            {{ ((value_json.data | map(attribute='size') | sum) / 1000000000) | round(1) }}
+
+  template:
+    - sensor:
+        # Age of the newest archive in days. This is the entity the watchdog
+        # actually triggers on, and the one worth putting on a dashboard.
+        - name: "Proxmox Backup Age"
+          unique_id: proxmox_backup_age
+          unit_of_measurement: d
+          state_class: measurement
+          availability: >-
+            {{ states('sensor.proxmox_backup_last')
+               not in ('unknown', 'unavailable', 'none', '') }}
+          state: >-
+            {{ ((now() - (states('sensor.proxmox_backup_last') | as_datetime)).total_seconds()
+                / 86400) | round(1) }}
+
+  automation:
+    # ----------------------------------------------------------------------
+    # Proxmox VM Backup Watchdog
+    #
+    # Backups run weekly (Sunday 03:00), so:
+    #   >8d  = one run missed
+    #   >15d = two runs missed, i.e. genuinely broken
+    #
+    # The third trigger is the important one: it fires when the monitor
+    # itself can't see the API (token revoked/expired, Proxmox down, storage
+    # unmounted). Without it this watchdog could go silently blind in exactly
+    # the way the mail-to-root notifications did — a monitor that fails quiet
+    # is worse than no monitor, because it reads as "all clear".
+    #
+    # Single-cross numeric_state triggers, so a value sitting above a
+    # threshold does not re-notify.
+    # ----------------------------------------------------------------------
+    - id: watchdog_proxmox_backup_stale
+      alias: "Watchdog — Proxmox VM Backup Stale"
+      description: >
+        Pages when the newest Proxmox vzdump archive goes stale, or when the
+        backup-age monitor itself loses sight of the Proxmox API.
+      mode: parallel
+      max: 5
+      triggers:
+        - trigger: numeric_state
+          entity_id: sensor.proxmox_backup_age
+          above: 8
+          for: "00:30:00"
+          id: pve_backup_warn
+        - trigger: numeric_state
+          entity_id: sensor.proxmox_backup_age
+          above: 15
+          for: "00:30:00"
+          id: pve_backup_crit
+        - trigger: template
+          value_template: >-
+            {{ states('sensor.proxmox_backup_last')
+               in ('unknown', 'unavailable', 'none', '') }}
+          for: "02:00:00"
+          id: pve_backup_unreachable
+      variables:
+        severity:
+          pve_backup_warn: "warning"
+          pve_backup_crit: "CRITICAL"
+          pve_backup_unreachable: "CRITICAL"
+        resource_label:
+          pve_backup_warn: "Proxmox VM backup is more than 8 days old — one weekly run missed"
+          pve_backup_crit: "Proxmox VM backup is more than 15 days old — backups are broken"
+          pve_backup_unreachable: "Backup-age monitor cannot read the Proxmox API — backup state is UNKNOWN"
+        hint:
+          pve_backup_warn: >-
+            Check `ls -lh /var/lib/vz/dump` on 192.168.2.100. A run that wrote only a
+            .log and no .vma.zst failed; the log tail names the reason.
+          pve_backup_crit: >-
+            Two or more weekly runs have failed. Last time this was `local` storage full.
+            Check `df -h /var/lib/vz/dump` (dedicated 295 GB pve-backups volume) then run
+            `vzdump 101 --storage local --mode snapshot --compress zstd` manually.
+          pve_backup_unreachable: >-
+            sensor.proxmox_backup_last is unavailable. Check the Proxmox host is up, then
+            the ha-monitor@pve API token in secrets.yaml (role HABackupMonitor). An empty
+            result set reads as unavailable too, and a permissions problem returns an
+            EMPTY LIST rather than a 403 — see the permission gotcha at the top of
+            packages/system/proxmox_backups.yaml.
+      actions:
+        - action: notify.send_message
+          target:
+            entity_id: notify.brenton_s_phone
+          data:
+            title: "Proxmox {{ severity[trigger.id] }}: {{ trigger.id }}"
+            message: >-
+              {{ resource_label[trigger.id] }}. {{ hint[trigger.id] }}
+        - action: persistent_notification.create
+          data:
+            notification_id: "watchdog_proxmox_backup_{{ trigger.id }}"
+            title: "Proxmox {{ severity[trigger.id] }} — {{ trigger.id }}"
+            message: >-
+              **{{ resource_label[trigger.id] }}**
+
+              Newest archive: `{{ states('sensor.proxmox_backup_last') }}`
+              ({{ states('sensor.proxmox_backup_age') }} days old).
+              Retained: `{{ states('sensor.proxmox_backup_count') }}` archives,
+              `{{ states('sensor.proxmox_backup_total_size') }}` GB total.
+
+              {{ hint[trigger.id] }}
