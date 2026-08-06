@@ -1,0 +1,100 @@
+system_proxmox_notifications:
+  # ------------------------------------------------------------------------
+  # Proxmox → HA notification webhook
+  #
+  # WHY THIS EXISTS: Proxmox's only notification target was the builtin
+  # `mail-to-root`, i.e. local mail on the Proxmox host that nothing ever
+  # reads. That is why eight consecutive weekly backup failures
+  # (2026-06-14 → 2026-08-02) went completely unnoticed — Proxmox WAS
+  # reporting them, into a void. See packages/system/proxmox_backups.yaml.
+  #
+  # This is the push half of the fix. proxmox_backups.yaml polls backup age
+  # and catches staleness within a day; this catches the failure the moment
+  # Proxmox emits it, and covers everything else too (replication, fencing,
+  # storage errors), not just vzdump.
+  #
+  # PROXMOX SIDE (host 192.168.2.100, config in /etc/pve/notifications.cfg):
+  #   webhook endpoint `ha-webhook`
+  #     method  post
+  #     url     http://192.168.2.151:8123/api/webhook/{{ secrets.token }}
+  #     header  Content-Type: application/json
+  #     secret  token = the HA webhook id
+  #   matcher `ha-alerts`
+  #     match-severity warning,error,unknown  → target ha-webhook
+  #
+  # The webhook id is held as a PVE *secret*, so it lands in the root-only
+  # /etc/pve/priv/notifications.cfg rather than the world-readable
+  # notifications.cfg. The builtin mail-to-root matcher is left intact, so
+  # nothing that worked before stops working.
+  #
+  # SECURITY: an HA webhook has no auth — the id IS the credential. It is
+  # therefore `!secret proxmox_webhook_id` and must never be committed; this
+  # repo is public. `local_only: true` additionally refuses anything from
+  # outside the LAN.
+  #
+  # PAYLOAD: PVE renders the body with Handlebars. `{{ json x }}` emits a
+  # correctly quoted/escaped JSON value, which matters because backup
+  # messages are multi-line and would otherwise produce invalid JSON:
+  #   {"title": {{ json title }}, "message": {{ json message }},
+  #    "severity": {{ json severity }}, "timestamp": {{ json timestamp }},
+  #    "fields": {{ json fields }}}
+  # `fields` carries type / hostname / job-id (note the HYPHEN in job-id —
+  # it needs bracket lookup in Jinja, not dot access).
+  # ------------------------------------------------------------------------
+  automation:
+    - id: proxmox_notification_received
+      alias: "Watchdog — Proxmox Notification Received"
+      description: >
+        Fires when the Proxmox host POSTs a notification (warning/error/
+        unknown severity) to HA's webhook. Pushes to phone and posts a
+        persistent notification so host-level faults surface where they are
+        actually seen instead of in unread root mail.
+      mode: parallel
+      max: 15
+      triggers:
+        - trigger: webhook
+          webhook_id: !secret proxmox_webhook_id
+          allowed_methods:
+            - POST
+          local_only: true
+      variables:
+        # Defensive defaults: a malformed or partial payload should still
+        # produce a usable alert rather than a template error that silently
+        # kills the automation — this watchdog failing quietly is the exact
+        # failure mode it exists to prevent.
+        pve_title: "{{ trigger.json.title | default('Proxmox notification', true) }}"
+        pve_message: "{{ trigger.json.message | default('(no message body)', true) }}"
+        pve_severity: "{{ trigger.json.severity | default('unknown', true) }}"
+        pve_type: "{{ trigger.json.fields.type | default('unknown', true) }}"
+        pve_host: "{{ trigger.json.fields.hostname | default('proxmox', true) }}"
+        pve_job: "{{ trigger.json.fields['job-id'] | default('', true) }}"
+      actions:
+        - action: notify.send_message
+          target:
+            entity_id: notify.brenton_s_phone
+          data:
+            title: "Proxmox {{ pve_severity | upper }}: {{ pve_type }}"
+            message: >-
+              {{ pve_title }} — {{ pve_message | truncate(220, true) }}
+        - action: persistent_notification.create
+          data:
+            # Keyed by type+job so a repeat of the same job replaces its
+            # previous notification instead of stacking duplicates.
+            notification_id: "proxmox_notify_{{ pve_type }}_{{ pve_job }}"
+            title: "Proxmox {{ pve_severity | upper }} — {{ pve_title }}"
+            message: >-
+              **{{ pve_title }}**
+
+              Severity: `{{ pve_severity }}` · Type: `{{ pve_type }}` · Host: `{{ pve_host }}`
+              {% if pve_job %}· Job: `{{ pve_job }}`{% endif %}
+
+              ```
+              {{ pve_message }}
+              ```
+
+              {% if pve_type == 'vzdump' %}
+              Backup fault. Check `df -h /var/lib/vz/dump` on 192.168.2.100 (dedicated
+              295 GB pve-backups volume) and `ls -lh /var/lib/vz/dump` — a run that wrote
+              only a .log and no .vma.zst failed. See sensor.proxmox_backup_age for how
+              stale the newest archive now is.
+              {% endif %}
