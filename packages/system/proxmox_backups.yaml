@@ -68,9 +68,11 @@ system_proxmox_backups:
           device_class: timestamp
           availability: >-
             {{ value_json.data is defined and (value_json.data | count) > 0 }}
+          # isoformat() is a METHOD on the datetime, not a Jinja filter —
+          # `| isoformat` fails check_config with "No filter named 'isoformat'".
           value_template: >-
-            {{ (value_json.data | map(attribute='ctime') | max)
-               | as_datetime | as_local | isoformat }}
+            {{ (value_json.data | map(attribute='ctime') | max
+                | as_datetime | as_local).isoformat() }}
 
         # How many archives are retained. With prune-backups keep-last=3 on
         # the `local` storage this should sit at 3 once steady-state.
