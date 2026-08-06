@@ -35,9 +35,13 @@ Set-Location C:\esphome-test
 uvx esphome@2026.6.5 run <name>.yaml --device <device-ip> --no-logs 2>&1 | Select-Object -Last 40
 ```
 
-- Pin `esphome@<ver>` to the version the device currently runs (2026.6.5 as of 2026-07-13;
-  check the device's `esphome_version` sensor or the dashboard) so you don't silently bump
-  the firmware core.
+- Pin `esphome@<ver>` to the version the device currently runs (**2026.7.4** as of
+  2026-08-06 — all four tent ESPs were reflashed onto it; check the device's
+  `esphome_version` sensor or the dashboard) so you don't silently bump the firmware core.
+- **Crossing the 2026.6 → 2026.7 boundary is not a normal bump.** 2026.7 replaced
+  PlatformIO with a native ESP-IDF toolchain, so the first build downloads several GB and
+  the cache is invalidated (full recompile, not incremental). `~/.platformio` becomes dead
+  weight for every `esp-idf` config — only `grow-tower.yaml` is still `framework: arduino`.
 - `--device <device-ip>` forces OTA to that address (e.g. `192.168.2.54`). Boards with a
   dead USB bootloader flash fine this way as long as they're online.
 - `| Select-Object -Last 40` is REQUIRED: raw PlatformIO output has box-drawing chars that
@@ -52,8 +56,16 @@ uvx esphome@2026.6.5 run <name>.yaml --device <device-ip> --no-logs 2>&1 | Selec
 ### Step 2 alt — flash from the LXC (when the Windows copy/secrets aren't handy)
 Per `update-homelab`: paramiko `root`/`PROXMOX_PASSWORD` to the Proxmox host, then
 `pct exec 100 -- bash -c 'cd /root/config && /opt/esphome/.venv/bin/esphome run <name>.yaml
---device <name>.local --no-logs'`. Config lives in LXC `/root/config`. The Proxmox host has
+--device <STATIC-IP> --no-logs'`. Config lives in LXC `/root/config`. The Proxmox host has
 no SSH key (password auth only); VM 101 `homeadmin@192.168.2.151` uses key auth.
+
+**⚠ `<name>.local` does NOT resolve** from the LXC 100 or VM 101 shells (no `nss-mdns`) —
+you get "Name or service not known" on perfectly healthy devices. Use the static IP from
+the config's `manual_ip:` block: `grow-tent-climate` **.236** · `grow-tent-one` **.96** ·
+`grow-tent-two` **.39** · `tent-irrigation-controller` **.55** · `grow-tower` **.248** ·
+`test-esp32` **.53**. Check `pct exec 100 -- df -h /` first — the ESP-IDF toolchain needs
+GB of free space and reports exhaustion as a misleading
+`RuntimeError: ESP-IDF 5.5.5 framework installation failure`.
 
 ## Step 3 — verify (HA is the fastest check)
 - `ha_get_entity_state` on the device's sensors: `..._wifi_signal`/`uptime` back = it

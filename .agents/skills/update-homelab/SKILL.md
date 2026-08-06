@@ -32,11 +32,24 @@ upgrades before device reflashing so devices get the newest ESPHome core in one 
 - **VM 101 OS packages**: SSH `homeadmin@192.168.2.151`, then
   `sudo -S -E apt-get update -qq && sudo -S -E apt list --upgradable`. Look for any
   `linux-image-*` package — if present, a reboot will actually be needed; otherwise skip
-  the reboot (this box has a history of a NIC hardware hang, see `project-ha-down-20260709`,
-  so don't reboot it speculatively).
+  the reboot. Also read `/var/run/reboot-required.pkgs`, which can list a reboot pending
+  from an *earlier* pass. Some packages (apport, alsa-ucm-conf) sit unupgraded because of
+  Ubuntu's **phased rollout** — `apt-get -s full-upgrade` says "deferred due to phasing".
+  That is normal, not a failure; leave them.
+  **The NIC-hang caveat (`project-ha-down-20260709`) does NOT apply to rebooting VM 101** —
+  that e1000e/I219-LM fault is the *Proxmox host's* physical NIC; VM 101 is `virtio_net`.
+  A guest reboot is cheap and safe: measured ~30 s end to end on 2026-08-06, both
+  containers return on their own (`restart: unless-stopped`), and the ESPs are untouched.
+  Only rebooting the **host** carries the e1000e risk.
 - **ESPHome tool**: on LXC 100 via Proxmox host (`pct exec 100 -- ...`), run
   `VIRTUAL_ENV=/opt/esphome/.venv /usr/local/bin/uv pip install --dry-run --upgrade esphome`
   to see the version delta without applying it.
+- **LXC 100 free disk** — `pct exec 100 -- df -h /`. **Do this before any reflash.**
+  ESPHome ≥2026.7 installs its own ESP-IDF toolchain under `/root/.cache/esphome/idf/`
+  (several GB). On 2026-08-06 this filled the then-16 GB rootfs and the flash died with
+  `RuntimeError: ESP-IDF 5.5.5 framework installation failure` — an error that names the
+  framework but actually means **no disk**. Resized to 40 GB (`pct resize 100 rootfs +24G`;
+  the `local-lvm` thin pool has ~650 GB spare). Want ≥10 GB free before flashing.
 - **Device firmware**: `esphome_list_configs` for the current device list. Check each
   device is actually online first (its `wifi_signal`/`uptime` sensor in HA — if
   `unavailable`, OTA will just fail, so skip and report it rather than attempting).
@@ -73,16 +86,33 @@ batch (they usually all get approved together, but ask).
 4. **ESPHome tool** (LXC 100 via Proxmox pct exec): `VIRTUAL_ENV=/opt/esphome/.venv
    /usr/local/bin/uv pip install --upgrade esphome && systemctl restart
    esphomeDashboard.service`.
+   **⚠ ESPHome 2026.7 REMOVED the built-in dashboard.** `esphome dashboard` now exits 1
+   with "The built-in dashboard has been removed from ESPHome" and the service fails.
+   It is a separate package now — already migrated on 2026-08-06:
+   `uv pip install esphome-device-builder` into the same venv, and the unit's ExecStart
+   repointed to `/opt/esphome/.venv/bin/esphome-device-builder /root/config/` (same port
+   6052, same positional config-dir arg; original unit backed up at
+   `/root/esphomeDashboard.service.bak-20260806`). If the `mcp__esphome__*` tools go dead
+   after an ESPHome upgrade, check this service first — it backs them.
 5. **Device reflash** — for each *online* device: first verify no feed/flush cycle is
    running (`script.run_feed_now` / `script.run_flush_now` state `"off"`) and no
    stir/air burst is mid-cycle (`script.tent_stir_burst` / `script.tent_air_burst`
    `current: 0`) — a flash reboots the ESP and all GPIO outputs default OFF on boot
    (valves close), which is safe when idle but would interrupt an active cycle.
    Then: `pct exec 100 -- bash -c 'cd /root/config && /opt/esphome/.venv/bin/esphome
-   run <config>.yaml --device <esphome-name>.local --no-logs'`. Watch for
-   `INFO OTA successful` + exit 0. **Windows console gotcha**: pipe/print the SSH
-   stdout through `.encode("ascii", "replace").decode("ascii")` before printing —
-   raw PlatformIO output has box-drawing characters that crash a cp1252 terminal.
+   run <config>.yaml --device <STATIC-IP> --no-logs'`. Watch for
+   `INFO OTA successful` + exit 0.
+   **⚠ Do NOT use `<name>.local` — mDNS does not resolve** from the LXC 100 or VM 101
+   shells (no `nss-mdns`); you get "Name or service not known" even though the devices are
+   perfectly healthy and device-builder's own mDNS browser sees them. Flash by static IP,
+   taken from each config's `manual_ip:` block:
+   `grow-tent-climate` **.236** · `grow-tent-one` **.96** · `grow-tent-two` **.39** ·
+   `tent-irrigation-controller` **.55** · `grow-tower` **.248** · `test-esp32` **.53**
+   A core-version bump busts the build cache, so expect a **full** recompile per device
+   (~2-3 min each once ESP-IDF is installed; the first one also downloads the toolchain).
+   **Windows console gotcha**: pipe/print the SSH stdout through
+   `.encode("ascii", "replace").decode("ascii")` before printing — raw build output has
+   box-drawing characters that crash a cp1252 terminal.
 
 ### 5. Verify
 

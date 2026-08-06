@@ -109,6 +109,11 @@ prefix — expect to re-run one after any reflash that adds entities.
 - ESP32 device `tent-irrigation-controller` exposes float switches, solenoid valves, and DS18B20 sensors to HA via ESPHome.
 - Full irrigation entity IDs and HS300 outlet mappings: see `MEMORY.md` and `grow_tent_automation/docs/tent_irrigation_esphome.md`.
 - HA config on host VM: `/home/homeadmin/homeassistant/.config/configuration.yaml`
+- **Proxmox host (`192.168.2.100`) — storage, VM backups, backup monitoring, guest agent
+  and the "rebooting VM 101" checklist: see `docs/proxmox_host.md`.** Read it before
+  touching `local` storage or debugging a backup — `vzdump`'s `Broken pipe` error means
+  *out of disk*, and the backup-listing API returns an empty list rather than a 403 when
+  the token lacks `Datastore.AllocateSpace` + `VM.Backup`.
 
 ### Power topology (matters for every "everything is offline" diagnosis)
 
