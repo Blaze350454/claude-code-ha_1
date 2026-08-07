@@ -61,11 +61,39 @@ no SSH key (password auth only); VM 101 `homeadmin@192.168.2.151` uses key auth.
 
 **⚠ `<name>.local` does NOT resolve** from the LXC 100 or VM 101 shells (no `nss-mdns`) —
 you get "Name or service not known" on perfectly healthy devices. Use the static IP from
-the config's `manual_ip:` block: `grow-tent-climate` **.236** · `grow-tent-one` **.96** ·
-`grow-tent-two` **.39** · `tent-irrigation-controller` **.55** · `grow-tower` **.248** ·
-`test-esp32` **.53**. Check `pct exec 100 -- df -h /` first — the ESP-IDF toolchain needs
-GB of free space and reports exhaustion as a misleading
+the config's `manual_ip:` block: `grow-tent-climate` **.236** · `grow-tent-one` **.241** ·
+`grow-tent-two` **.242** · `tent-irrigation-controller` **.240** · `grow-tower` **.248** ·
+`test-esp32` **.53**.
+**Renumbered 2026-08-07** — irrigation `.55`→`.240`, tent-one `.96`→`.241`,
+tent-two `.39`→`.242`, to lift every static above the DHCP pool (the router refuses
+reservations, and DHCP demonstrably hands out into the .180s, so statics down there
+were exposed to a lease collision). `.236`/`.248` were already high and did not move.
+**Changing a device's static IP also requires re-pointing HA**, which does NOT happen
+by itself — see "Step 2b" below.
+
+Check `pct exec 100 -- df -h /` first — the ESP-IDF toolchain needs GB of free space and
+reports exhaustion as a misleading
 `RuntimeError: ESP-IDF 5.5.5 framework installation failure`.
+
+## Step 2b — if you changed the static IP, re-point HA (it will NOT self-heal)
+Flash with `--device <OLD-ip>` (that is how you still reach it); the device reboots onto
+the new one. HA keeps dialling the old address and every entity goes `unavailable` —
+**zeroconf did not update it** in practice (2026-08-07), even though all the ESPHome
+entries were originally created by zeroconf discovery.
+
+Drive the reconfigure flow. It is two steps: `user` (host/port) then `encryption_key`,
+which asks for the `noise_psk` HA *already has* — so read it back out of
+`.storage/core.config_entries` and post it straight back. Run it ON THE VM so the key
+never leaves the box. `tools/ha_repoint_esphome.py` in this repo does exactly that:
+
+```bash
+scp tools/ha_repoint_esphome.py homeadmin@192.168.2.151:/tmp/
+ssh homeadmin@192.168.2.151 'python3 /tmp/ha_repoint_esphome.py <entry_id> <new-ip>'
+# <entry_id> from: GET /api/config/config_entries/entry  (filter domain == esphome)
+```
+
+`FINAL: type=abort reason=already_configured_updates` is **success** — that abort reason
+means "entry matched and its data was updated". Entities return within ~10 s.
 
 ## Step 3 — verify (HA is the fastest check)
 - `ha_get_entity_state` on the device's sensors: `..._wifi_signal`/`uptime` back = it
