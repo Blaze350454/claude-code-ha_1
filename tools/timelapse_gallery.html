@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grow Tent Timelapse</title>
+<style>
+  :root {
+    --bg: #0c0e11;
+    --panel: #151920;
+    --panel-2: #1d222b;
+    --line: #2a313d;
+    --text: #e6e9ee;
+    --muted: #8b95a5;
+    --accent: #56d364;
+    --accent-dim: #2ea043;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  figure, figcaption { margin: 0; }   /* UA default is 1em 40px -- it eats grid columns */
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.45 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  button, select { font: inherit; color: inherit; }
+
+  /* ---------- header ---------- */
+  header {
+    position: sticky; top: 0; z-index: 40;
+    background: rgba(12,14,17,.94);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 16px; }
+  .brand { font-weight: 650; letter-spacing: .2px; margin-right: 4px; white-space: nowrap; }
+  .brand span { color: var(--accent); }
+  .spacer { flex: 1 1 auto; }
+  .meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tab {
+    background: transparent; border: 1px solid transparent; color: var(--muted);
+    padding: 5px 11px; border-radius: 7px; cursor: pointer; white-space: nowrap;
+  }
+  .tab:hover { color: var(--text); background: var(--panel); }
+  .tab.on { background: var(--panel-2); border-color: var(--line); color: var(--text); }
+  .tab .n { color: var(--muted); font-size: 11px; margin-left: 5px; }
+
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+  .seg button { background: transparent; border: 0; padding: 5px 12px; cursor: pointer; color: var(--muted); }
+  .seg button.on { background: var(--accent-dim); color: #06210c; font-weight: 600; }
+
+  /* ---------- player ---------- */
+  main { padding: 16px; max-width: 1600px; margin: 0 auto; }
+  .stage { display: grid; gap: 12px; }
+  .stage.multi { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .pane {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .pane .hd {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+    padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: 12px;
+  }
+  .pane .hd b { font-weight: 600; }
+  .pane .hd .t { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .pane .shot { background: #000; aspect-ratio: 16 / 9; position: relative; }
+  .stage.single .pane .shot { aspect-ratio: auto; height: min(66vh, 720px); }
+  .pane img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .pane .none { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; }
+  .pane .shot.blank .none { display: flex; }
+  .pane .shot.blank img { visibility: hidden; }
+
+  .clock { text-align: center; padding: 10px 0 2px; }
+  .clock .d { font-size: 20px; font-weight: 600; letter-spacing: .2px; }
+  .clock .h { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .controls {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px 14px; margin-top: 12px;
+  }
+  .controls button.ctl {
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 6px 12px; cursor: pointer; min-width: 40px;
+  }
+  .controls button.ctl:hover { border-color: var(--muted); }
+  .controls button.play { background: var(--accent-dim); border-color: var(--accent-dim); color: #06210c; font-weight: 650; }
+  input[type=range] { flex: 1 1 260px; accent-color: var(--accent); min-width: 200px; }
+  .pos { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  select {
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 6px 8px; cursor: pointer;
+  }
+
+  /* ---------- grid ---------- */
+  .day { margin: 22px 0 8px; display: flex; align-items: center; gap: 10px; }
+  .day h2 { font-size: 14px; margin: 0; font-weight: 600; }
+  .day .rule { flex: 1; height: 1px; background: var(--line); }
+  .day .n { color: var(--muted); font-size: 12px; }
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .thumb { background: var(--panel); border: 1px solid var(--line); border-radius: 9px; overflow: hidden; cursor: pointer; }
+  .thumb:hover { border-color: var(--accent); }
+  .thumb .box { aspect-ratio: 4 / 3; background: #000; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .cap {
+    display: flex; justify-content: space-between; gap: 6px;
+    padding: 4px 7px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums;
+  }
+  .thumb .cam { color: var(--accent); }
+
+  /* ---------- lightbox ---------- */
+  .lb { position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 90; display: none; flex-direction: column; }
+  .lb.on { display: flex; }
+  .lb .top { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+  .lb .top .ttl { font-weight: 600; }
+  .lb .body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 12px; min-height: 0; }
+  .lb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .lb .nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(30,35,44,.85); border: 1px solid var(--line); color: var(--text);
+    font-size: 22px; line-height: 1; padding: 14px 16px; border-radius: 10px; cursor: pointer;
+  }
+  .lb .nav.prev { left: 14px; } .lb .nav.next { right: 14px; }
+
+  /* ---------- movies ---------- */
+  .movies { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
+  .movies figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .movies video { width: 100%; display: block; background: #000; }
+  .movies figcaption { padding: 8px 12px; font-size: 13px; }
+
+  .empty { color: var(--muted); padding: 40px 0; text-align: center; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 18px; text-align: center; }
+  kbd {
+    background: var(--panel-2); border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 4px; padding: 1px 5px; font-size: 11px; font-family: inherit;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="brand">Grow Tent <span>Timelapse</span></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="spacer"></div>
+    <div class="seg" id="modes">
+      <button data-mode="play" class="on">Timelapse</button>
+      <button data-mode="grid">Contact sheet</button>
+    </div>
+    <div class="meta" id="meta"></div>
+  </div>
+</header>
+
+<main>
+  <!-- player -->
+  <section id="view-play">
+    <div class="clock"><div class="d" id="clk-d">&nbsp;</div><div class="h" id="clk-h">&nbsp;</div></div>
+    <div class="stage" id="stage"></div>
+    <div class="controls">
+      <button class="ctl play" id="btn-play" title="Space">▶ Play</button>
+      <button class="ctl" id="btn-prev" title="Left arrow">‹</button>
+      <button class="ctl" id="btn-next" title="Right arrow">›</button>
+      <input type="range" id="scrub" min="0" max="0" value="0">
+      <span class="pos" id="pos"></span>
+      <select id="speed">
+        <option value="2">2 fps</option>
+        <option value="5" selected>5 fps</option>
+        <option value="10">10 fps</option>
+        <option value="20">20 fps</option>
+        <option value="40">40 fps</option>
+      </select>
+      <select id="jump"><option value="">Jump to day…</option></select>
+    </div>
+    <p class="hint">
+      <kbd>Space</kbd> play/pause · <kbd>←</kbd><kbd>→</kbd> step · <kbd>Shift</kbd>+arrows jump 10 ·
+      <kbd>Home</kbd>/<kbd>End</kbd> ends
+    </p>
+  </section>
+
+  <!-- contact sheet -->
+  <section id="view-grid" hidden></section>
+
+  <!-- movies -->
+  <section id="view-movies" hidden></section>
+</main>
+
+<div class="lb" id="lb">
+  <div class="top">
+    <div class="ttl" id="lb-ttl"></div>
+    <div class="spacer"></div>
+    <button class="ctl" id="lb-play" style="background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer">Play from here</button>
+    <button class="ctl" id="lb-close" style="background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer">Close ✕</button>
+  </div>
+  <div class="body"><img id="lb-img" alt=""></div>
+  <button class="nav prev" id="lb-prev">‹</button>
+  <button class="nav next" id="lb-next">›</button>
+</div>
+
+<script>
+const DATA = /*__DATA__*/ {"generated":"","cams":[],"movies":[]};
+
+/* ---------- model ---------- */
+const RE = /(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})/;
+function stampOf(name) {
+  const m = RE.exec(name);
+  if (!m) return null;
+  return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime();
+}
+const CAMS = DATA.cams.map(c => {
+  const rows = c.frames.map(f => ({ f, t: stampOf(f) })).filter(r => r.t !== null);
+  rows.sort((a, b) => a.t - b.t);
+  return { id: c.id, label: c.label, files: rows.map(r => r.f), times: rows.map(r => r.t) };
+}).filter(c => c.files.length);
+
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const pad = n => String(n).padStart(2, '0');
+const dayKey = t => { const d = new Date(t); return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`; };
+const dayLabel = t => { const d = new Date(t); return `${DAYS[d.getDay()]} ${d.getDate()} ${MONS[d.getMonth()]} ${d.getFullYear()}`; };
+const timeLabel = t => { const d = new Date(t); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const url = (cam, file) => `${cam}/${file}`;
+
+/* nearest frame at or before t (falls back to first) */
+function at(times, t) {
+  let lo = 0, hi = times.length - 1, best = 0;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (times[mid] <= t) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
+  }
+  return best;
+}
+
+/* ---------- state ---------- */
+let sel = CAMS.length > 1 ? 'all' : (CAMS[0] ? CAMS[0].id : 'all');
+let mode = 'play';
+let cursor = 0;
+let playing = false;
+let timer = null;
+
+const shown = () => sel === 'all' ? CAMS : CAMS.filter(c => c.id === sel);
+function timeline() {
+  const cams = shown();
+  if (cams.length === 1) return cams[0].times;
+  const set = new Set();
+  cams.forEach(c => c.times.forEach(t => set.add(t)));
+  return Array.from(set).sort((a, b) => a - b);
+}
+let TL = timeline();
+
+/* ---------- header ---------- */
+const $ = id => document.getElementById(id);
+function buildTabs() {
+  const tabs = $('tabs');
+  const items = [];
+  if (CAMS.length > 1) items.push({ id: 'all', label: 'All cameras', n: CAMS.reduce((a, c) => a + c.files.length, 0) });
+  CAMS.forEach(c => items.push({ id: c.id, label: c.label, n: c.files.length }));
+  if (DATA.movies.length) items.push({ id: 'movies', label: 'Movies', n: DATA.movies.length });
+  tabs.innerHTML = items.map(i =>
+    `<button class="tab${i.id === sel ? ' on' : ''}" data-cam="${i.id}">${i.label}<span class="n">${i.n}</span></button>`
+  ).join('');
+  tabs.querySelectorAll('.tab').forEach(b => b.onclick = () => pick(b.dataset.cam));
+}
+function pick(id) {
+  stop();
+  sel = id;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.cam === id));
+  if (id !== 'movies') { TL = timeline(); cursor = Math.min(cursor, TL.length - 1); }
+  render();
+}
+$('modes').querySelectorAll('button').forEach(b => b.onclick = () => {
+  stop();
+  mode = b.dataset.mode;
+  $('modes').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  render();
+});
+
+/* ---------- player ---------- */
+function renderPlay() {
+  const cams = shown();
+  const stage = $('stage');
+  stage.className = 'stage ' + (cams.length > 1 ? 'multi' : 'single');
+  stage.innerHTML = cams.map(c => `
+    <figure class="pane" data-cam="${c.id}">
+      <div class="hd"><b>${c.label}</b><span class="t"></span></div>
+      <div class="shot"><img alt="${c.label}"><span class="none">not online yet</span></div>
+    </figure>`).join('');
+
+  const jump = $('jump');
+  const seen = new Set(), opts = ['<option value="">Jump to day…</option>'];
+  TL.forEach((t, i) => { const k = dayKey(t); if (!seen.has(k)) { seen.add(k); opts.push(`<option value="${i}">${dayLabel(t)}</option>`); } });
+  jump.innerHTML = opts.join('');
+  $('scrub').max = Math.max(0, TL.length - 1);
+  paint();
+}
+
+function paint() {
+  if (!TL.length) return;
+  cursor = Math.max(0, Math.min(cursor, TL.length - 1));
+  const t = TL[cursor];
+  $('clk-d').textContent = dayLabel(t);
+  $('clk-h').textContent = timeLabel(t);
+  $('scrub').value = cursor;
+  $('pos').textContent = `${cursor + 1} / ${TL.length}`;
+
+  document.querySelectorAll('.pane').forEach(p => {
+    const c = CAMS.find(x => x.id === p.dataset.cam);
+    const shot = p.querySelector('.shot');
+    // a camera that wasn't online yet shows a placeholder, not its first future frame
+    if (t < c.times[0]) {
+      shot.classList.add('blank');
+      p.querySelector('.t').textContent = '--:--';
+      return;
+    }
+    shot.classList.remove('blank');
+    const i = at(c.times, t);
+    const img = p.querySelector('img');
+    const next = url(c.id, c.files[i]);
+    if (img.getAttribute('src') !== next) img.src = next;
+    p.querySelector('.t').textContent = timeLabel(c.times[i]);
+  });
+
+  // preload upcoming frames so playback stays smooth
+  for (let k = 1; k <= 6; k++) {
+    const j = cursor + k;
+    if (j >= TL.length) break;
+    shown().forEach(c => {
+      if (TL[j] < c.times[0]) return;
+      const i = at(c.times, TL[j]);
+      new Image().src = url(c.id, c.files[i]);
+    });
+  }
+}
+
+function step(n) { stop(); cursor += n; paint(); }
+function play() {
+  if (playing || !TL.length) return;
+  playing = true;
+  $('btn-play').textContent = '❚❚ Pause';
+  const fps = +$('speed').value;
+  timer = setInterval(() => {
+    cursor = cursor + 1 >= TL.length ? 0 : cursor + 1;
+    paint();
+  }, 1000 / fps);
+}
+function stop() {
+  playing = false;
+  if (timer) clearInterval(timer);
+  timer = null;
+  const b = $('btn-play');
+  if (b) b.textContent = '▶ Play';
+}
+$('btn-play').onclick = () => playing ? stop() : play();
+$('btn-prev').onclick = () => step(-1);
+$('btn-next').onclick = () => step(1);
+$('scrub').oninput = e => { stop(); cursor = +e.target.value; paint(); };
+$('speed').onchange = () => { if (playing) { stop(); play(); } };
+$('jump').onchange = e => { if (e.target.value !== '') { stop(); cursor = +e.target.value; paint(); } };
+
+/* ---------- contact sheet ---------- */
+let sheet = [];
+function renderGrid() {
+  const cams = shown();
+  sheet = [];
+  cams.forEach(c => c.files.forEach((f, i) => sheet.push({ cam: c.id, label: c.label, f, t: c.times[i] })));
+  sheet.sort((a, b) => a.t - b.t || a.cam.localeCompare(b.cam));
+
+  const out = [];
+  let day = null, open = false;
+  const groups = [];
+  sheet.forEach((r, idx) => {
+    const k = dayKey(r.t);
+    if (k !== day) { day = k; groups.push({ label: dayLabel(r.t), rows: [] }); }
+    groups[groups.length - 1].rows.push({ ...r, idx });
+  });
+  groups.forEach(g => {
+    out.push(`<div class="day"><h2>${g.label}</h2><span class="rule"></span><span class="n">${g.rows.length} frames</span></div>`);
+    out.push('<div class="thumbs">' + g.rows.map(r => `
+      <figure class="thumb" data-i="${r.idx}">
+        <div class="box"><img loading="lazy" src="${url(r.cam, r.f)}" alt=""></div>
+        <figcaption class="cap"><span>${timeLabel(r.t)}</span>${cams.length > 1 ? `<span class="cam">${r.label}</span>` : ''}</figcaption>
+      </figure>`).join('') + '</div>');
+  });
+  const v = $('view-grid');
+  v.innerHTML = out.length ? out.join('') : '<p class="empty">No frames synced yet.</p>';
+  v.querySelectorAll('.thumb').forEach(el => el.onclick = () => openLb(+el.dataset.i));
+}
+
+/* ---------- lightbox ---------- */
+let lbi = 0;
+function openLb(i) {
+  lbi = Math.max(0, Math.min(i, sheet.length - 1));
+  const r = sheet[lbi];
+  $('lb-img').src = url(r.cam, r.f);
+  $('lb-ttl').textContent = `${r.label} — ${dayLabel(r.t)} ${timeLabel(r.t)}`;
+  $('lb').classList.add('on');
+}
+function lbStep(n) { if ($('lb').classList.contains('on')) openLb(lbi + n); }
+$('lb-close').onclick = () => $('lb').classList.remove('on');
+$('lb-prev').onclick = () => lbStep(-1);
+$('lb-next').onclick = () => lbStep(1);
+$('lb').onclick = e => { if (e.target.id === 'lb' || e.target.classList.contains('body')) $('lb').classList.remove('on'); };
+$('lb-play').onclick = () => {
+  const r = sheet[lbi];
+  $('lb').classList.remove('on');
+  mode = 'play';
+  $('modes').querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.mode === 'play'));
+  render();
+  cursor = at(TL, r.t);
+  paint();
+  play();
+};
+
+/* ---------- movies ---------- */
+function renderMovies() {
+  $('view-movies').innerHTML = DATA.movies.length
+    ? '<div class="movies">' + DATA.movies.map(m => `
+        <figure>
+          <video controls preload="metadata" src="movies/${m}"></video>
+          <figcaption>${m}</figcaption>
+        </figure>`).join('') + '</div>'
+    : '<p class="empty">No movies synced.</p>';
+}
+
+/* ---------- routing ---------- */
+function render() {
+  const isMovies = sel === 'movies';
+  $('view-play').hidden = isMovies || mode !== 'play';
+  $('view-grid').hidden = isMovies || mode !== 'grid';
+  $('view-movies').hidden = !isMovies;
+  $('modes').style.visibility = isMovies ? 'hidden' : 'visible';
+  if (isMovies) renderMovies();
+  else if (mode === 'play') renderPlay();
+  else renderGrid();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+  if ($('lb').classList.contains('on')) {
+    if (e.key === 'Escape') $('lb').classList.remove('on');
+    if (e.key === 'ArrowLeft') lbStep(-1);
+    if (e.key === 'ArrowRight') lbStep(1);
+    return;
+  }
+  if (sel === 'movies' || mode !== 'play') return;
+  if (e.key === ' ') { e.preventDefault(); playing ? stop() : play(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); step(e.shiftKey ? -10 : -1); }
+  if (e.key === 'ArrowRight') { e.preventDefault(); step(e.shiftKey ? 10 : 1); }
+  if (e.key === 'Home') { stop(); cursor = 0; paint(); }
+  if (e.key === 'End') { stop(); cursor = TL.length - 1; paint(); }
+});
+
+const total = CAMS.reduce((a, c) => a + c.files.length, 0);
+const span = CAMS.length ? `${dayLabel(Math.min(...CAMS.map(c => c.times[0])))} → ${dayLabel(Math.max(...CAMS.map(c => c.times[c.times.length - 1])))}` : '';
+$('meta').textContent = `${total} frames · ${span} · synced ${DATA.generated}`;
+buildTabs();
+render();
+</script>
+</body>
+</html>
