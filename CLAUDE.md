@@ -90,6 +90,12 @@ prefix — expect to re-run one after any reflash that adds entities.
 ## Home Assistant / Grow System Context
 
 - HA instance: `http://192.168.2.151:8123`
+- **Device addressing — read `docs/network_addressing.md` before changing any ESP's IP.**
+  The ESP32s pin static IPs *in firmware* (the router refuses DHCP reservations), all at
+  `.200+` to stay clear of the DHCP pool. **Changing one also requires re-pointing HA by
+  hand — zeroconf does NOT follow the device**, and every entity goes `unavailable` until
+  you do (`tools/ha_repoint_esphome.py`). Current: irrigation `.240` · tent-one `.241` ·
+  tent-two `.242` · climate `.236` · tower `.248` · test-esp32 `.53`.
 - **HS300 "Tent Irrigation Power Strip"** — `192.168.2.182`, MAC suffix `c074`,
   model **HS300**, 6 sockets. This is the **live feed/flush strip**. Its six sockets,
   verified against the registry 2026-08-07, are exactly: `air_pump`, `feed_pump`,
