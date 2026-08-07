@@ -186,16 +186,18 @@ tent_camera_timelapse:
             {% endif %}
       actions:
         # Stamp the START of the cycle, not the end. `action: script.<name>`
-        # BLOCKS until the script returns, and the Blink thumbnail poll runs up
-        # to ~48s, so stamping afterwards caused two problems:
-        #   1. the /1 tick during a slow capture re-evaluated the condition
-        #      against the stale timestamp, passed, and was dropped by
+        # BLOCKS until the script returns, and a full capture is SLOWER THAN THE
+        # /1 TRIGGER: measured 76s end-to-end (the 48s poll cap is only the
+        # delays — add blink.trigger_camera, 8 update_entity round trips and two
+        # cloud-backed camera.snapshot calls). Stamping afterwards therefore:
+        #   1. left the /1 tick mid-capture re-evaluating the condition against
+        #      the stale timestamp, where it passed and was dropped by
         #      `mode: single` -> "Already running" warnings in the log;
-        #   2. last_capture meant "capture finished", so every gap was
+        #   2. made last_capture mean "capture finished", so every gap was
         #      interval + capture duration and the schedule slipped a minute
         #      later each cycle.
         # Stamping first makes the condition false for the rest of the interval
-        # (min 15 min >> 48s capture), which kills the overlap and the drift.
+        # (15 min minimum vs a 76s capture), killing both the overlap and drift.
         - action: input_datetime.set_datetime
           target:
             entity_id: input_datetime.tent_timelapse_last_capture
