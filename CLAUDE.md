@@ -91,10 +91,24 @@ prefix — expect to re-run one after any reflash that adds entities.
 
 - HA instance: `http://192.168.2.151:8123`
 - **HS300 "Tent Irrigation Power Strip"** — `192.168.2.182`, MAC suffix `c074`,
-  model **HS300**, 6 sockets. This is the **live feed/flush strip** carrying the
-  feed/flush/stir/air/table-drain pumps *and* the outlet powering the irrigation
-  ESP32 (`switch.irrigation_controller_tent`).
+  model **HS300**, 6 sockets. This is the **live feed/flush strip**. Its six sockets,
+  verified against the registry 2026-08-07, are exactly: `air_pump`, `feed_pump`,
+  `feed_stir_pump`, `flush_pump`, `flush_stir_pump`, `irrigation_controller`
+  (plus the strip master and its LED, which are not sockets).
   (MAC verified 2026-06-16 — an earlier `53db` here was wrong; don't "correct" it back.)
+  - **⚠ Corrected 2026-08-07: the irrigation ESP32 is NOT on this strip — it is not
+    on a smart plug at all.** `switch.irrigation_controller_tent` is a real HS300
+    socket (platform `tplink`, on the `c074` strip) and it is named after the ESP,
+    but **it does not power it** — confirmed by the user, who has eyes on the wiring.
+    What that socket actually feeds is **unrecorded**; fill this in when known.
+    **Consequence: you cannot power-cycle the irrigation ESP32 from Home Assistant.**
+    Recovery from a wedged controller is a physical unplug, or a reflash. This file
+    previously claimed the socket powered the ESP, which sent a session (2026-08-07)
+    to recommend a power-cycle that would have done nothing.
+  - **Corrected 2026-08-07: the table-drain pump is NOT on this strip.**
+    `switch.table_drain_pump_irrigation_tent` is an **ESPHome** switch on
+    **grow-tent-one** (esp32-c3-devkitm-1), as are `binary_sensor.table_drain_empty`
+    / `_full`. This entry used to list it among the strip's loads; it never was one.
   - **Corrected 2026-08-05:** this entry previously described `.182`/`c074` as an
     *unplugged KP303 spare*. That was wrong — it is the live HS300, and **no KP303
     exists in the device registry at all**. Verified against
