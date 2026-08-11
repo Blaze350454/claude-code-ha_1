@@ -1,0 +1,60 @@
+# --- Per-sensor glitch filter / despike twins (added 2026-07-13) ---
+# Each single-sensor tent gauge (Feed / Flush water temps) gets a "filtered"
+# twin here. (The grow-tent-env air-temp twins were removed 2026-07-14 when the
+# device was retired; re-add per-sensor twins when the rebuilt board lands.)
+# The twin keeps
+# the last 5 raw readings in a `buffer` attribute and reports their MEDIAN, so a
+# lone glitchy spike/dip is thrown out while a sustained change still passes
+# through (with ~1-2 samples of lag). The daily high/low trackers in
+# temperature_daily_extremes.yaml follow these twins instead of the raw sensors,
+# so a momentary glitch can never latch as the day's record high or low.
+#
+# These twins are intentionally arealess (no Tent area) so they are NOT pulled
+# into the auto-discovering tent averages — do not assign them to an area.
+# An unavailable source holds the last median (buffer is not cleared).
+
+# ---- Feed reservoir water temp ----
+- trigger:
+    - trigger: state
+      entity_id: sensor.feed_temperature_irrigation_tent
+  sensor:
+    - name: "Feed Temperature Filtered"
+      unique_id: feed_temperature_filtered
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:thermometer
+      state: >
+        {% set cur = states('sensor.feed_temperature_irrigation_tent') | float(none) %}
+        {% set buf = this.attributes.get('buffer', []) %}
+        {% if cur is not none %}{% set buf = (buf + [cur])[-5:] %}{% endif %}
+        {% if buf | length == 0 %}{{ None }}
+        {% else %}{% set s = buf | sort %}{{ s[(s | length - 1) // 2] | round(2) }}{% endif %}
+      attributes:
+        buffer: >
+          {% set cur = states('sensor.feed_temperature_irrigation_tent') | float(none) %}
+          {% set buf = this.attributes.get('buffer', []) %}
+          {% if cur is not none %}{{ (buf + [cur])[-5:] }}{% else %}{{ buf }}{% endif %}
+
+# ---- Flush reservoir water temp ----
+- trigger:
+    - trigger: state
+      entity_id: sensor.flush_temperature_irrigation_tent
+  sensor:
+    - name: "Flush Temperature Filtered"
+      unique_id: flush_temperature_filtered
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      icon: mdi:thermometer
+      state: >
+        {% set cur = states('sensor.flush_temperature_irrigation_tent') | float(none) %}
+        {% set buf = this.attributes.get('buffer', []) %}
+        {% if cur is not none %}{% set buf = (buf + [cur])[-5:] %}{% endif %}
+        {% if buf | length == 0 %}{{ None }}
+        {% else %}{% set s = buf | sort %}{{ s[(s | length - 1) // 2] | round(2) }}{% endif %}
+      attributes:
+        buffer: >
+          {% set cur = states('sensor.flush_temperature_irrigation_tent') | float(none) %}
+          {% set buf = this.attributes.get('buffer', []) %}
+          {% if cur is not none %}{{ (buf + [cur])[-5:] }}{% else %}{{ buf }}{% endif %}

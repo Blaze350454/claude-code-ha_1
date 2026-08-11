@@ -41,7 +41,7 @@
 
 - trigger:
     - trigger: state
-      entity_id: sensor.feed_temperature_irrigation_tent
+      entity_id: sensor.feed_temperature_filtered
     - trigger: time
       at: "00:00:00"
   sensor:
@@ -52,7 +52,7 @@
       state_class: measurement
       icon: mdi:thermometer-chevron-up
       state: >
-        {% set cur = states('sensor.feed_temperature_irrigation_tent') | float(none) %}
+        {% set cur = states('sensor.feed_temperature_filtered') | float(none) %}
         {% set prev = this.state | float(none) %}
         {% if cur is none %}{{ prev if prev is not none }}
         {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
@@ -64,7 +64,7 @@
       state_class: measurement
       icon: mdi:thermometer-chevron-down
       state: >
-        {% set cur = states('sensor.feed_temperature_irrigation_tent') | float(none) %}
+        {% set cur = states('sensor.feed_temperature_filtered') | float(none) %}
         {% set prev = this.state | float(none) %}
         {% if cur is none %}{{ prev if prev is not none }}
         {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
@@ -72,7 +72,7 @@
 
 - trigger:
     - trigger: state
-      entity_id: sensor.flush_temperature_irrigation_tent
+      entity_id: sensor.flush_temperature_filtered
     - trigger: time
       at: "00:00:00"
   sensor:
@@ -83,7 +83,7 @@
       state_class: measurement
       icon: mdi:thermometer-chevron-up
       state: >
-        {% set cur = states('sensor.flush_temperature_irrigation_tent') | float(none) %}
+        {% set cur = states('sensor.flush_temperature_filtered') | float(none) %}
         {% set prev = this.state | float(none) %}
         {% if cur is none %}{{ prev if prev is not none }}
         {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
@@ -95,7 +95,7 @@
       state_class: measurement
       icon: mdi:thermometer-chevron-down
       state: >
-        {% set cur = states('sensor.flush_temperature_irrigation_tent') | float(none) %}
+        {% set cur = states('sensor.flush_temperature_filtered') | float(none) %}
         {% set prev = this.state | float(none) %}
         {% if cur is none %}{{ prev if prev is not none }}
         {% elif trigger.platform == 'time' or prev is none %}{{ cur | round(1) }}
