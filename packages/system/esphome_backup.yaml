@@ -1,0 +1,184 @@
+system_esphome_backup:
+  # ------------------------------------------------------------------------
+  # ESPHome VM nightly config backup — failure push + staleness poll
+  #
+  # WHY THIS EXISTS: /root/backup-esphome.sh on the ESPHome VM (192.168.2.14)
+  # pulls, commits dashboard edits and pushes them to GitHub at 02:15 nightly.
+  # From 2026-08-13 its `git pull --rebase` aborted every single night on an
+  # untracked file, and because the script exits 1 before its `git add -A`,
+  # the condition could never clear itself. It wrote the failure to
+  # /root/backup.log and nowhere else, so it went unnoticed for six days while
+  # dashboard edits accumulated only on the VM — including a grow-tower fix
+  # without which that device does not compile.
+  #
+  # Same shape as the Proxmox blind spot (eight silent backup failures), so
+  # this is deliberately the same two-part fix as packages/system/
+  # proxmox_notifications.yaml + proxmox_backups.yaml:
+  #
+  #   PUSH  the script POSTs here the moment a run fails  -> immediate alert
+  #   POLL  every run also heartbeats on success, and sensor.esphome_backup_age
+  #         alerts when no success has landed in 36 h -> catches the failures a
+  #         push can never report: cron removed, VM down, script deleted,
+  #         network gone. A watchdog that can only speak when it is alive is
+  #         not a watchdog.
+  #
+  # ESPHOME VM SIDE (192.168.2.14):
+  #   /root/.esphome_backup_webhook   mode 600, holds the webhook id
+  #   backup-esphome.sh calls notify_ha() on both exit paths
+  #
+  # SECURITY: an HA webhook has no auth — the id IS the credential. Hence
+  # `!secret esphome_backup_webhook_id`, never committed; this repo is public.
+  # `local_only: true` additionally refuses anything originating off-LAN.
+  # ------------------------------------------------------------------------
+
+  input_datetime:
+    esphome_backup_last_success:
+      name: ESPHome Backup Last Success
+      has_date: true
+      has_time: true
+      icon: mdi:content-save-check
+
+  automation:
+    - id: esphome_backup_webhook_received
+      alias: "Watchdog — ESPHome Backup Reported"
+      description: >
+        Receives the POST that backup-esphome.sh sends on every run. A status
+        of "ok" stamps the heartbeat that the staleness sensor reads; anything
+        else alerts immediately with the git output that caused it.
+      mode: parallel
+      max: 5
+      triggers:
+        - trigger: webhook
+          webhook_id: !secret esphome_backup_webhook_id
+          allowed_methods:
+            - POST
+          local_only: true
+      variables:
+        # Defensive defaults throughout: a malformed payload must still produce
+        # a usable alert rather than a template error that silently kills the
+        # automation — this failing quietly is the exact thing it guards against.
+        eb_status: "{{ trigger.json.status | default('unknown', true) }}"
+        eb_stage: "{{ trigger.json.stage | default('unknown', true) }}"
+        eb_detail: "{{ trigger.json.detail | default('(no detail)', true) }}"
+      actions:
+        - choose:
+            # ---- success heartbeat ----
+            - conditions:
+                - condition: template
+                  value_template: "{{ eb_status == 'ok' }}"
+              sequence:
+                - action: input_datetime.set_datetime
+                  target:
+                    entity_id: input_datetime.esphome_backup_last_success
+                  data:
+                    datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+                # Clear any standing failure notice now that a run has worked.
+                - action: persistent_notification.dismiss
+                  data:
+                    notification_id: esphome_backup_failed
+          # ---- anything that is not "ok" is a failure ----
+          default:
+            - action: notify.send_message
+              target:
+                entity_id: notify.brenton_s_phone
+              data:
+                title: "ESPHome backup FAILED ({{ eb_stage }})"
+                message: >-
+                  {{ eb_detail | truncate(220, true) }}
+            - action: persistent_notification.create
+              data:
+                # Fixed id so repeated nightly failures replace rather than stack.
+                notification_id: esphome_backup_failed
+                title: "ESPHome backup failed at {{ eb_stage }}"
+                # `|-` literal, NOT `>-` folded: folded collapses newlines and
+                # renders the ``` fence inline instead of as a code block.
+                message: |-
+                  **/root/backup-esphome.sh failed on 192.168.2.14**
+
+                  Stage: `{{ eb_stage }}` · Status: `{{ eb_status }}`
+
+                  ```
+                  {{ eb_detail }}
+                  ```
+
+                  Dashboard edits are now accumulating ONLY on the VM. Check:
+                  `ssh root@192.168.2.14 'cd /root/config && git status && tail -30 /root/backup.log'`
+
+                  If it is "untracked working tree files would be overwritten":
+                  a file untracked on the VM became tracked upstream, and the pull
+                  can never self-clear. Move the stray aside, then reconcile — but
+                  diff every file against origin FIRST, because the VM has twice
+                  held content that existed nowhere else.
+
+    - id: esphome_backup_stale
+      alias: "Watchdog — ESPHome Backup Stale"
+      description: >
+        Fires when no successful backup has been reported in 36 h. This is the
+        half that catches what the webhook cannot: cron removed, VM down,
+        script deleted, network gone. 36 h rather than 24 h so a single missed
+        nightly run is tolerated without paging.
+      mode: single
+      triggers:
+        # numeric_state is a single-crossing trigger, so a value already sitting
+        # above the threshold will not re-page every evaluation.
+        - trigger: numeric_state
+          entity_id: sensor.esphome_backup_age
+          above: 36
+          id: stale
+        # The heartbeat has never landed at all, or the helper was reset.
+        - trigger: state
+          entity_id: sensor.esphome_backup_age
+          to: unavailable
+          for: "01:00:00"
+          id: never
+      actions:
+        - variables:
+            eb_reason: >-
+              {% if trigger.id == 'never' %}No successful backup has EVER been
+              recorded, or the heartbeat helper was reset.
+              {% else %}Last success was {{ states('sensor.esphome_backup_age') }} h ago.
+              {% endif %}
+        - action: notify.send_message
+          target:
+            entity_id: notify.brenton_s_phone
+          data:
+            title: "ESPHome backup STALE"
+            message: "{{ eb_reason }} Nightly config backup is not running."
+        - action: persistent_notification.create
+          data:
+            notification_id: esphome_backup_stale
+            title: "ESPHome backup stale"
+            message: |-
+              **No successful ESPHome config backup in over 36 h.**
+
+              {{ eb_reason }}
+
+              The webhook alert never fired, so the script is not merely failing —
+              it is not running, or cannot reach HA. Check in this order:
+
+              ```
+              ssh root@192.168.2.14 'crontab -l; tail -20 /root/backup.log'
+              ```
+
+              Dashboard edits made on the VM are unprotected until this clears.
+
+  template:
+    - sensor:
+        # Hours since the last successful backup. This is what the staleness
+        # automation triggers on and the number worth putting on a dashboard.
+        - name: "ESPHome Backup Age"
+          unique_id: esphome_backup_age
+          unit_of_measurement: h
+          state_class: measurement
+          icon: mdi:clock-alert-outline
+          state: >
+            {% set ts = state_attr('input_datetime.esphome_backup_last_success','timestamp') %}
+            {% if ts is none or ts == 0 %}unknown
+            {% else %}{{ ((now().timestamp() - ts) / 3600) | round(1) }}{% endif %}
+          availability: >
+            {{ state_attr('input_datetime.esphome_backup_last_success','timestamp') not in [none, 0] }}
+
+    # NOTE the `timestamp` ATTRIBUTE, not as_timestamp(states(...)). The state
+    # string is naive and gets parsed as UTC, which silently skews every
+    # comparison by the local offset — that bug already cost a day on the
+    # irrigation baseline logic.
