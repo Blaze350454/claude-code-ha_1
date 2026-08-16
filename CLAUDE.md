@@ -127,6 +127,13 @@ prefix — expect to re-run one after any reflash that adds entities.
     toggle **Third-Party Services OFF then ON**. An HA reload does *not* fix it.
     Zero kasa retries in the log alongside a pingable strip is the signature.
 - ESP32 device `tent-irrigation-controller` exposes float switches, solenoid valves, and DS18B20 sensors to HA via ESPHome.
+- **Air diverter servo (live 2026-08-16) — read `grow_tent_automation/docs/air_diverter_valve.md`
+  before touching it.** One DS3225 on **GPIO33 (signal only)**; power is a separate XL4016 buck
+  at 6.0 V whose **ground must be bonded to the ESP32 ground** or the servo sits dead/jittering
+  and looks like a bad pin. `select.air_route_irrigation_tent` on the device is the **single
+  source of truth** — the old `input_select.air_route` / `input_boolean.air_real_servos` dummy
+  layer was deleted, so don't reintroduce an HA-side mirror. Options name the hose that is
+  **PINCHED**, so the HA mapping is deliberately crossed (`tank=feed` → `Flush Air Blocked`).
 - Full irrigation entity IDs and HS300 outlet mappings: see `MEMORY.md` and `grow_tent_automation/docs/tent_irrigation_esphome.md`.
 - HA config on host VM: `/home/homeadmin/homeassistant/.config/configuration.yaml`
 - **Proxmox host (`192.168.2.100`) — storage, VM backups, backup monitoring, guest agent

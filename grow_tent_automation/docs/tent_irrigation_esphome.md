@@ -95,6 +95,19 @@ Device: `tent-irrigation-controller`
 
 > **GPIO25 = Flush Fill, GPIO26 = Feed Fill** — confirmed against the wiring 2026-06-19 (an earlier revision of this doc had these two reversed).
 
+### Air Diverter Servo (added 2026-08-16)
+| Entity | GPIO | Description |
+|--------|------|-------------|
+| Air Route | GPIO33 (ledc 50 Hz) | Cam pinch valve — `select.air_route_irrigation_tent`; options `Both Open` / `Feed Air Blocked` / `Flush Air Blocked` |
+| Air Servo Level | — | Bench calibration, −100…100% — `number.air_servo_level_irrigation_tent` |
+| Air Servo Detach | — | Go limp for horn indexing — `button.air_servo_detach_irrigation_tent` |
+| Air Servo Calibrate | — | Suspends the re-assert interval — `switch.air_servo_calibrate_irrigation_tent` |
+
+> **GPIO33 carries the servo SIGNAL ONLY.** Power comes from a dedicated XL4016 buck at 6.0 V,
+> and the buck's ground **must be bonded to the ESP32 ground** or the PWM has no reference.
+> **GPIO5 is now free** (it carried the second servo in the retired two-servo design).
+> Full wiring, states, HA integration and the bench procedure: **`air_diverter_valve.md`**.
+
 ---
 
 ## ESPHome Code — Complete File
