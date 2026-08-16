@@ -1,28 +1,30 @@
 tent_irrigation_air:
   # ================================================
-  # Air alternation (Phase 2) — DUMMY SERVO MODE
+  # Air routing — DS3225 cam pinch valve
   # ------------------------------------------------
-  # The single VIVOHOME air pump physically aerates BOTH reservoirs right now
-  # (no pinch valves installed yet). input_select.air_route is a *dummy servo*:
-  # it records which tank the air is "intended" for and lets the never-both /
-  # never-both-closed alternation logic run for real. When the 2x DS3225 pinch
-  # servos are flashed, flip input_boolean.air_real_servos on and add the servo
-  # commands in script.tent_air_burst (marked TODO) — nothing else changes.
+  # The single VIVOHOME air pump feeds both reservoirs through one servo-driven
+  # cam valve on the irrigation ESP32. Routing state lives ON THE DEVICE, in
+  # select.air_route_irrigation_tent. There is deliberately no HA-side mirror of
+  # it: a second copy would drift out of step the first time the ESP rebooted
+  # (the ESP boots to Both Open) and nothing would reconcile them.
+  #
+  #   "Both Open"          both hoses open     — boot and idle default
+  #   "Feed Air Blocked"   feed  hose pinched  -> all air reaches FLUSH
+  #   "Flush Air Blocked"  flush hose pinched  -> all air reaches FEED
+  #
+  # The three cam positions are mutually exclusive by construction, so "both
+  # pinched" — the state that would dead-head the pump — is not reachable. That
+  # is a property of the mechanism, not of this config, so nothing here needs to
+  # guard against it.
+  #
+  # ⚠ Options are named for WHICH HOSE IS PINCHED, so routing air TO a tank means
+  # blocking the OTHER one. The mapping is crossed on purpose; see tent_air_burst.
+  #
+  # ⚠ DEPLOY ORDER: this file references an entity that only exists once the ESP
+  # is flashed AND its entity_id is corrected from the area-prefixed default that
+  # HA generates. Flash first, rename, then deploy this. Deploying this first
+  # halts aeration (the select call fails and tent_air_burst aborts).
   # ================================================
-
-  input_select:
-    air_route:
-      name: Air Route (dummy servo target)
-      options:
-        - none
-        - feed
-        - flush
-      icon: mdi:valve
-
-  input_boolean:
-    air_real_servos:
-      name: Air Real Servos Installed
-      icon: mdi:robot-industrial
 
   input_number:
     air_burst_feed_duration:
@@ -94,16 +96,25 @@ tent_irrigation_air:
               {% if m <= 0 %}{% set m = states('input_number.air_burst_' ~ tank ~ '_duration') | float(4) %}{% endif %}
               {{ (m * 60) | round | int }}
             air_dt_entity: "{{ 'input_datetime.last_' ~ tank ~ '_air' }}"
-        # Move the (dummy) servo: route air to this tank, away from the other.
-        - action: input_select.select_option
+        # Route the air by pinching the OTHER tank's hose. The valve is named for
+        # the hose it blocks, so this mapping is crossed on purpose:
+        #   tank=feed  -> "Flush Air Blocked"  (flush pinched, all air reaches feed)
+        #   tank=flush -> "Feed Air Blocked"   (feed  pinched, all air reaches flush)
+        #
+        # If the ESP32 is offline this action fails and the script aborts HERE,
+        # before the pump is energised. That is the intended behaviour: with the cam
+        # position unknown, do not run the pump. Being offline is separately alerted
+        # by watchdog_irrigation_critical_offline, so this failure is not silent.
+        - action: select.select_option
           target:
-            entity_id: input_select.air_route
+            entity_id: select.air_route_irrigation_tent
           data:
-            option: "{{ tank }}"
-        # TODO (real servos): when input_boolean.air_real_servos is on, command the
-        # DS3225 pinch valves here — open <tank>, close the other. Never both open
-        # (failsafe), never both closed while the pump runs (anti-dead-head). In
-        # dummy mode the pump aerates both tanks; air_route is intent only.
+            # Spelled out rather than a two-way ternary on purpose: a ternary sends
+            # any unexpected `tank` down the else branch and silently aerates the
+            # WRONG reservoir. This emits a string that is not a valid option, so
+            # select.select_option raises and the script aborts before the pump runs.
+            option: "{% if tank == 'feed' %}Flush Air Blocked{% elif tank == 'flush' %}Feed Air Blocked{% else %}INVALID TANK: {{ tank }}{% endif %}"
+        # Let the cam finish its swing before the pump loads the line.
         - delay:
             seconds: 1
         - action: switch.turn_on
@@ -114,11 +125,13 @@ tent_irrigation_air:
         - action: switch.turn_off
           target:
             entity_id: switch.air_pump_irrigation_tent
-        - action: input_select.select_option
+        # Back to both-open at rest. Never leave a reservoir cut off between bursts,
+        # and never leave the pump a pinched line to start against.
+        - action: select.select_option
           target:
-            entity_id: input_select.air_route
+            entity_id: select.air_route_irrigation_tent
           data:
-            option: none
+            option: "Both Open"
         - action: input_datetime.set_datetime
           target:
             entity_id: "{{ air_dt_entity }}"
@@ -133,9 +146,9 @@ tent_irrigation_air:
         Periodic aeration of the FEED reservoir only: every 5 min, airs feed if it's
         past air_refresh_interval_duration. FLUSH is NOT periodically aired — it gets a
         full aeration only right before each flush (flush_pre_use_air_duration, in
-        run_feed_cycle / run_flush_now). One tank at a time via the dummy air_route
-        (Phase-2 real = DS3225 pinch servos). Stamps last_feed_air. Skips while feeding,
-        in the feed settle window, or while a night pulse runs.
+        run_feed_cycle / run_flush_now). One tank at a time, enforced by the DS3225
+        cam valve. Stamps last_feed_air. Skips while feeding, in the feed settle
+        window, or while a night pulse runs.
       triggers:
         - trigger: time_pattern
           minutes: /5

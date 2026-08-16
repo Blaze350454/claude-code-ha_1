@@ -134,8 +134,7 @@
         - binary_sensor.feed_empty_irrigation_tent
         - switch.air_pump_irrigation_tent
         - switch.feed_stir_pump_irrigation_tent
-        - input_select.air_route
-        - input_boolean.air_real_servos
+        - select.air_route_irrigation_tent
     - trigger: homeassistant
       event: start
   sensor:
@@ -156,10 +155,19 @@
       availability: >
         {{ states('binary_sensor.feed_empty_irrigation_tent')
            not in ['unavailable', 'unknown'] }}
+      # AGITATION TEST — inverted on purpose (2026-08-16, servo valve went in).
+      # A tank is churned by the air pump unless ITS OWN hose is pinched, so this
+      # asks "not blocked", never "routed here". Asking "routed here" would be
+      # wrong in the idle Both Open state, where the pump feeds BOTH tanks: the
+      # freeze would switch off while feed was still being churned, and the
+      # surface agitation would false-trip the float ladder — precisely the
+      # failure this hysteresis exists to prevent.
+      # Fails safe: if the select is unavailable, is_state() returns false, so
+      # air_here stays true and a falling reading is frozen rather than believed.
       state: >
         {% set prev = this.state | int(0) %}
         {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
-        {% set air_here = air and (is_state('input_boolean.air_real_servos', 'off') or is_state('input_select.air_route', 'feed')) %}
+        {% set air_here = air and not is_state('select.air_route_irrigation_tent', 'Feed Air Blocked') %}
         {% set agit = air_here or is_state('switch.feed_stir_pump_irrigation_tent', 'on') %}
         {% set full = is_state('binary_sensor.feed_full_irrigation_tent', 'on') %}
         {% set tq = is_state('binary_sensor.feed_three_quarter_irrigation_tent', 'on') %}
@@ -173,7 +181,7 @@
         level_text: >
           {% set prev = this.state | int(0) %}
           {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
-          {% set air_here = air and (is_state('input_boolean.air_real_servos', 'off') or is_state('input_select.air_route', 'feed')) %}
+          {% set air_here = air and not is_state('select.air_route_irrigation_tent', 'Feed Air Blocked') %}
           {% set agit = air_here or is_state('switch.feed_stir_pump_irrigation_tent', 'on') %}
           {% set full = is_state('binary_sensor.feed_full_irrigation_tent', 'on') %}
           {% set tq = is_state('binary_sensor.feed_three_quarter_irrigation_tent', 'on') %}
@@ -191,8 +199,7 @@
         - binary_sensor.flush_empty_irrigation_tent
         - switch.air_pump_irrigation_tent
         - switch.flush_stir_pump_irrigation_tent
-        - input_select.air_route
-        - input_boolean.air_real_servos
+        - select.air_route_irrigation_tent
     - trigger: homeassistant
       event: start
   sensor:
@@ -209,7 +216,7 @@
       state: >
         {% set prev = this.state | int(0) %}
         {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
-        {% set air_here = air and (is_state('input_boolean.air_real_servos', 'off') or is_state('input_select.air_route', 'flush')) %}
+        {% set air_here = air and not is_state('select.air_route_irrigation_tent', 'Flush Air Blocked') %}
         {% set agit = air_here or is_state('switch.flush_stir_pump_irrigation_tent', 'on') %}
         {% set full = is_state('binary_sensor.flush_full_irrigation_tent', 'on') %}
         {% set half = is_state('binary_sensor.flush_half_irrigation_tent', 'on') %}
@@ -222,7 +229,7 @@
         level_text: >
           {% set prev = this.state | int(0) %}
           {% set air = is_state('switch.air_pump_irrigation_tent', 'on') %}
-          {% set air_here = air and (is_state('input_boolean.air_real_servos', 'off') or is_state('input_select.air_route', 'flush')) %}
+          {% set air_here = air and not is_state('select.air_route_irrigation_tent', 'Flush Air Blocked') %}
           {% set agit = air_here or is_state('switch.flush_stir_pump_irrigation_tent', 'on') %}
           {% set full = is_state('binary_sensor.flush_full_irrigation_tent', 'on') %}
           {% set half = is_state('binary_sensor.flush_half_irrigation_tent', 'on') %}
