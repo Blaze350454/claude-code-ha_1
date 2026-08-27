@@ -158,7 +158,12 @@ starter_timelapse:
           unique_id: starter_chamber_temp_f
           icon: mdi:thermometer
           unit_of_measurement: "°F"
-          device_class: temperature
+          # NO device_class: temperature. This HA runs a metric unit system, and
+          # a temperature device_class makes HA convert the value to the system
+          # unit and rewrite unit_of_measurement — so 80.6 °F came back as
+          # "27.0 °C" from an entity named _f. Without the device class the value
+          # is passed through verbatim, which is the whole point: the starter log
+          # is written in °F. state_class still gives proper recorder statistics.
           state_class: measurement
           availability: >
             {{ states('sensor.bed_temperature_p1s') not in
