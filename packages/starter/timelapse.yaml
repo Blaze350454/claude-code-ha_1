@@ -1,0 +1,213 @@
+starter_timelapse:
+  # ================================================
+  # Sourdough starter timelapse  (single camera, P1S chamber)
+  # ------------------------------------------------
+  # The starter jar proofs inside the Bambu P1S, which is used as a temperature
+  # -holding enclosure. camera.camera_p1s looks straight at it, so a timestamped
+  # frame on a fixed interval brackets the rise automatically.
+  #
+  # WHY THIS EXISTS: in the Recipes starter log, every feed whose peak was
+  # "not observed" was a missed LOOK, not a missed rise — feeds 9, 10 and 12 all
+  # went unbracketed because nobody was awake at the right offset. Time-to-peak
+  # IS the measurement for that project, so an unattended frame every 30 min is
+  # the instrument it has been missing.
+  #
+  # DELIBERATELY SEPARATE from tent_camera_timelapse. That one is round-robin:
+  # one camera per scheduler fire, so each cam fires every interval*N. Folding a
+  # 4th camera in would drop the starter to a frame every 2 h and slow the tent
+  # cams as well. This package owns its own scheduler and its own cadence.
+  #
+  # SIMPLER than the tent script, too: the Blink cams there need a
+  # trigger-then-poll-until-the-thumbnail-URL-changes dance because their stills
+  # go via Blink's cloud. camera.camera_p1s is a live local stream, so a plain
+  # camera.snapshot already returns a fresh frame.
+  #
+  # Frames: /config/www/timelapse/starter/starter_<YYYYmmdd_HHMM>.jpg plus
+  # starter/latest.jpg for the dashboard tile. The folder MUST pre-exist —
+  # camera.snapshot does not mkdir. Created on the host 2026-08-27, owner
+  # matched to tent_1. Requires allowlist_external_dirs: [/config/www/timelapse]
+  # (already set in configuration.yaml; it covers subdirs).
+  #
+  # THE CHAMBER LIGHT IS LEFT ON, ON PURPOSE. Frames get compared against each
+  # other to read the level, so the lighting has to be identical between them.
+  # The script asserts the light on before each frame rather than toggling it,
+  # because a light that goes off between captures makes the series unmeasurable.
+  #
+  # KNOWN SILENT FAILURE: the P1S LAN access code rotates on firmware updates
+  # and LAN-mode toggles. When it does the chamber camera breaks while telemetry
+  # keeps working perfectly, so nothing looks wrong. That is why capture success
+  # is stamped SEPARATELY from capture attempt (see below) and surfaced as
+  # binary_sensor.starter_timelapse_stale. If it trips, check the access code
+  # first — an ftplib 530 in the HA log confirms it in one step.
+  # ================================================
+
+  input_select:
+    starter_timelapse:
+      name: Starter Timelapse
+      icon: mdi:bread-slice-outline
+      options:
+        - "Off"
+        - Every 5 min
+        - Every 15 min
+        - Every 30 min
+        - Every 1 hour
+        - Every 2 hours
+
+  input_datetime:
+    # Stamped by the SCHEDULER, before the capture runs. Controls cadence only.
+    starter_timelapse_last_capture:
+      name: Starter Timelapse Last Attempt
+      icon: mdi:camera-timer
+      has_date: true
+      has_time: true
+    # Stamped by the SCRIPT, only after both snapshots actually succeeded.
+    # Staleness is measured against THIS one. Measuring it against the attempt
+    # stamp would defeat the whole check: a dead camera still gets attempted on
+    # schedule, so the attempt stamp stays fresh forever while no frame lands.
+    starter_timelapse_last_success:
+      name: Starter Timelapse Last Success
+      icon: mdi:camera-check
+      has_date: true
+      has_time: true
+
+  script:
+    starter_timelapse_capture:
+      alias: Starter Timelapse — Capture
+      icon: mdi:bread-slice-outline
+      mode: single
+      sequence:
+        # Don't stamp success for a camera that isn't there.
+        - condition: not
+          conditions:
+            - condition: state
+              entity_id: camera.camera_p1s
+              state:
+                - unavailable
+                - unknown
+        # Consistent lighting is what makes two frames comparable. Idempotent.
+        - action: light.turn_on
+          target:
+            entity_id: light.chamber_light_p1s
+        - delay:
+            seconds: 2
+        - variables:
+            stamp: "{{ now().strftime('%Y%m%d_%H%M') }}"
+        # Timestamped frame for the sequence...
+        - action: camera.snapshot
+          target:
+            entity_id: camera.camera_p1s
+          data:
+            filename: "/config/www/timelapse/starter/starter_{{ stamp }}.jpg"
+        # ...and the dashboard tile.
+        - action: camera.snapshot
+          target:
+            entity_id: camera.camera_p1s
+          data:
+            filename: "/config/www/timelapse/starter/latest.jpg"
+        # Only reached if both snapshots returned without error.
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.starter_timelapse_last_success
+          data:
+            timestamp: "{{ now().timestamp() }}"
+
+  automation:
+    - id: starter_timelapse_scheduler
+      alias: Starter Timelapse — Scheduler
+      description: >-
+        Checks every minute; captures the P1S chamber camera when
+        input_select.starter_timelapse is not Off and the interval has elapsed.
+      triggers:
+        - trigger: time_pattern
+          minutes: "/1"
+      conditions:
+        - condition: template
+          value_template: >
+            {% set sel = states('input_select.starter_timelapse') %}
+            {% if sel in ['Off', 'unknown', 'unavailable'] %}
+              false
+            {% else %}
+              {% set m = {'Every 5 min':5,'Every 15 min':15,'Every 30 min':30,
+                          'Every 1 hour':60,'Every 2 hours':120} %}
+              {% set iv = m.get(sel, 30) %}
+              {% set last = state_attr('input_datetime.starter_timelapse_last_capture','timestamp') %}
+              {{ last is none or (now().timestamp() - last) >= (iv * 60 - 30) }}
+            {% endif %}
+      actions:
+        # Stamp the START of the cycle. `action: script.<name>` blocks until the
+        # script returns, so stamping afterwards would let the next /1 tick
+        # re-evaluate against a stale timestamp mid-capture and add the capture
+        # duration to every gap. Same lesson as the tent scheduler.
+        - action: input_datetime.set_datetime
+          target:
+            entity_id: input_datetime.starter_timelapse_last_capture
+          data:
+            timestamp: "{{ now().timestamp() }}"
+        - action: script.starter_timelapse_capture
+      mode: single
+
+  template:
+    # Continuous mirror of the chamber temperature in Fahrenheit. The starter log
+    # works in °F and had been ASSUMING 80 °F ("standing condition, not a
+    # per-feed reading"), which the skill warns collapses the whole time model
+    # when it is wrong. This puts a real, recorder-backed number behind it, so
+    # any past or future feed's temperature can be read back from history
+    # instead of guessed.
+    - sensor:
+        - name: Starter Chamber Temp F
+          unique_id: starter_chamber_temp_f
+          icon: mdi:thermometer
+          unit_of_measurement: "°F"
+          device_class: temperature
+          state_class: measurement
+          availability: >
+            {{ states('sensor.bed_temperature_p1s') not in
+               ['unknown', 'unavailable', 'none', ''] }}
+          state: >
+            {{ (states('sensor.bed_temperature_p1s') | float * 9 / 5 + 32) | round(1) }}
+
+    - trigger:
+        - trigger: time_pattern
+          minutes: "/1"
+        - trigger: state
+          entity_id:
+            - input_datetime.starter_timelapse_last_capture
+            - input_datetime.starter_timelapse_last_success
+            - input_select.starter_timelapse
+        - trigger: homeassistant
+          event: start
+      sensor:
+        - name: Starter Next Timelapse
+          unique_id: starter_next_timelapse
+          icon: mdi:camera-timer
+          state: >
+            {% set m = {'Every 5 min':5,'Every 15 min':15,'Every 30 min':30,'Every 1 hour':60,'Every 2 hours':120} %}
+            {% set sel = states('input_select.starter_timelapse') %}
+            {% if sel not in m %}Off
+            {% else %}
+            {% set iv = m[sel]*60 %}
+            {% set secs = [((state_attr('input_datetime.starter_timelapse_last_capture','timestamp')|float(0)) + iv - now().timestamp())|int, 0]|max %}
+            {% set mins = secs // 60 %}
+            {{ (mins//60)~'h '~('%02d'|format(mins%60))~'m' if mins>=60 else mins~'m' }}
+            {% endif %}
+      binary_sensor:
+        # Trips when the scheduler is enabled but no frame has actually LANDED
+        # for three intervals. That is the tell for the rotated-access-code
+        # failure, which is otherwise invisible: telemetry keeps flowing and only
+        # the camera dies.
+        - name: Starter Timelapse Stale
+          unique_id: starter_timelapse_stale
+          device_class: problem
+          icon: mdi:camera-off-outline
+          state: >
+            {% set m = {'Every 5 min':5,'Every 15 min':15,'Every 30 min':30,'Every 1 hour':60,'Every 2 hours':120} %}
+            {% set sel = states('input_select.starter_timelapse') %}
+            {% if sel not in m %}false
+            {% else %}
+            {% set iv = m[sel]*60 %}
+            {% set ok = state_attr('input_datetime.starter_timelapse_last_success','timestamp') %}
+            {{ ok is none or (now().timestamp() - ok) > (3*iv + 300) }}
+            {% endif %}
+          attributes:
+            last_success: >
+              {{ state_attr('input_datetime.starter_timelapse_last_success','timestamp') }}
