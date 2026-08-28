@@ -58,7 +58,7 @@ timelapse_p1s_rise:
 
   command_line:
     # The newest frame on disk, independent of the reference. Exists so the
-    # "set reference" button has something to point at: sensor.starter_rise
+    # "set reference" button has something to point at: sensor.starter_rise_status
     # cannot supply it, because before a reference is set that sensor is
     # deliberately reporting no-reference and knows nothing about the folder.
     - sensor:
@@ -72,21 +72,33 @@ timelapse_p1s_rise:
         scan_interval: 120
         command_timeout: 30
 
+    # ⚠ THE STATE HERE IS THE PHASE, A STRING - NOT THE RISE PERCENTAGE, and
+    # that split is load bearing. This sensor was first written as the numeric
+    # one, with unit_of_measurement '%', and HA refused to add it at all:
+    #
+    #   ValueError: Sensor sensor.starter_rise has ... unit '%' thus indicating
+    #   it has a numeric value; however, it has the non-numeric value: 'unknown'
+    #
+    # A unit makes HA require a number in every state forever - but "I could not
+    # look" is a legitimate, and the most important, outcome of this sensor, and
+    # it is not a number. Marking it `unavailable` instead would DROP the
+    # attributes, taking the error message and the phase with it, which is
+    # exactly the "an error became an empty result" failure the house rules
+    # forbid: a sensor that has gone blind would look identical to a calm jar.
+    #
+    # So: this one carries the truth, in strings, always available. The numeric
+    # sensor below is derived from its attribute and is allowed to go
+    # unavailable, because losing a point on a graph costs nothing.
     - sensor:
-        name: Starter Rise
-        unique_id: starter_rise
+        name: Starter Rise Status
+        unique_id: starter_rise_status
         icon: mdi:arrow-expand-up
-        unit_of_measurement: "%"
-        # NO device_class and NO state_class here on purpose: the sensor
-        # legitimately reports the string "unknown" whenever it could not look,
-        # and a numeric state_class turns every one of those into a recorder
-        # warning. The phase attribute is the machine-readable channel.
         command: >-
           python3 /config/scripts/starter_rise.py
           --frames /config/www/timelapse/starter
           --ref '{{ states("input_text.starter_rise_reference") }}'
           --band '{{ states("input_text.starter_rise_band") }}'
-        value_template: "{{ value_json.state }}"
+        value_template: "{{ value_json.phase }}"
         json_attributes:
           - phase
           - error
@@ -105,6 +117,26 @@ timelapse_p1s_rise:
         # default 15 s timeout is not enough headroom for that.
         command_timeout: 120
         scan_interval: 300
+
+  template:
+    # The graphable number, derived from the status sensor's attribute so the
+    # measuring script still runs only ONCE per poll. This one is allowed to go
+    # unavailable whenever there is no number to report - unlike the status
+    # sensor, which must always be able to say why.
+    - sensor:
+        - name: Starter Rise
+          unique_id: starter_rise
+          icon: mdi:arrow-expand-up
+          unit_of_measurement: "%"
+          state_class: measurement
+          availability: >-
+            {{ state_attr('sensor.starter_rise_status', 'rise_pct') is not none }}
+          state: >-
+            {{ state_attr('sensor.starter_rise_status', 'rise_pct') }}
+          attributes:
+            elapsed_h: "{{ state_attr('sensor.starter_rise_status', 'elapsed_h') }}"
+            rate_px_h: "{{ state_attr('sensor.starter_rise_status', 'rate_px_h') }}"
+            reference: "{{ state_attr('sensor.starter_rise_status', 'reference') }}"
 
   script:
     starter_rise_set_reference:
@@ -127,7 +159,7 @@ timelapse_p1s_rise:
             value: "{{ latest }}"
         - action: homeassistant.update_entity
           target:
-            entity_id: sensor.starter_rise
+            entity_id: sensor.starter_rise_status
         - action: notify.mobile_app_sm_a166w
           data:
             title: Timelapse P1S — reference set
@@ -152,8 +184,7 @@ timelapse_p1s_rise:
         reached, never the latest reading), so this cannot flap back and forth.
       triggers:
         - trigger: state
-          entity_id: sensor.starter_rise
-          attribute: phase
+          entity_id: sensor.starter_rise_status
           to: rising
       conditions:
         # Only a genuine quiet -> rising transition. After an HA restart the
@@ -161,14 +192,14 @@ timelapse_p1s_rise:
         - condition: template
           value_template: >-
             {{ trigger.from_state is not none and
-               trigger.from_state.attributes.get('phase') == 'quiet' }}
+               trigger.from_state.state == 'quiet' }}
       actions:
         - action: notify.mobile_app_sm_a166w
           data:
             title: Timelapse P1S — first movement
             message: >-
-              Starter is rising: {{ state_attr('sensor.starter_rise','rise_pct') }} %
-              at +{{ state_attr('sensor.starter_rise','elapsed_h') }} h,
+              Starter is rising: {{ states('sensor.starter_rise') }} %
+              at +{{ state_attr('sensor.starter_rise_status','elapsed_h') }} h,
               chamber {{ states('sensor.starter_chamber_temp_f') }} °F.
             data:
               image: /local/timelapse/starter/latest.jpg
@@ -193,23 +224,22 @@ timelapse_p1s_rise:
         degraded this culture through feeds 8-12.
       triggers:
         - trigger: state
-          entity_id: sensor.starter_rise
-          attribute: phase
+          entity_id: sensor.starter_rise_status
           to: turned
       conditions:
         - condition: template
           value_template: >-
             {{ trigger.from_state is not none and
-               trigger.from_state.attributes.get('phase') == 'rising' }}
+               trigger.from_state.state == 'rising' }}
       actions:
         - action: notify.mobile_app_sm_a166w
           data:
             title: Timelapse P1S — PEAK
             message: >-
-              Turned at +{{ state_attr('sensor.starter_rise','elapsed_h') }} h
-              at {{ state_attr('sensor.starter_rise','rise_pct') }} % rise.
-              Rate fell {{ state_attr('sensor.starter_rise','peak_rate_px_h') }}
-              -> {{ state_attr('sensor.starter_rise','rate_px_h') }} px/h.
+              Turned at +{{ state_attr('sensor.starter_rise_status','elapsed_h') }} h
+              at {{ states('sensor.starter_rise') }} % rise.
+              Rate fell {{ state_attr('sensor.starter_rise_status','peak_rate_px_h') }}
+              -> {{ state_attr('sensor.starter_rise_status','rate_px_h') }} px/h.
               Feed now, and record the turn time.
             data:
               image: /local/timelapse/starter/latest.jpg
@@ -233,8 +263,7 @@ timelapse_p1s_rise:
         from a calm starter unless it says so.
       triggers:
         - trigger: state
-          entity_id: sensor.starter_rise
-          attribute: phase
+          entity_id: sensor.starter_rise_status
           to: could-not-look
           for:
             minutes: 15
@@ -253,7 +282,7 @@ timelapse_p1s_rise:
             title: Timelapse P1S — measurement broken
             message: >-
               Frames are still landing but the rise cannot be read:
-              {{ state_attr('sensor.starter_rise','error') }}
+              {{ state_attr('sensor.starter_rise_status','error') }}
             data:
               tag: timelapse_p1s_broken
       mode: single
