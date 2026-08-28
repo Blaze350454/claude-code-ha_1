@@ -1,0 +1,259 @@
+timelapse_p1s_rise:
+  # ================================================
+  # Timelapse P1S — rise measurement and alerts
+  # ------------------------------------------------
+  # timelapse.yaml takes the pictures. This package READS them: it turns the
+  # frame series into sensor.starter_rise, and pushes to the phone when the
+  # level first moves and when it turns.
+  #
+  # WHY IT MOVED HERE. The measurement previously ran on the Alienware, inside
+  # an agent session. That worked but had one fatal property: when the terminal
+  # was closed on 2026-08-28 the python process kept running happily while its
+  # output went nowhere, so it could have called the turn to an empty room. The
+  # measurement now runs on the same box that takes the pictures, on HA's own
+  # schedule, and alerts through the phone — no workstation in the loop at all.
+  #
+  # NOTHING NEW IS INSTALLED. The HA container already ships numpy and Pillow
+  # (2.3.2 / 12.3.0, verified 2026-08-28), and command_line sensors execute
+  # INSIDE that container, where the frames are plain /config paths.
+  #
+  # THE MATHS AND ITS THREE PAID-FOR FAULTS live in the script's docstring:
+  # scripts/starter_rise.py. Read it before changing any number here.
+  #
+  # ⚠ CALIBRATION IS PER-FEED AND CANNOT BE AUTOMATED. Both inputs below
+  # describe THIS jar in THIS position. A new jar goes in at every feed and the
+  # fill mark is redrawn, so both must be re-set each cycle or the sensor will
+  # confidently measure the wrong thing. That is not a hypothetical: on
+  # 2026-08-27 an auto-detected band latched onto the dial thermometer standing
+  # beside the jar and would have measured a needle all night, with nothing in
+  # the output looking wrong.
+  # ================================================
+
+  input_text:
+    starter_rise_reference:
+      name: Starter Rise Reference Frame
+      icon: mdi:image-marker
+      max: 40
+      # Set this about an hour AFTER feeding, not at the feed. A fresh feed
+      # throws splash high up the glass and it drains for roughly two hours;
+      # differencing against a wet-glass reference tracks residue sliding down
+      # rather than the culture rising, and it never self-corrects, because
+      # every later frame keeps differing from that same wet reference.
+      pattern: "^starter_[0-9]{8}_[0-9]{4}\\.jpg$"
+
+    starter_rise_band:
+      name: Starter Rise Band
+      icon: mdi:crop
+      max: 40
+      # X0,X1,Y0,Y1,SURFACE,BASE — all row/column numbers in the full frame.
+      #   X0,X1    the jar's columns, inset clear of both glass edges AND clear
+      #            of the dial thermometer standing beside it
+      #   Y0,Y1    vertical search bounds: Y0 a row no plausible rise reaches,
+      #            Y1 just above the fill mark
+      #   SURFACE  row of the fill mark at t=0
+      #   BASE     row of the jar's base; BASE-SURFACE is the fill depth that
+      #            rise % is measured against
+      # Feed 13's jar, measured off starter_20260827_2240.jpg: 780,1049,300,512,515,690
+      pattern: "^[0-9]+(,[0-9]+){5}$"
+
+  command_line:
+    # The newest frame on disk, independent of the reference. Exists so the
+    # "set reference" button has something to point at: sensor.starter_rise
+    # cannot supply it, because before a reference is set that sensor is
+    # deliberately reporting no-reference and knows nothing about the folder.
+    - sensor:
+        name: Starter Latest Frame
+        unique_id: starter_latest_frame
+        icon: mdi:image-outline
+        command: >-
+          ls -1t /config/www/timelapse/starter/starter_*.jpg 2>/dev/null
+          | head -1 | xargs -r basename || true
+        value_template: "{{ value | trim if value | trim else 'unknown' }}"
+        scan_interval: 120
+        command_timeout: 30
+
+    - sensor:
+        name: Starter Rise
+        unique_id: starter_rise
+        icon: mdi:arrow-expand-up
+        unit_of_measurement: "%"
+        # NO device_class and NO state_class here on purpose: the sensor
+        # legitimately reports the string "unknown" whenever it could not look,
+        # and a numeric state_class turns every one of those into a recorder
+        # warning. The phase attribute is the machine-readable channel.
+        command: >-
+          python3 /config/scripts/starter_rise.py
+          --frames /config/www/timelapse/starter
+          --ref '{{ states("input_text.starter_rise_reference") }}'
+          --band '{{ states("input_text.starter_rise_band") }}'
+        value_template: "{{ value_json.state }}"
+        json_attributes:
+          - phase
+          - error
+          - rise_pct
+          - front_row
+          - brightening
+          - elapsed_h
+          - rate_px_h
+          - peak_rate_px_h
+          - frames
+          - latest_frame
+          - reference
+          - measured_at
+        # Every frame since the reference is re-read on each poll, so a long
+        # cycle costs more than a short one: ~120 frames on a 30 h cycle. The
+        # default 15 s timeout is not enough headroom for that.
+        command_timeout: 120
+        scan_interval: 300
+
+  script:
+    starter_rise_set_reference:
+      alias: Timelapse P1S — Set Reference To Latest Frame
+      icon: mdi:image-marker
+      description: >-
+        Marks the current frame as t=0 for the rise measurement. Press it about
+        an hour after feeding, once the splash has drained off the glass and the
+        jar is sitting still — pressing it AT the feed measures draining
+        residue rather than the culture.
+      sequence:
+        - variables:
+            latest: "{{ states('sensor.starter_latest_frame') }}"
+        - condition: template
+          value_template: "{{ latest not in ['unknown', 'unavailable', '', 'none'] }}"
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.starter_rise_reference
+          data:
+            value: "{{ latest }}"
+        - action: homeassistant.update_entity
+          target:
+            entity_id: sensor.starter_rise
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Timelapse P1S — reference set
+            message: >-
+              t=0 is now {{ latest }}. Rise is measured from here. Check the band
+              still matches this jar: {{ states('input_text.starter_rise_band') }}
+      mode: single
+
+  automation:
+    # ---------------------------------------------------------------
+    # The level has moved for the first time since the reference.
+    # Confirms the detector is alive and the cycle has started — which
+    # matters most while trust in it is still being built, because a
+    # detector that is silent because it is broken and a detector that
+    # is silent because the jar is calm look exactly the same.
+    # ---------------------------------------------------------------
+    - id: timelapse_p1s_first_movement
+      alias: Timelapse P1S — First Movement
+      description: >-
+        Fires when sensor.starter_rise leaves the quiet phase. The phase is
+        monotonic by construction (the script measures from the highest row
+        reached, never the latest reading), so this cannot flap back and forth.
+      triggers:
+        - trigger: state
+          entity_id: sensor.starter_rise
+          attribute: phase
+          to: rising
+      conditions:
+        # Only a genuine quiet -> rising transition. After an HA restart the
+        # attribute goes unknown -> rising, which is not the starter moving.
+        - condition: template
+          value_template: >-
+            {{ trigger.from_state is not none and
+               trigger.from_state.attributes.get('phase') == 'quiet' }}
+      actions:
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Timelapse P1S — first movement
+            message: >-
+              Starter is rising: {{ state_attr('sensor.starter_rise','rise_pct') }} %
+              at +{{ state_attr('sensor.starter_rise','elapsed_h') }} h,
+              chamber {{ states('sensor.starter_chamber_temp_f') }} °F.
+            data:
+              image: /local/timelapse/starter/latest.jpg
+              tag: timelapse_p1s
+      mode: single
+
+    # ---------------------------------------------------------------
+    # THE TURN. This is the measurement the whole instrument exists for:
+    # time-to-peak. Every feed whose peak was "not observed" in the
+    # Recipes log was a missed LOOK, not a missed rise.
+    #
+    # It lands roughly an hour late by design — three readings at a
+    # 15 min cadence are needed to see the rate collapse, verified on a
+    # synthetic series 2026-08-28. This starter rises and HOLDS rather
+    # than falling, so an hour into the plateau is still the plateau.
+    # ---------------------------------------------------------------
+    - id: timelapse_p1s_turn
+      alias: Timelapse P1S — The Turn
+      description: >-
+        Fires when the rise rate collapses below a quarter of its peak. Feed at
+        the observed peak: the cadence drifting later than the peak is what
+        degraded this culture through feeds 8-12.
+      triggers:
+        - trigger: state
+          entity_id: sensor.starter_rise
+          attribute: phase
+          to: turned
+      conditions:
+        - condition: template
+          value_template: >-
+            {{ trigger.from_state is not none and
+               trigger.from_state.attributes.get('phase') == 'rising' }}
+      actions:
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Timelapse P1S — PEAK
+            message: >-
+              Turned at +{{ state_attr('sensor.starter_rise','elapsed_h') }} h
+              at {{ state_attr('sensor.starter_rise','rise_pct') }} % rise.
+              Rate fell {{ state_attr('sensor.starter_rise','peak_rate_px_h') }}
+              -> {{ state_attr('sensor.starter_rise','rate_px_h') }} px/h.
+              Feed now, and record the turn time.
+            data:
+              image: /local/timelapse/starter/latest.jpg
+              tag: timelapse_p1s
+              priority: high
+              ttl: 0
+      mode: single
+
+    # ---------------------------------------------------------------
+    # The measurement itself broke. Separate from binary_sensor.
+    # starter_timelapse_stale, which catches the CAMERA stopping: this
+    # catches the READING stopping while frames keep landing — a
+    # reference frame deleted by the archiver, a band left describing
+    # the previous jar, numpy gone after a container update.
+    # ---------------------------------------------------------------
+    - id: timelapse_p1s_measurement_broken
+      alias: Timelapse P1S — Measurement Broken
+      description: >-
+        Fires when the rise sensor cannot look. Silence must never be the only
+        success signal — a sensor stuck at could-not-look is indistinguishable
+        from a calm starter unless it says so.
+      triggers:
+        - trigger: state
+          entity_id: sensor.starter_rise
+          attribute: phase
+          to: could-not-look
+          for:
+            minutes: 15
+      conditions:
+        - condition: state
+          entity_id: input_select.starter_timelapse
+          state:
+            - Every 5 min
+            - Every 15 min
+            - Every 30 min
+            - Every 1 hour
+            - Every 2 hours
+      actions:
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Timelapse P1S — measurement broken
+            message: >-
+              Frames are still landing but the rise cannot be read:
+              {{ state_attr('sensor.starter_rise','error') }}
+            data:
+              tag: timelapse_p1s_broken
+      mode: single
