@@ -20,12 +20,20 @@ timelapse_p1s_rise:
   # THE MATHS AND ITS SIX PAID-FOR FAULTS live in the script's docstring:
   # scripts/starter_rise.py. Read it before changing any number here.
   #
-  # ⚠ THE REFERENCE MUST BE SET ON DRY GLASS. Feed 13 was referenced 55 min
-  # after mixing, while the jar was still thickly coated; that film went on
-  # drying — and BRIGHTENING — for nine hours, the old top-down scan locked onto
-  # it, and the sensor read 122.9 % of fill from 07:31 to 17:16 on 2026-08-28
-  # while the true level was near 20 %. It also called a turn at +9 h that never
-  # happened. On a heavily coated jar give it three hours, not one.
+  # ⚠ WIPING THE GLASS AND WAITING FOR THE SPLASH TO DRAIN IS NOT ENOUGH, and
+  # feed 13 is the proof. Both were done: the glass was wiped at 22:40 and the
+  # reference taken on the cleaned frame, with the surface reading directly
+  # against the mark. The film that broke the measurement was the residue ABOVE
+  # the wipe, which the log had already noted was there — it went on drying, and
+  # BRIGHTENING, for nine hours. The old top-down scan locked onto it and the
+  # sensor read 122.9 % of fill from 07:31 to 17:16 on 2026-08-28, and called a
+  # turn at +9 h, while the true level was near 20 % and still climbing.
+  #
+  # So do not read this as "be more careful at calibration time". The care was
+  # taken. A jar with a culture in it cannot be made clean above the surface,
+  # and daylight moves whatever is left there — which is why the answer is
+  # structural (walk up from the mark; refuse impossible jumps) and not another
+  # instruction to the human holding the cloth.
   #
   # ⚠ CALIBRATION IS PER-FEED AND CANNOT BE AUTOMATED. Both inputs below
   # describe THIS jar in THIS position. A new jar goes in at every feed and the
