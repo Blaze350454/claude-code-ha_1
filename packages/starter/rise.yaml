@@ -81,6 +81,11 @@ timelapse_p1s_rise:
       icon: mdi:bell-ring-outline
       max: 40
 
+    starter_rise_alerted_quiet:
+      name: Starter Rise — Quiet Alerted For
+      icon: mdi:bell-sleep-outline
+      max: 40
+
   command_line:
     # The newest frame on disk, independent of the reference. Exists so the
     # "set reference" button has something to point at: sensor.starter_rise_status
@@ -229,7 +234,13 @@ timelapse_p1s_rise:
               at +{{ state_attr('sensor.starter_rise_status','elapsed_h') }} h,
               chamber {{ states('sensor.starter_chamber_temp_f') }} °F.
             data:
-              image: /local/timelapse/starter/latest.jpg
+              # The frame that TRIGGERED this, not whatever latest.jpg has become
+              # by the time the phone is opened - which after a feed is a
+              # different jar entirely.
+              image: >-
+                /local/timelapse/starter/{{
+                  state_attr('sensor.starter_rise_status','latest_frame')
+                  or 'latest.jpg' }}
               tag: timelapse_p1s
         - action: input_text.set_value
           target:
@@ -275,7 +286,13 @@ timelapse_p1s_rise:
               (limit {{ state_attr('sensor.starter_rise_status','stall_limit_h') }} h).
               Feed now, and record the turn time.
             data:
-              image: /local/timelapse/starter/latest.jpg
+              # The frame that TRIGGERED this, not whatever latest.jpg has become
+              # by the time the phone is opened - which after a feed is a
+              # different jar entirely.
+              image: >-
+                /local/timelapse/starter/{{
+                  state_attr('sensor.starter_rise_status','latest_frame')
+                  or 'latest.jpg' }}
               tag: timelapse_p1s
               priority: high
               ttl: 0
@@ -323,4 +340,57 @@ timelapse_p1s_rise:
               {{ state_attr('sensor.starter_rise_status','error') }}
             data:
               tag: timelapse_p1s_broken
+      mode: single
+
+    # ---------------------------------------------------------------
+    # Nothing has moved at all, well past the predicted window. This is
+    # NOT a broken-measurement alert - the sensor is working and saying
+    # "quiet". It is the feed-12 outcome: flat at +28 h, with nobody
+    # told, because a system that only speaks on good news is silent in
+    # exactly the case that most needs a decision.
+    # ---------------------------------------------------------------
+    - id: timelapse_p1s_still_quiet
+      alias: Timelapse P1S — Still Quiet
+      description: >-
+        Fires once per reference frame when the level has not moved at all by
+        +12 h. The 1:7:7 window centres near 8 h, and feed 7 - the fastest turn
+        in the log - came at +13 h, so 12 h of nothing is genuinely late rather
+        than merely slow.
+      triggers:
+        - trigger: numeric_state
+          entity_id: sensor.starter_rise_status
+          attribute: elapsed_h
+          above: 12
+      conditions:
+        - condition: state
+          entity_id: sensor.starter_rise_status
+          state: quiet
+        - condition: template
+          value_template: >-
+            {{ states('input_text.starter_rise_alerted_quiet')
+               != state_attr('sensor.starter_rise_status', 'reference') }}
+      actions:
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Timelapse P1S — still nothing at +12 h
+            message: >-
+              No movement at all since
+              {{ state_attr('sensor.starter_rise_status','reference') }}
+              ({{ state_attr('sensor.starter_rise_status','elapsed_h') }} h,
+              chamber {{ states('sensor.starter_chamber_temp_f') }} °F).
+              Brightening peaked at
+              {{ state_attr('sensor.starter_rise_status','brightening') }}
+              against a threshold of 9. Check bubbles, smell and texture before
+              calling it flat - height is the weakest signal.
+            data:
+              image: >-
+                /local/timelapse/starter/{{
+                  state_attr('sensor.starter_rise_status','latest_frame')
+                  or 'latest.jpg' }}
+              tag: timelapse_p1s
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.starter_rise_alerted_quiet
+          data:
+            value: "{{ state_attr('sensor.starter_rise_status', 'reference') }}"
       mode: single

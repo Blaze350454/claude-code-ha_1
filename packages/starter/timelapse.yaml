@@ -41,6 +41,23 @@ starter_timelapse:
   # first — an ftplib 530 in the HA log confirms it in one step.
   # ================================================
 
+  shell_command:
+    # Retention for the starter frames. The tent package's timelapse_archive
+    # globs tent_* only, so starter/ was accumulating in www forever - about
+    # 4.4 MB a day at a 15 min cadence, never pruned.
+    #
+    # ⚠ AGE-BASED, NOT MONTH-BASED, AND THAT IS THE WHOLE POINT. The tent rule
+    # moves everything from before the current calendar month on the 1st. Applied
+    # here it would eventually delete the ACTIVE REFERENCE FRAME: feed late on the
+    # 31st, and at 03:30 on the 1st the frame the measurement is differenced
+    # against disappears mid-cycle. sensor.starter_rise_status would go
+    # `no-reference`, which does not alert, so the whole cycle would be lost in
+    # silence. 30 days of age can never catch a reference that is hours old.
+    starter_frames_archive: >-
+      sh -c 'mkdir -p /archive/starter;
+      find /config/www/timelapse/starter -type f -name "starter_*.jpg" -mtime +30
+      -exec mv {} /archive/starter/ \; '
+
   input_select:
     starter_timelapse:
       name: Starter Timelapse
@@ -171,6 +188,23 @@ starter_timelapse:
               No frame has landed for 3 intervals. Check the P1S access code
               first (an ftplib 530 in the HA log confirms it), then that
               switch.bambu is still on.
+      mode: single
+
+    # Frames older than 30 days move to the archive; www keeps the recent
+    # month or so. Daily rather than monthly, so the folder never accumulates a
+    # month's worth of deletion in one go, and deliberately at 04:10 - clear of
+    # the tent archiver at 03:30.
+    - id: starter_frames_archive_daily
+      alias: Starter Timelapse — Archive Frames Older Than 30 Days
+      description: >-
+        Moves aged starter frames to /archive/starter (host ~/timelapse_archive).
+        Age-based so it can never reach the active reference frame.
+      triggers:
+        - trigger: time
+          at: "04:10:00"
+      conditions: []
+      actions:
+        - action: shell_command.starter_frames_archive
       mode: single
 
   template:
