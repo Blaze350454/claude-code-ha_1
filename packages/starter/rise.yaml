@@ -17,8 +17,15 @@ timelapse_p1s_rise:
   # (2.3.2 / 12.3.0, verified 2026-08-28), and command_line sensors execute
   # INSIDE that container, where the frames are plain /config paths.
   #
-  # THE MATHS AND ITS THREE PAID-FOR FAULTS live in the script's docstring:
+  # THE MATHS AND ITS SIX PAID-FOR FAULTS live in the script's docstring:
   # scripts/starter_rise.py. Read it before changing any number here.
+  #
+  # ⚠ THE REFERENCE MUST BE SET ON DRY GLASS. Feed 13 was referenced 55 min
+  # after mixing, while the jar was still thickly coated; that film went on
+  # drying — and BRIGHTENING — for nine hours, the old top-down scan locked onto
+  # it, and the sensor read 122.9 % of fill from 07:31 to 17:16 on 2026-08-28
+  # while the true level was near 20 %. It also called a turn at +9 h that never
+  # happened. On a heavily coated jar give it three hours, not one.
   #
   # ⚠ CALIBRATION IS PER-FEED AND CANNOT BE AUTOMATED. Both inputs below
   # describe THIS jar in THIS position. A new jar goes in at every feed and the
@@ -128,6 +135,7 @@ timelapse_p1s_rise:
           --frames /config/www/timelapse/starter
           --ref '{{ states("input_text.starter_rise_reference") }}'
           --band '{{ states("input_text.starter_rise_band") }}'
+          --control 1160,1260,300,345
         value_template: "{{ value_json.phase }}"
         json_attributes:
           - phase
@@ -140,6 +148,19 @@ timelapse_p1s_rise:
           - peak_rate_px_h
           - stall_h
           - stall_limit_h
+          # How far the scene lighting has drifted from the reference, measured
+          # on a patch OUTSIDE the jar, and how many readings were refused as
+          # jumps no culture could make. Diagnostics, not inputs: daylight moved
+          # the jar +24 grey levels on 2026-08-28 and the patch +15, and there
+          # is no scalar that turns one into the other — see fault 5. They are
+          # here so that "refused 19, drift +12" can be READ off the dashboard
+          # instead of guessed at.
+          - control_drift
+          - refused_frames
+          # Age of the number being shown. Zero means the latest frame was read;
+          # anything else means the reading is history, and past REJECT_MAX_H
+          # the phase goes could-not-look rather than keep presenting it.
+          - reading_age_h
           - frames
           - latest_frame
           - reference
