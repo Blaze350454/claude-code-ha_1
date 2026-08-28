@@ -56,6 +56,31 @@ timelapse_p1s_rise:
       # Feed 13's jar, measured off starter_20260827_2240.jpg: 780,1049,300,512,515,690
       pattern: "^[0-9]+(,[0-9]+){5}$"
 
+    # ---------------------------------------------------------------
+    # Which reference frame each alert has already fired for. These exist to
+    # replace a from_state condition that was silently DROPPING REAL ALERTS.
+    #
+    # The automations first read `trigger.from_state.state == 'rising'`, to stop
+    # an HA restart re-firing them. But the sensor is stateless - it recomputes
+    # from every frame on disk - so after a restart it can land straight in
+    # `turned` from `unknown`, and that condition then suppressed the one push
+    # the whole system exists to send. The guard against a duplicate was also a
+    # guard against the real thing.
+    #
+    # Keying on the reference frame separates the two properly: it is stable for
+    # a whole cycle no matter how often HA restarts, and it changes at the next
+    # feed, which re-arms both alerts exactly when it should.
+    # ---------------------------------------------------------------
+    starter_rise_alerted_movement:
+      name: Starter Rise — Movement Alerted For
+      icon: mdi:bell-check-outline
+      max: 40
+
+    starter_rise_alerted_turn:
+      name: Starter Rise — Turn Alerted For
+      icon: mdi:bell-ring-outline
+      max: 40
+
   command_line:
     # The newest frame on disk, independent of the reference. Exists so the
     # "set reference" button has something to point at: sensor.starter_rise_status
@@ -108,6 +133,8 @@ timelapse_p1s_rise:
           - elapsed_h
           - rate_px_h
           - peak_rate_px_h
+          - stall_h
+          - stall_limit_h
           - frames
           - latest_frame
           - reference
@@ -187,12 +214,12 @@ timelapse_p1s_rise:
           entity_id: sensor.starter_rise_status
           to: rising
       conditions:
-        # Only a genuine quiet -> rising transition. After an HA restart the
-        # attribute goes unknown -> rising, which is not the starter moving.
+        # Fire once per reference frame, not once per transition. A from_state
+        # test would also swallow a genuine movement discovered after a restart.
         - condition: template
           value_template: >-
-            {{ trigger.from_state is not none and
-               trigger.from_state.state == 'quiet' }}
+            {{ states('input_text.starter_rise_alerted_movement')
+               != state_attr('sensor.starter_rise_status', 'reference') }}
       actions:
         - action: notify.mobile_app_sm_a166w
           data:
@@ -204,6 +231,11 @@ timelapse_p1s_rise:
             data:
               image: /local/timelapse/starter/latest.jpg
               tag: timelapse_p1s
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.starter_rise_alerted_movement
+          data:
+            value: "{{ state_attr('sensor.starter_rise_status', 'reference') }}"
       mode: single
 
     # ---------------------------------------------------------------
@@ -229,8 +261,8 @@ timelapse_p1s_rise:
       conditions:
         - condition: template
           value_template: >-
-            {{ trigger.from_state is not none and
-               trigger.from_state.state == 'rising' }}
+            {{ states('input_text.starter_rise_alerted_turn')
+               != state_attr('sensor.starter_rise_status', 'reference') }}
       actions:
         - action: notify.mobile_app_sm_a166w
           data:
@@ -238,14 +270,20 @@ timelapse_p1s_rise:
             message: >-
               Turned at +{{ state_attr('sensor.starter_rise_status','elapsed_h') }} h
               at {{ states('sensor.starter_rise') }} % rise.
-              Rate fell {{ state_attr('sensor.starter_rise_status','peak_rate_px_h') }}
-              -> {{ state_attr('sensor.starter_rise_status','rate_px_h') }} px/h.
+              No new maximum for
+              {{ state_attr('sensor.starter_rise_status','stall_h') }} h
+              (limit {{ state_attr('sensor.starter_rise_status','stall_limit_h') }} h).
               Feed now, and record the turn time.
             data:
               image: /local/timelapse/starter/latest.jpg
               tag: timelapse_p1s
               priority: high
               ttl: 0
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.starter_rise_alerted_turn
+          data:
+            value: "{{ state_attr('sensor.starter_rise_status', 'reference') }}"
       mode: single
 
     # ---------------------------------------------------------------

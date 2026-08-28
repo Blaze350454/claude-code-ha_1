@@ -54,8 +54,33 @@ from datetime import datetime
 STAMP = re.compile(r"_(\d{8})_(\d{4})\.jpg$", re.I)
 MIN_DELTA = 9.0       # grey levels of BRIGHTENING that count as changed
 MIN_RUN = 6           # consecutive rows required, so one glare flicker cannot fire
-TURN_MIN_RATE = 8.0   # px/h the rise must have reached before a collapse means anything
-TURN_FRACTION = 0.25  # rate below this share of peak = turned
+
+# --- Calling the turn -------------------------------------------------------
+# The turn is "it stopped making new maxima", NOT "its rate collapsed".
+#
+# The rate rule alone was measured on 2026-08-28 to be SILENT at three of the
+# four paces this starter has actually run at. It required a peak of more than
+# 8 px/h before a collapse counted, and on a 175 px fill that is 4.6 % of fill
+# per hour: feed 7's pace peaks at 12 px/h and fires, but feed 8's peaks at
+# exactly 8.0 and fails the comparison, and feed 11's peaks at 4.0. In those
+# cases the phase stayed `rising` through a six-hour dead-flat plateau - which
+# is the silence that looks exactly like a calm jar, and it bites hardest when
+# the culture is degraded, i.e. when the measurement matters most.
+#
+# The stall rule has no absolute rate in it, so it works at any pace, and the
+# window ADAPTS: three times the recent interval between new maxima. A fast
+# rise makes a new maximum every few minutes and is called ~1.5 h after peak;
+# a crawl makes one every hour or so and is given up to 4 h before being
+# called, which is proportionate on a 30 h cycle. The rate rule is kept as a
+# fast path, since when it does fire it fires sooner.
+NEW_MAX_PX = 2        # improvement that counts as a new maximum; 1 px would let
+                      # jitter on a plateau keep resetting the stall clock
+STALL_MIN_H = 1.5     # never call a turn on less stillness than this
+STALL_MAX_H = 4.0     # ... and never wait longer than this, however slow it is
+STALL_DEFAULT_H = 2.0 # used until there are two maxima to measure an interval from
+TURN_MIN_RISE = 10.0  # % of fill; below this a "stall" is noise, not a peak
+TURN_MIN_RATE = 8.0   # fast path only: px/h the rise must have reached ...
+TURN_FRACTION = 0.25  # ... before a collapse to this share of peak counts
 
 
 def out(**kw):
@@ -63,6 +88,7 @@ def out(**kw):
     payload = {"state": None, "phase": "could-not-look", "error": None,
                "rise_pct": None, "front_row": None, "brightening": None,
                "elapsed_h": None, "rate_px_h": None, "peak_rate_px_h": None,
+               "stall_h": None, "stall_limit_h": None,
                "frames": 0, "latest_frame": None, "reference": None,
                "measured_at": datetime.now().strftime("%Y-%m-%d %H:%M")}
     payload.update(kw)
@@ -177,6 +203,28 @@ def main():
     # on it. Monotonic by construction rather than by de-bouncing in the automation.
     rise = round(100.0 * (surf - best_row) / fill, 1)
 
+    # Every point at which the level reached a new maximum, at least NEW_MAX_PX
+    # better than the previous one. The gaps between these are the natural clock
+    # of this particular rise, whatever its pace.
+    maxima = []
+    cur = None
+    for t, y in hist:
+        if cur is None or y <= cur - NEW_MAX_PX:
+            cur = y
+            maxima.append((t, y))
+
+    stall_h = stall_limit = None
+    if maxima:
+        stall_h = (latest[0] - maxima[-1][0]).total_seconds() / 3600.0
+        gaps = [(maxima[i + 1][0] - maxima[i][0]).total_seconds() / 3600.0
+                for i in range(len(maxima) - 1)]
+        if gaps:
+            recent = sorted(gaps[-5:])
+            typical = recent[len(recent) // 2]          # median, so one long gap cannot skew it
+            stall_limit = min(max(3.0 * typical, STALL_MIN_H), STALL_MAX_H)
+        else:
+            stall_limit = STALL_DEFAULT_H
+
     rate = peak = None
     phase = "rising"
     if len(hist) >= 5:
@@ -185,13 +233,23 @@ def main():
             return (hist[i][1] - hist[j][1]) / dt if dt > 0 else 0.0
         rate = slope(-3, -1)
         peak = max((slope(k, k + 2) for k in range(len(hist) - 3)), default=0.0)
-        if peak > TURN_MIN_RATE and rate < TURN_FRACTION * peak:
-            phase = "turned"
+
+    # Primary rule: it has risen far enough to have a peak worth calling, and has
+    # made no new maximum for longer than its own recent rhythm allows.
+    if rise >= TURN_MIN_RISE and stall_h is not None and stall_limit is not None \
+            and stall_h >= stall_limit:
+        phase = "turned"
+    # Fast path, for a rise quick enough that the rate rule resolves it sooner.
+    elif rate is not None and peak is not None \
+            and peak > TURN_MIN_RATE and rate < TURN_FRACTION * peak:
+        phase = "turned"
 
     out(phase=phase, state=rise, rise_pct=rise, front_row=best_row,
         brightening=round(bright, 1), elapsed_h=round(elapsed, 2),
         rate_px_h=None if rate is None else round(rate, 1),
         peak_rate_px_h=None if peak is None else round(peak, 1),
+        stall_h=None if stall_h is None else round(stall_h, 2),
+        stall_limit_h=None if stall_limit is None else round(stall_limit, 2),
         frames=len(series), reference=ref_name, latest_frame=latest[1])
 
 
