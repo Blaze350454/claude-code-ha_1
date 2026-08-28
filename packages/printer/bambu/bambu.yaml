@@ -41,7 +41,27 @@ printer_bambu:
             hours: 0
             minutes: 30
             seconds: 0
-      conditions: []
+      conditions:
+        # INTERLOCK (added 2026-08-27, with the user's go-ahead). The P1S doubles
+        # as a proofing chamber for the sourdough starter. switch.bambu is mains
+        # power: cutting it kills the chamber camera AND drops the chamber from
+        # ~80 F to room, so it ends any starter measurement in progress.
+        #
+        # Not hypothetical - it fired 2026-08-23 16:30, one hour into starter
+        # feed 9, and feed 9 is where that culture's time-to-peak began to
+        # regress (8-13 h before, 30 h two days later).
+        #
+        # NOTE: this does NOT only fire after a finished print. The trigger is
+        # any state transition INTO idle held for 30 min, and unavailable -> idle
+        # counts. An HA restart, an integration reload, or the printer briefly
+        # dropping off wifi all arm it - the P1S entities went unavailable and
+        # back at 12:47 on 2026-08-27 alone. So "it can't fire unless I print"
+        # is not a safe assumption, and leaving the automation merely DISABLED is
+        # load-bearing tribal knowledge. This condition makes it safe to re-enable
+        # and switch the printer off after prints as originally intended.
+        - condition: state
+          entity_id: input_select.starter_timelapse
+          state: "Off"
       actions:
         - action: switch.turn_off
           metadata: {}
