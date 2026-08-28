@@ -146,6 +146,33 @@ starter_timelapse:
         - action: script.starter_timelapse_capture
       mode: single
 
+    # The one alert that must survive everything. Any turn-detection running in
+    # an agent session dies with that session; this does not. It answers the
+    # only question that silently invalidates a whole cycle: "did the camera
+    # quietly stop while I was asleep?"
+    - id: starter_timelapse_stale_alert
+      alias: Starter Timelapse — Capture Stopped
+      description: >-
+        Pushes to the phone when no frame has LANDED for three intervals while
+        the scheduler is enabled. Catches the rotated-access-code failure, which
+        is otherwise invisible because telemetry keeps working.
+      triggers:
+        - trigger: state
+          entity_id: binary_sensor.starter_timelapse_stale
+          to: "on"
+          for:
+            minutes: 5
+      conditions: []
+      actions:
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Starter timelapse stopped
+            message: >-
+              No frame has landed for 3 intervals. Check the P1S access code
+              first (an ftplib 530 in the HA log confirms it), then that
+              switch.bambu is still on.
+      mode: single
+
   template:
     # Continuous mirror of the chamber temperature in Fahrenheit. The starter log
     # works in °F and had been ASSUMING 80 °F ("standing condition, not a
