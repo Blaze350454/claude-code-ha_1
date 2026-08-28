@@ -163,6 +163,25 @@ where pwsh >nul 2>nul && (pwsh -NoProfile -ExecutionPolicy Bypass -File "$self")
 if errorlevel 1 pause
 "@ | Set-Content (Join-Path $Dest 'Sync Now.cmd') -Encoding ascii
 
+# Readable aliases beside the frames: <Dest>\by-time\<cam>\2026-08-27 22-40.jpg,
+# hardlinked so they cost no space. The canonical <cam>_YYYYmmdd_HHMM.jpg name is
+# parsed by the gallery, by the starter watcher and by this script's own
+# already-have-it check, so it must not be renamed - hence a second name rather
+# than a new one. Added 2026-08-28.
+$aliaser = Join-Path $PSScriptRoot 'alias_by_time.py'
+if (Test-Path $aliaser) {
+  try {
+    & uv run --no-project python $aliaser --root $Dest
+    if ($LASTEXITCODE -ne 0) {
+      Say ("  by-time aliases: FAILED (exit {0}) - frames synced, readable names not" -f $LASTEXITCODE) Yellow
+    }
+  } catch {
+    Say ("  by-time aliases: FAILED - {0}" -f $_.Exception.Message) Yellow
+  }
+} else {
+  Say ("  by-time aliases: SKIPPED - {0} is missing" -f $aliaser) Yellow
+}
+
 $total = ($camData | ForEach-Object { $_.frames.Count } | Measure-Object -Sum).Sum
 Say ""
 Say ("Gallery rebuilt: {0}" -f $index) Cyan
