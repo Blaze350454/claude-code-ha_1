@@ -44,6 +44,26 @@ timelapse_p1s_rise:
   # the output looking wrong.
   # ================================================
 
+  input_datetime:
+    # ---------------------------------------------------------------
+    # WHEN THE CULTURE WAS FED. Added 2026-08-29 because HA did not know.
+    #
+    # Every elapsed figure was measured from the REFERENCE FRAME, which is set
+    # an hour or more after the feed - so `elapsed_h` ran systematically short,
+    # and the Turn alert reported a time-to-peak that was wrong by that much.
+    # After a mid-cycle recalibration on 2026-08-28 the reference was re-set
+    # nine hours into the cycle and the gap became NINE HOURS, in the one number
+    # this whole instrument exists to produce.
+    #
+    # Set it to the moment the flour and water met the culture, not to when the
+    # jar went back in the chamber and not to when you finished tidying up.
+    # ---------------------------------------------------------------
+    starter_fed_at:
+      name: Starter Fed At
+      icon: mdi:silverware-fork-knife
+      has_date: true
+      has_time: true
+
   input_text:
     starter_rise_reference:
       name: Starter Rise Reference Frame
@@ -144,6 +164,7 @@ timelapse_p1s_rise:
           --ref '{{ states("input_text.starter_rise_reference") }}'
           --band '{{ states("input_text.starter_rise_band") }}'
           --control 1160,1260,300,345
+          --fed '{{ states("input_datetime.starter_fed_at") }}'
         value_template: "{{ value_json.phase }}"
         json_attributes:
           - phase
@@ -169,6 +190,13 @@ timelapse_p1s_rise:
           # anything else means the reading is history, and past REJECT_MAX_H
           # the phase goes could-not-look rather than keep presenting it.
           - reading_age_h
+          # Which clock elapsed_h is counted from. "feed" is right; "reference"
+          # means input_datetime.starter_fed_at is unset and the figure is
+          # running short by however long after the feed the reference was set.
+          - elapsed_from
+          # How far after the feed the reference frame was taken. Small is
+          # normal; large means a mid-cycle recalibration happened.
+          - ref_offset_h
           - frames
           - latest_frame
           - reference

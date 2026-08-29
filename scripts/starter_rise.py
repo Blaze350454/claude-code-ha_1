@@ -152,6 +152,7 @@ def out(**kw):
                "elapsed_h": None, "rate_px_h": None, "peak_rate_px_h": None,
                "stall_h": None, "stall_limit_h": None,
                "control_drift": None, "refused_frames": 0, "reading_age_h": None,
+               "elapsed_from": "reference", "ref_offset_h": None,
                "frames": 0, "latest_frame": None, "reference": None,
                "measured_at": datetime.now().strftime("%Y-%m-%d %H:%M")}
     payload.update(kw)
@@ -197,6 +198,13 @@ def main():
     ap.add_argument("--frames", default="/config/www/timelapse/starter")
     ap.add_argument("--ref", default="")
     ap.add_argument("--band", default="")
+    ap.add_argument("--fed", default="",
+                    help="When the culture was fed, 'YYYY-MM-DD HH:MM[:SS]'. Elapsed time is "
+                         "reported FROM THIS when given, and from the reference frame only as "
+                         "a fallback. The reference is set an hour or more after the feed, and "
+                         "after a mid-cycle recalibration it can be many hours after - so the "
+                         "fallback understates time-to-peak, which is the number this whole "
+                         "script exists to produce. See elapsed_from in the payload.")
     ap.add_argument("--control", default="",
                     help="X0,X1,Y0,Y1 of a patch OUTSIDE the jar. Diagnostic only - it "
                          "reports how far the scene lighting has drifted from the "
@@ -225,6 +233,18 @@ def main():
         out(error="--band values must all be integers - got %r" % a.band)
     if not (x0 < x1 and y0 < y1 and surf < base):
         out(error="--band must satisfy X0<X1, Y0<Y1, SURFACE<BASE - got %r" % a.band)
+
+    fed_t = None
+    fed_raw = (a.fed or "").strip()
+    if fed_raw and fed_raw not in ("unknown", "unavailable", "none", "-"):
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M"):
+            try:
+                fed_t = datetime.strptime(fed_raw, fmt)
+                break
+            except ValueError:
+                continue
+        if fed_t is None:
+            out(error="--fed is not a date I can read: %r (want 'YYYY-MM-DD HH:MM')" % fed_raw)
 
     ctl = None
     if (a.control or "").strip():
@@ -301,10 +321,22 @@ def main():
     if latest is None:
         out(reference=ref_name, error="every frame since the reference failed to decode")
 
-    elapsed = (latest[0] - ref_t).total_seconds() / 3600.0
+    # Elapsed is measured FROM THE FEED whenever HA knows it. Measuring from the
+    # reference is only a fallback: the reference is set an hour or more after
+    # the feed, so it runs short - and after a mid-cycle recalibration it ran
+    # NINE hours short on 2026-08-28, in the one number that matters.
+    if fed_t is not None:
+        elapsed = (latest[0] - fed_t).total_seconds() / 3600.0
+        elapsed_from = "feed"
+        ref_offset = round((ref_t - fed_t).total_seconds() / 3600.0, 2)
+    else:
+        elapsed = (latest[0] - ref_t).total_seconds() / 3600.0
+        elapsed_from = "reference"
+        ref_offset = None
     fill = float(base - surf)
     age = None if last_ok_t is None else (latest[0] - last_ok_t).total_seconds() / 3600.0
     common = dict(brightening=round(bright, 1), elapsed_h=round(elapsed, 2),
+                  elapsed_from=elapsed_from, ref_offset_h=ref_offset,
                   control_drift=drift, refused_frames=refused,
                   reading_age_h=None if age is None else round(age, 2),
                   frames=len(series), reference=ref_name, latest_frame=latest[1])
