@@ -117,16 +117,32 @@ REJECT_MAX_H = 3.0    # refusing this long in a row is lost tracking, and says s
 # window ADAPTS: three times the recent interval between new maxima. A fast
 # rise makes a new maximum every few minutes and is called ~1.5 h after peak;
 # a crawl makes one every hour or so and is given up to 4 h before being
-# called, which is proportionate on a 30 h cycle. The rate rule is kept as a
-# fast path, since when it does fire it fires sooner.
+# called, which is proportionate on a 30 h cycle.
+#
+# THE RATE "FAST PATH" WAS DELETED 2026-08-29, and must not come back. It called
+# a turn when the rate fell below a quarter of its peak, and on feed 14 - the
+# first cycle of the rebuilt rig - it called a peak at +5 h 45 m on a front that
+# was still climbing monotonically, every single frame. What tripped it was one
+# 10 px step between two frames, which set peak_rate to 22 px/h; the ordinary
+# 4 px/h pace that followed is under a quarter of that. A BRIEF ACCELERATION
+# FOLLOWED BY A RETURN TO NORMAL PACE reads to it as a collapse.
+#
+# It cannot recover, either: peak_rate is a running MAXIMUM, so once set high
+# the phase stays `turned` for the rest of the cycle whatever the culture does,
+# and the real turn becomes unobservable.
+#
+# It was also silently mis-scaled by geometry. 8 px/h was 4.6 % of fill per hour
+# on a 175 px fill; on the 295 px fill of the cardboard-slot rig it is 2.7 %/h.
+# A rule that needs re-deriving every time the jar moves is the wrong rule.
+#
+# The stall rule was tracking correctly underneath it the whole time - 0.25 h
+# against a 1.5 h limit - and would not have fired. It is now the only rule.
 NEW_MAX_PX = 2        # improvement that counts as a new maximum; 1 px would let
                       # jitter on a plateau keep resetting the stall clock
 STALL_MIN_H = 1.5     # never call a turn on less stillness than this
 STALL_MAX_H = 4.0     # ... and never wait longer than this, however slow it is
 STALL_DEFAULT_H = 2.0 # used until there are two maxima to measure an interval from
 TURN_MIN_RISE = 10.0  # % of fill; below this a "stall" is noise, not a peak
-TURN_MIN_RATE = 8.0   # fast path only: px/h the rise must have reached ...
-TURN_FRACTION = 0.25  # ... before a collapse to this share of peak counts
 
 
 def out(**kw):
@@ -356,14 +372,12 @@ def main():
         rate = slope(-3, -1)
         peak = max((slope(k, k + 2) for k in range(len(hist) - 3)), default=0.0)
 
-    # Primary rule: it has risen far enough to have a peak worth calling, and has
-    # made no new maximum for longer than its own recent rhythm allows.
+    # THE ONLY RULE: it has risen far enough to have a peak worth calling, and
+    # has made no new maximum for longer than its own recent rhythm allows.
+    # rate and peak are still computed and reported, but they are DIAGNOSTICS
+    # ONLY and must never decide the phase again - see the deleted fast path.
     if rise >= TURN_MIN_RISE and stall_h is not None and stall_limit is not None \
             and stall_h >= stall_limit:
-        phase = "turned"
-    # Fast path, for a rise quick enough that the rate rule resolves it sooner.
-    elif rate is not None and peak is not None \
-            and peak > TURN_MIN_RATE and rate < TURN_FRACTION * peak:
         phase = "turned"
 
     out(phase=phase, state=rise, rise_pct=rise, front_row=best_row,
