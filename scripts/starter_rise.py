@@ -69,6 +69,36 @@ The answers to 4-6 are structural, not another threshold:
     is chosen as a row no plausible rise reaches: arriving there means the band
     is wrong, not that the starter is at 122 %.
 
+Fault 7 was paid for on 2026-08-29. It is the same shape as 4-6 - something
+other than the culture brightened part of the band - but BELOW the front rather
+than above it, which is the one direction walking up from the mark does not
+cover.
+
+ 7. THE BODY ITSELF BRIGHTENS AS IT FERMENTS. On feed 14 a band at rows 356-361
+    - inside the culture, 50 px BELOW the front, and already body in the
+    reference frame - crept from +5 to +10 grey levels over seven hours as the
+    culture went paler and more aerated. At 13:01 it cleared MIN_DELTA on
+    exactly MIN_RUN rows; the walk locked onto it and stopped there, and the
+    reported front fell 50 px in a single frame while the culture was in fact
+    still rising 1 px per frame.
+
+    It did not look like a failure from outside. rise_pct held at 28.4 %,
+    because best_row is a running minimum - but no new maximum could be made
+    after that, so the stall clock ran, and the turn would have been called
+    2 h 15 m later ON A RISING JAR. A measurement that fails by going QUIET is
+    the failure mode this file exists to prevent.
+
+  * The answer uses what the rest of the file already assumes: THE CULTURE DOES
+    NOT FALL. The lower bound of the search is pinned to the last accepted
+    front, plus the same MAX_STEP_PX of slack the upward bound uses, so a
+    brightening below the front is never inside the search at all.
+  * Deliberately NOT a threshold. Raising MIN_DELTA, or requiring the run to
+    contain a strongly-changed row, would both have worked on this jar and both
+    would need re-deriving per rig: this jar's front brightens ~90 grey levels,
+    but the old jar's entire signal was 11 - less than this artefact reached.
+  * A REAL COLLAPSE IS NOW INVISIBLE, by exactly the assumption best_row already
+    makes. If this starter is ever seen to fall, both must be revisited.
+
 BAND: --band X0,X1,Y0,Y1,SURFACE,BASE is per-jar and must be re-set every feed,
 because the jar is replaced every feed and the mark is redrawn. X0,X1 bound the
 jar's columns clear of both glass edges and of the thermometer; Y0,Y1 bound the
@@ -302,7 +332,11 @@ def main():
         if im.shape != ref.shape:
             continue
         t = stamp(f)
-        y, dmax = front_row(ref, im, x0, x1, y0, y1)
+        # Fault 7: the front cannot be below where it has already been, so the
+        # search does not look there. Without this, a band brightening INSIDE
+        # the body captures the walk before it ever reaches the culture.
+        y1_eff = y1 if accepted is None else min(y1, accepted + MAX_STEP_PX)
+        y, dmax = front_row(ref, im, x0, x1, y0, y1_eff)
         latest = (t, os.path.basename(f), y, dmax)
         bright = max(bright, dmax)
         if ctl_ref is not None:
