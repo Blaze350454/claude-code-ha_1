@@ -145,10 +145,26 @@ LDO puts *itself* into limit rather than dragging the buck into CC and collapsin
 healthy rail with it. Real combined draw is ~750 mA peak with both rails at maximum, so
 3 A is nowhere near nuisance territory.
 
-**Use a low CC as a bench tool, not as the final setting.** While landing drops one at a
-time (step 13), winding CC down to ~200 mA makes a miswired drop a non-event — the rail
-sags instead of delivering fault current. Wind it back to ~3 A before the board goes into
-service, or the branch fuses are decorative.
+**A low CC is a bench tool for first power-up only — not for landing drops.**
+
+⚠ **Corrected 2026-09-06, the same day it was written.** This section first said to wind
+CC down to ~200 mA while landing drops at step 13. That is wrong twice over.
+
+**The sensor rail is already behind LM1117 (I), which current-limits at ~1.3–1.5 A and
+thermally shuts down.** A shorted or reversed drop is caught there — locally, at a lower
+threshold than the buck could impose — and the buck's CC sits upstream of *both* LDOs, so
+it cannot tell which rail is faulted anyway. **And 200 mA is below the board's own running
+draw:** with the ESP rail up, WiFi bursts alone hit ~500 mA, so a 200 mA ceiling parks the
+buck in permanent current limit and browns out the ESP. That is the *current limit set low
+looks exactly like a broken board* trap, self-inflicted.
+
+Where a low ceiling does earn its place is **step 12, first power-up of the LDO stage with
+nothing downstream**, where expected draw is a few mA of quiescent current. A 100–200 mA
+limit there turns a solder bridge into a sagging rail instead of a fault current. Even
+that is belt-and-braces — step 11's unpowered ohm check should have caught it already.
+
+Wind CC back to ~3 A before step 13, and leave it there in service, or the branch fuses
+are decorative.
 
 **One fault no CC setting helps with:** a short at the buck's own output terminals,
 upstream of both branch fuses. Only the 24 V input fuse is in that path, and it needs
@@ -320,10 +336,14 @@ Steps 1 and 2 are free and were never run. Either could still exonerate a part.
 
 On step 12: a fixed-output LM1117 self-biases through its internal divider, so an
 unloaded reading is trustworthy. If it reads high, hang ~1 kΩ across the output to
-settle it.
+settle it. Optionally wind CC to ~100–200 mA for this one step — with nothing downstream
+the expected draw is a few mA, so a solder bridge sags the rail rather than being fed.
+**Wind it back to ~3 A before step 13**; the ESP will not run at 200 mA.
 
 Step 13 is not ceremony — **one-at-a-time reconnection is the diagnostic that actually
-found the fault on 2026-07-28.**
+found the fault on 2026-07-28.** The protection during it is **the sensor LM1117's own
+~1.3–1.5 A limit and thermal shutdown**, not the buck. Do not try to guard this step by
+winding CC down: the ESP is running by now, and a low ceiling browns it out instead.
 
 On step 14: a serial on the wrong channel means **fix the wiring, not the YAML**. And if
 all eight SHT41 entities come up `unknown` rather than `unavailable`, the ESP is
