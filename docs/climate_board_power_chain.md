@@ -314,7 +314,7 @@ been metered unloaded first.**
 
 | # | Step | Expect |
 |---|---|---|
-| 1 | Adjust-up test on the dead DFR0379, **nothing downstream** | holds ~6 V unloaded ⇒ alive, only the setpoint was lost ⇒ you have a spare |
+| 1 | ~~Adjust-up test on the DFR0379~~ — **DONE 2026-09-06** | **Genuinely dead.** Would not come up off 1.23 V with nothing downstream. No spare buck from it. |
 | 2 | Ohm the SCD41 that was connected 2026-08-14 | kΩ+ VDD↔GND ⇒ that sensor is alive and the buck died of something else |
 | 3 | Identify the two pots on the HW-083B — silkscreen, LED count, or turn each unloaded | only the CV pot moves the output voltage |
 | 4 | Set CV, nothing downstream | 5.00 V |
@@ -330,7 +330,12 @@ been metered unloaded first.**
 | 14 | Boot with logs, read the I²C scan | 0x70 + 4 serials + 0x62 on ch4 · `Tent CO2` publishing within 30 s |
 | 15 | FRC outdoors, powered ≥ 3 min | — |
 
-Steps 1 and 2 are free and were never run. Either could still exonerate a part.
+**Step 1 is closed (2026-09-06).** The DFR0379 was tested with nothing downstream and would
+not come up off the 1.23 V reference — it is genuinely dead, not a lost setpoint, so there
+is **no spare buck** from it. One unit only, the climate board's; tent-one's and tent-two's
+are untouched and still good. The rebuild runs on the HW-083B, of which there are four.
+
+**Step 2 is still free and still not run** — it could yet exonerate the 08-14 SCD41.
 
 ⚠ **Step 5 is only safe once step 3 has confirmed the board is CC/CV.**
 
