@@ -439,6 +439,63 @@ does not bite.
 
 ---
 
+## The wiring drawing lives in Fusion 360
+
+The board's wiring drawing is a Fusion 360 model, not a paper schematic: **"Grow Tent Climate
+Schematic"** (project Aqua, folder Tent), built 2026-09 from the user's own part models, every
+part labelled, the wiring split into five show/hide components — power source · ESP-32 to
+TCA9548A · rectifier diodes · sensor logic · sensor power. It is the drawing the board is wired
+from, so its correctness matters as much as this sheet's.
+
+**Read it orthographic, from the front.** Wires sit on a plane 2.5 cm in front of the parts; a
+perspective view parallaxes every wire end off its terminal.
+
+**Connection = one fused body, no seam. Crossing = the crossed wire is cut and abuts the
+continuous wire on both sides**, with small stub bodies filling the gaps between adjacent
+crossing wires. A wire end touching another wire is therefore *never* a connection — including
+black on black.
+
+**Breadboards:** the bus strips are being drilled out, so every connection must be an explicit
+wire. The model already does this; keep it that way.
+
+### Review 2026-09-06 — what the drawing got wrong
+
+The model was machine-traced (89 wire bodies → 42 nets, every free end matched to a pin) and
+each finding confirmed on a front render. **Correct as drawn:** the 24 V chain and its fuse,
+both LM1117 pinouts, ESP D21→SDA / D22→SCL, LM1117 (I) → ESP 3V3 + mux Vin, fuse→sensor→Schottky
+order on all five drops, all four electrolytic polarities, ch3 = the on-board Controller SHT41.
+
+Open as of the review. (The tickable fix list is a private page; its URL is in the memory store,
+not here, because this repo is public.)
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | The two old DC-DC mini step-down modules are still drawn **in series** between the HW-083B and both LM1117s, their outputs drawn as 3.3 V — an LM1117 fed 3.3 V cannot regulate | Remove them and their two input electrolytics; buck → 1.1 A PPTC → LM1117 Vin, twice. **Pending: were they deliberate?** |
+| 2 | Schottkys on the **SCD41** and the **on-board SHT41** are reversed — anode to VCC, a short across the rail at power-up | Banded end to VCC / Vin. The three remote-SHT41 diodes are right; copy them |
+| 3 | SCD41 SDA lands on `SC4`, SCL on `SD4` | `SDA → SD4`, `SCL → SC4` |
+| 4 | The sensor-ground bus terminates only at screw terminal 4 pin 3, and crosses the regulator ground bus twice without joining | Join it to the star point. **Pending: is that terminal the star point?** |
+| 5 | Right output ceramic has both leads on GND · zener unwired · left 1.1 A PPTC unwired, so LM1117 (I) is unfused | Ceramic: one lead to LM1117 (II) Vout. Zener: band to Vout, other lead to GND. PPTC: in series with LM1117 (I) Vin |
+| 6 | All five drop fuses labelled 0.5 | SCD41 only. The SHT41 drops are 0.05 A, deferred |
+| 7 | Not drawn: SCD41 local caps, the 200 Ω main-bus series pair, A0–A2 → GND | Add |
+
+Plus legend and drawing-clarity items, on the page.
+
+**Trap that produced two of these:** the diode models carry no visible cathode band, so a
+reversed diode looks identical to a correct one from the front. Put a band on the model before
+trusting any diode orientation in it. **The ESP32 model has no pin text either** — D21 / D22 /
+3V3 / GND were inferred from a standard 30-pin DevKit V1 laid USB-left; label the model from the
+silkscreen before wiring from it.
+
+### The 15-foot run
+
+The HW-083B sits about 15 ft of wire from the boards. As drawn that carries **5 V** over the run
+and regulates at the wrong end — the buck holds 5.00 V at its own terminals, not at the LDO
+inputs, and 22 AWG loses roughly 0.35 V round trip at full draw. Proposed: run **24 V** over the
+15 ft and put the buck at the board end — five times less current, regulation at the load, and the
+0.5 A fuse at the Mean Well still protects the run. Not yet decided.
+
+---
+
 ## Sensor connector
 
 The SCD41 is unclipped and carried outdoors for FRC **at the start of every grow**, so
@@ -525,6 +582,8 @@ start of a grow, not at commissioning.
   a static IP change.
 - `grow_tent_automation/docs/air_diverter_valve.md` — the other live subsystem whose
   failure mode was a missing common ground.
+- Fusion 360, *Grow Tent Climate Schematic* (Aqua / Tent) — the wiring drawing. Read the
+  section above before trusting it.
 
 **Working checklists.** The same content also exists as two tickable pages, tick state
 saved in the browser: *Climate Board Rebuild* (phases A–D end to end) and *Climate Board
