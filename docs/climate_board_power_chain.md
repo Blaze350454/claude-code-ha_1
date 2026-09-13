@@ -64,6 +64,7 @@ regulator and three weeks of downtime.
           │                   │                                   (1N5819 across VDD→GND at every drop)
           │                   │
           │                   └─[PPTC 1.1 A]─ LM1117T-3.3 (II) ── ESP RAIL 3.3 V
+          │                                                        ├── 3.6 V zener 1N4729A → GND
           │                                                        ├── ESP32 3V3 pin
           │                                                        └── TCA9548A VIN
           │
@@ -179,8 +180,9 @@ disk recorded it. There are now two settings to lose instead of one.
 
 ## Fuse map
 
-Every polyfuse sits **in the box, on the terminal side** — never out at the sensor.
-That puts a bridged Cat5 crimp inside the protected zone too.
+Every polyfuse sits **in the box, upstream of its GX16 connector** — never out at the
+sensor. That puts the connector, the whole drop cable and any joint in it inside the
+protected zone.
 
 **Every polyfuse goes in the positive conductor only. Never fuse a ground return.** A
 tripped ground fuse leaves the load powered with no way home, and the current finds its
@@ -192,7 +194,54 @@ way back through the signal lines instead.
 | 5 V → sensor LDO | **1.1 A** | Sensor rail peaks ~250 mA, so it never nuisance-trips. Sized *up* for discrimination — see below. |
 | 5 V → ESP LDO | **1.1 A** | ESP32 WiFi bursts hit ~500 mA; polyfuse thermal constant is seconds, so no nuisance trip. |
 | SCD41 drop | **0.5 A** | Contains a dead short in under a second. |
-| SHT41 drops ×4 | **0.05 A** | *Not fitted yet — see "Deferred".* |
+| SHT41 drops ×4 | **0.05 A** | *Not fitted yet — see "Deferred".* One per drop, board-side, feeding pin 1 of that drop's connector — see below. |
+
+### One fuse per drop, all board-side — revised 2026-09-13 for GX16
+
+**Superseded:** the 2026-09-12 arrangement in which the three remote SHT41s shared a single
+3.3 V terminal position (TB1.1) with the fuse split on the far side of it. That existed to save
+screw-terminal positions. With a **4-pin GX16 per drop** there are no positions to save — every
+drop carries its own V / GND / SCL / SDA — so the shared feed is gone.
+
+**What replaces it:** each drop's 0.05 A PPTC sits on the board, its input on the sensor rail
+and its output on **pin 1 of that drop's connector**. All four fuse inputs common at the
+sensor-rail LM1117's output; each fuse output serves exactly one connector.
+
+```
+U9.OUT ─┬─[0.05 ch3]─ SHT41 Controller (on board, no connector)
+        ├─[0.05 ch0]─ J1 pin 1 → Canopy
+        ├─[0.05 ch1]─ J2 pin 1 → Flower
+        ├─[0.05 ch2]─ J3 pin 1 → Stem
+        └─[0.5  ch4]─ J4 pin 1 → SCD41
+```
+
+**Discrimination is unchanged and still the reason for the layout.** A fuse only discriminates
+if it sits downstream of the branch. Four PPTCs feeding one common node are four resistors in
+parallel — a short pulls through all of them at once and nothing says which drop did it.
+Downstream, a short on Flower trips Flower's fuse only, and Canopy and Stem keep reading.
+
+⚠ **The SCD41 does not share the SHT41 fusing.** It draws 205 mA measurement bursts and would
+trip a 0.05 A on its first reading. Its own leg, its own **0.5 A**.
+
+**Build points:**
+
+- **Every fuse stays inside the box, upstream of its connector.** A fuse protects only what is
+  downstream of it, so a fuse out at the sensor leaves the whole 15 ft drop and the zipper pass
+  unprotected — and a PPTC in a 30 °C tent holds like a 0.04 A part instead of 0.05 A. It would
+  also sit at 80–100 °C while tripped, right beside the sensor measuring air temperature.
+- **Keep the fuse bodies ~5 mm apart.** A PPTC latches by self-heating; against its neighbour it
+  becomes that neighbour's ambient and drags it toward tripping too.
+- **Stand each PPTC 2–3 mm off the board** on its own leads. ABS softens near 95–100 °C and a
+  tripped body resting flat on a drilled-out breadboard will dimple it. Solder is in no danger —
+  Sn63Pb37 melts at 183 °C, SAC305 at ~217 °C.
+- **Use 105 °C PVC or silicone** for the fuse pigtails and each drop's V lead. Common 80 °C PVC
+  softens right in the tripped-body band. Polyolefin heatshrink at 125 °C is fine.
+- **No hot glue anywhere near a fuse** — it melts at 60–80 °C. Zip tie or adhesive-lined
+  heatshrink for strain relief.
+- **Strain-relieve each drop at the box wall**, not on the connector's own clamp alone.
+
+**Connector map:** J1 = ch0 Canopy · J2 = ch1 Flower · J3 = ch2 Stem · J4 = ch4 SCD41.
+ch3 Controller is on the board and has no connector. Two spare pairs remain from the kit of six.
 
 ### Corrected 2026-09-02 — two values changed from the 2026-08-16 spec
 
@@ -255,10 +304,11 @@ Fitting them later means breaking one wire per drop.
 | Part | Where | Purpose |
 |---|---|---|
 | PPTC polyfuse, RXEF | per branch, in the box | one shorted drop can't take the rail down |
-| 1N4729A, 3.6 V zener | sensor rail, at the LDO output | crowbar if an LDO fails short input→output |
+| 1N4729A, 3.6 V zener ×2 | **each** 3.3 V rail, at that LDO's output | crowbar if an LDO fails short input→output |
 | 1N5819 Schottky | across VDD→GND at **each** sensor, **cathode — the banded end — to VDD** | reverse-polarity clamp |
 | 10–22 µF electrolytic + 0.1 µF ceramic | both LDOs, input **and** output, close to the pins | LM1117 stability |
 | 10 µF + 0.1 µF ceramic X7R ≥16 V | at the SCD41 pins | supplies the 205 mA pulses locally |
+| **1.5KE6.8A TVS** | **across the HW-083B's own OUT+ / OUT− terminals**, cathode (band) to OUT+ | clamps a buck high-side short so 24 V never reaches the LDOs |
 
 **No tantalum anywhere** — it fails short on overvoltage.
 
@@ -271,6 +321,49 @@ and leaks continuously. If 3.6 V is ever unobtainable, 3.9 V is the better fallb
 
 The zener is **sacrificial and only works if an upstream fuse trips**. Expect to replace
 it after any event; an overloaded zener usually fails short but can fail open.
+
+### Both rails get a clamp, not just the sensor rail — corrected 2026-09-12
+
+The original sheet put a 3.6 V zener on the **sensor** rail only, reasoning about the four SHT41s
+and their 3.6 V absolute maximum. That reasoning was never applied to the other rail, and it
+applies identically: **the ESP32's VDD33 absolute maximum is also 3.6 V.** A shorted LM1117 on the
+ESP rail puts 5 V on the ESP32 and kills it — the TCA9548A survives (1.65–5.5 V), so the ESP is the
+part at risk, and it is the one whose loss means the board is dead until it is replaced and
+reflashed.
+
+**D9, a second 1N4729A, cathode to the ESP rail, anode to ground** (user, 2026-09-12). Same
+sacrificial behaviour as D7: it conducts hard, holds the rail down, and will likely die while the
+1.1 A PPTC opens. That is the intended outcome.
+
+**Why it stays at the LDO output and never at a sensor.** A clamp works on the node; the sensor
+10 ft down a drop sits on that same node and is protected, because in a fault essentially all the
+current runs through the zener at the board and only the sensor's microamps run down the cable.
+Move the clamp to a sensor end and both things break: fault current would have to travel the drop
+to reach it, so cable resistance lets the board end rise above 3.6 V anyway, and the other drops
+would have no clamp at all. This is the sheet's own rule — **fuse at the source end, protection
+diode at the load end**. The zener is a rail clamp, so it is a source-end part; what each remote
+sensor gets at its end is its own 1N5819.
+
+### The 5 V clamp — added 2026-09-11
+
+**1.5KE6.8A, across the buck's output terminals, band to OUT+.** It is there for one failure:
+the XL4015 is non-synchronous, and that architecture's catastrophic death is the high-side
+switch shorting VIN onto VOUT — which would put **24 V on the 5 V bus**, past the 50 V input
+caps and into LM1117s rated 15–20 V absolute maximum. A shorted LDO then puts that on 3.6 V
+sensors.
+
+- **5.8 V standoff**, so it does nothing at 5.00 V; breakdown 6.45–7.14 V, clamps ~10.5 V.
+- **Sits across the buck output, upstream of both 1.1 A PPTCs**, so one part covers both rails,
+  and the loop is as short as it can be.
+- **It is a clamp, not a fuse.** It does not interrupt the fault — it drags the bus down until
+  the **0.5 A PPTC at the Mean Well** opens. Expect it to **fail short** doing that, and expect
+  to replace it. That is the intended outcome: a shorted TVS is an obvious diagnosis and a 20¢
+  part instead of two LDOs and five sensors.
+- **A 1 W zener from the kit will not do this job** — it goes open at ~0.16 A, and open protects
+  nothing. Choose the standoff, not the wattage: 6.8 V belongs on a 5 V rail and cooks on 12 V.
+- Probability of the failure it guards is **low** (this board's own two regulator deaths both
+  ended dead-not-pass-through, and it runs at ~6 % of the module's rating). It is fitted for the
+  asymmetry, and because a bench mis-wire reaches the same rail.
 
 ### On the Schottky-needs-a-fuse rule
 
@@ -359,6 +452,89 @@ On step 15: tent intake is **living-room air** (exhaust goes outside), so the te
 breathes 420 ppm and the in-tent guard blocks the button anyway. FRC happens outdoors at
 the start of every grow. Afterwards, cross-check `temperature_offset: 4.0` against the
 adjacent Flower SHT41 — the four agreeing to 0.29 °C are the reference.
+
+---
+
+## Part sizing and physical placement — settled 2026-09-10
+
+### Where the buck lives, and therefore where the 0.5 A goes
+
+**The HW-083B goes in the tent, next to the ESP32** (user, 2026-09-10). That settles the open
+"15-foot run" question the right way round: **the 15 ft carries 24 V, not 5 V** — one fifth the
+current in the run, and the buck regulates at the load instead of 15 ft upstream of it, so wire drop
+stops mattering. 22 AWG is fine over that distance behind a 0.5 A fuse.
+
+**The 0.5 A PPTC goes at the Mean Well end, outside the tent** — first thing after the +24 V terminal,
+before the run starts. Four reasons, and the first is the one that counts:
+
+1. **A fuse protects only what is downstream of it.** At the buck, the whole 15 ft is unprotected — a
+   chafe or a pinch at the tent zipper draws straight off a 100 W supply with nothing limiting it.
+   That run is the most exposed part of the chain.
+2. It is guarding the **shared backbone**, so it must sit where this branch taps it, or a fault here
+   drags tent-one and tent-two down.
+3. **PPTC hold current derates with ambient.** 0.5 A in a 30 °C tent behaves like ~0.4 A; outside it
+   holds its nameplate. (Either survives the ~180 mA draw, but cooler is better.)
+4. It is self-resetting, so put it where it can be inspected without opening the tent.
+
+Keep the unprotected stub short: solder the PPTC lead onto the terminal tail and heatshrink over it.
+
+### Fuse at the source, protection diode at the load
+
+The same rule decides the drop wiring, and it lands differently for the two parts:
+
+| Part | Goes at | Because |
+|---|---|---|
+| Drop PPTC | **Board end** | It protects the drop cable, so it must be upstream of it |
+| 1N5819 Schottky | **At the sensor, across its own VDD/GND pins** | It only catches a reversed drop if it sits on the node whose polarity can be wrong. The board's rails are correct by definition, so a diode there would never conduct and would protect nothing |
+
+The drawing already has each Schottky on its sensor's own pins; the physical part must match — soldered
+across the breakout's VIN and GND pads, out at the sensor. Not at the board end, and not in the
+GX16 shell.
+
+### Capacitor and diode values
+
+**Per LM1117T-3.3, four capacitors:**
+
+| Position | Part | Rating | Reasoning |
+|---|---|---|---|
+| Vin ↔ GND | 10 µF electrolytic | **50 V** | The rail is 5 V, but the **HW-083B is non-synchronous** — a high-side short puts **24 V** on it. A 25 V part sitting at 24 V vents. Rate input caps for the fault voltage upstream, not the nominal rail |
+| Vin ↔ GND | 0.1 µF ceramic | ≥16 V | HF bypass, at the pin |
+| Vout ↔ GND | 22 µF electrolytic | **16 V** | Worst case on this node is 5 V (an LDO failing short), so 16 V is 3× the fault. Smaller can, and **more ESR**, which the LM1117 wants |
+| Vout ↔ GND | 0.1 µF ceramic | ≥16 V | HF bypass, at the pin |
+
+- **22 µF, not 10 µF, on the output.** The datasheet's 10 µF is the *tantalum* figure; aluminium ESR
+  rises as it cools, so aluminium wants 22 µF. No tantalum anywhere — it fails short on overvoltage.
+- **The output electrolytic is a stability part.** A pure-ceramic output can fall below the LM1117's
+  minimum ESR and oscillate. Do not "tidy" it into a 10 µF MLCC.
+- **The input cap does real work here** even though the buck is inches away, because a **PPTC sits in
+  series** ahead of it — a fuse is resistance, so the buck's output caps are not electrically at the pin.
+
+**Physical placement on the TO-220** (printed face toward you, legs down): **pin 1 left = GND, pin 2
+middle = Vout, pin 3 right = Vin, and the tab is tied to pin 2 — live at 3.3 V.** Input pair between
+pins 3 and 1, output pair between pins 2 and 1, ceramics with ~5 mm of lead right at the pins,
+electrolytics within 1–2 cm, **stripe to pin 1**. **Return all four capacitor grounds to pin 1 itself**,
+not to separate points on the ground bus, or input ripple current crosses that stretch of bus and shows
+up on the output. Order along the path: fuse → Vin node (input pair) → regulator → Vout node (output
+pair) → drop fuses. Keep the two tabs clear of each other and of the bus — they are **different nets**.
+
+**Sensor Schottkys: 1N5819**, 40 V / 1 A / 25 A surge. Schottky rather than a 1N400x for the ~0.35 V
+drop; the 1 A rating is what lets it survive until the upstream protection acts (LM1117 limits at
+~1.3–1.5 A then thermally shuts down; the 1.1 A PPTC opens in about a second). The 40 V is incidental.
+
+**SCD41 local pair: 10 µF + 0.1 µF, X7R, take the highest voltage rating the kit offers.** This is the
+opposite of the electrolytic advice above and for a different reason: **MLCC capacitance collapses
+under DC bias**, worse in smaller and lower-rated parts, so a bigger-bodied part keeps more of its
+nameplate at 3.3 V. **Check the 10 µF is X7R and not Y5V/Z5U** — assortment kits sometimes use Y5V for
+larger values, and a Y5V part would be 10 µF in name only, exactly where a 205 mA pulse needs it.
+
+### Open drawing item found while re-verifying
+
+**The two regulators are not wired alike.** The ESP-rail LM1117 has its input capacitors on the Vin
+node, downstream of its 1.1 A fuse — correct. The **sensor-rail LM1117 has no capacitor at its Vin pin
+at all**: that node contains only the fuse lead and the pin, and the three capacitors that look like its
+input caps sit on the **5 V bus upstream of the fuse**. They are useful bulk there, but they are on the
+far side of a PPTC's resistance, so that regulator has no local input decoupling. Add a 10 µF + 0.1 µF
+pair across its Vin↔GND to match the other rail.
 
 ---
 
@@ -470,7 +646,7 @@ not here, because this repo is public.)
 
 | # | Finding | Fix |
 |---|---|---|
-| 1 | The two old DC-DC mini step-down modules are still drawn **in series** between the HW-083B and both LM1117s, their outputs drawn as 3.3 V — an LM1117 fed 3.3 V cannot regulate | Remove them and their two input electrolytics; buck → 1.1 A PPTC → LM1117 Vin, twice. **Pending: were they deliberate?** |
+| 1 | The two old DC-DC mini step-down modules are still drawn **in series** between the HW-083B and both LM1117s, their outputs drawn as 3.3 V — an LM1117 fed 3.3 V cannot regulate | Remove them and their two input electrolytics; buck → 1.1 A PPTC → LM1117 Vin, twice. **DECIDED 2026-09-10 — not deliberate; user removed both modules and their caps.** The deletion alone is not the whole edit — see §“After deleting the two mini modules” below. |
 | 2 | Schottkys on the **SCD41** and the **on-board SHT41** are reversed — anode to VCC, a short across the rail at power-up | Banded end to VCC / Vin. The three remote-SHT41 diodes are right; copy them |
 | 3 | SCD41 SDA lands on `SC4`, SCL on `SD4` | `SDA → SD4`, `SCL → SC4` |
 | 4 | The sensor-ground bus terminates only at screw terminal 4 pin 3, and crosses the regulator ground bus twice without joining | Join it to the star point. **Pending: is that terminal the star point?** |
@@ -480,53 +656,388 @@ not here, because this repo is public.)
 
 Plus legend and drawing-clarity items, on the page.
 
+#### Re-trace of v44 — 2026-09-10
+
+The model was re-traced at **v44** (the review above was v31): 97 wire bodies → 55 nets, each net
+checked for colour consistency (no net mixes two wire colours, which is the signal that the
+crossing/continuation reading is right). Status of the seven findings:
+
+| # | Finding | v44 status |
+|---|---|---|
+| 1 | Two mini step-down modules in series | **Still drawn** — removal decided, see below |
+| 2 | Two Schottkys reversed | **FIXED.** All five now sit GND on the low-X lead, VDD on the banded high-X lead |
+| 3 | SCD41 SDA/SCL swapped | **Consistent now** — the SCL-coloured wire lands on `SC4`, the SDA-coloured on `SD4`. The SCD41 model carries no pin text, so the drawing cannot prove the board's own pin order — check the physical silkscreen |
+| 4 | Sensor-ground bus floats | **STILL OPEN.** The five sensor grounds still terminate only at screw terminal 4 pin 3 and never join the regulator ground |
+| 5 | Ceramic on GND–GND, zener unwired, left 1.1 A unfused | **Mostly fixed** — the zener is now across the sensor rail (3.3 V to GND) and the right ceramic has one lead on the rail. The left 1.1 A PPTC is placed and half-wired, but its run to the LM1117 does not close — see the new findings |
+| 6 | Drop fuses all labelled 0.5 | **FIXED** — 0.05 on the four SHT41 drops, 0.5 on the SCD41 drop. The legend still has no 5 V entry |
+| 7 | SCD41 local caps, 200 Ω pair, A0–A2 → GND not drawn | **STILL OPEN** — none of the three appear in the model |
+
+**New, not in the v31 review:**
+
+1. **The ESP-rail LM1117's input does not connect to its 1.1 A fuse.** That LM1117's Vin pin is on a
+   net with only its own input caps; the fuse's other lead is on a net that ends in space, and five
+   green wire ends float around x≈20.2, z −1.4…−3.3 (touching no other body). Traced as drawn, that
+   regulator is fed by nothing.
+2. **A duplicated wire** — two black bodies with identical volume and identical end points at
+   (12.91, −1.06). Delete one.
+3. **Three wires with both ends in free space:** a long black one spanning x≈18.7→20.8 at z≈0.5, a
+   long green one at x≈30.8 near z≈−6, and green ends beside the zener at (29.5, −1.9)/(29.6, −2.0).
+4. **Two blue (24 V-coloured) ends float** beside the mini modules' input electrolytics
+   (7.7/7.8, −3.9) and (9.5/9.6, −3.9) — these disappear with the modules.
+5. **The sensor-rail LM1117 has an electrolytic on its output but no ceramic.** The ESP-rail one has
+   both on both sides. Add the 0.1 µF.
+6. A black wire ends at (11.82, 0.58), within 0.06 cm of the mux's `SC7` pin. Channel 7 is unused so
+   nothing is broken, but it reads as ground landing on a channel pin.
+
+**Correction to finding 4 above:** those blue "floating" ends were a false positive. A 90° jog in a
+wire exposes two 0.15×0.15 faces that look exactly like end caps to a face-area test. A pair of such
+faces 0.15 apart on the diagonal is a **jog, not an end** — the same is true of several other pairs in
+the list (x≈20.2 near the ESP-rail LM1117, and the pair beside the zener). Only a lone unpaired face
+is a real end.
+
+#### Modules removed and the 5 V rebuilt — 2026-09-10
+
+Done in the live model (not saved by Claude). Both **Volt Regulator** modules and their two input
+electrolytics are deleted: 53 → 49 root occurrences, 42 → 38 joints (Rigid 25/26/34/35 went with
+them). The buses were then repaired and the chain is now, as traced:
+
+`MW24 +24 V → PPTC 0.5 → HW-083B → 5 V → PPTC 1.1 ×2 → LM1117 Vin`, with the sensor-rail LM1117's
+input capacitors (CER:1, ELE:3, CER:2) sitting on the 5 V rail where they belong.
+
+What the rebuild needed beyond the deletion, in case it is ever repeated:
+
+1. **The cap stubs had to be trimmed off the buses.** Each bus body was one solid carrying the
+   horizontal run, a riser and a down-stub to a capacitor; only the stub goes.
+2. **Two bus gaps had to be CLOSED.** They were crossings — of the very cap wires that were removed.
+   Once the crossing wire is gone, the gap means "not connected" and has to be filled.
+3. **Four bridges**, buck-side riser to onward run, at x = 6.80 / 7.70 / 8.54 / 9.44, each **joined**
+   into one body so the drawing reads as connected rather than abutting.
+4. **Recoloured to a new 5 V red** (255,0,0), with a **"5 Volt" legend row** added. The run had been
+   drawn half in 24 V blue and half in 3.3 V green.
+5. Common ground is now real: the buck's negative reaches the ESP32, mux, both LM1117 grounds and
+   the output capacitors on one net.
+
+**Traps hit doing it, worth knowing before editing this file again:**
+
+- **Deleting a body that a split produced deleted the whole parent feature** — all ten Power Wiring
+  bodies vanished at once, because they share one feature. Recovered with undo. **Cut with a
+  Combine‑cut (modifies in place); never delete a body in this model.**
+- A base feature's tool body **cannot be used by a Combine in the same script** —
+  `ALL_TOOL_BODY_REFERENCE_LOST`. Create the tool in one call, combine in the next.
+- A cut box spanning "everything below z" also removes **other wires' crossings** in that band, which
+  silently opens gaps elsewhere. Re-probe every gap after cutting.
+- Sketch text on an offset XZ plane comes out **vertically mirrored** (sketch +Y = world −Z);
+  `isVerticalFlip` does not recompute the extrude. Fix with a 180° move-rotate about the row axis.
+
+#### 200 Ω I²C resistors fitted — 2026-09-10
+
+The user added two `Electric Resistor 1/4` occurrences; both are now **in series in the I²C trunk**,
+one per line, mounted with joints and wired in:
+
+- Each resistor sits **above the mux corridor** (SDA at z 6.55, SCL at z 7.05 — the only bands wide
+  enough; the corridor itself is six wires on a 0.25 pitch from z 4.39 to 5.79) with its **right lead
+  directly above the mux pin** it feeds, so the descent is a straight drop.
+- The old trunk wires were cut in the middle; their ESP-side risers and their mux-side drops were
+  kept and re-used, so only the middle span is new.
+- Route: ESP pin → existing riser → up across the crossing → left along a clear band → up to the
+  left lead → **resistor** → right lead → straight down through the corridor → existing mux drop.
+- Mounted with **as-built rigid joints** to Breadboard 2, named `SDA resistor 200R` /
+  `SCL resistor 200R`, so both are editable and deletable from the browser like any joint.
+
+**How wire geometry is authored in this file** (matters for every future edit):
+
+- Each wiring component has **one `Sketch1`**, whose plane sits at `y = -3.0` with **sketch +X = world
+  X and sketch +Y = world Z**, and every wire is a profile extruded by the parameter **`wire_od`**
+  along the sketch normal (into −Y). Add wires by drawing into that sketch — never a new one.
+- **`addTwoPointRectangle` works; a chain of `addByTwoPoints` does not** — polyline endpoints do not
+  merge, so no closed profile forms and the extrude silently finds nothing. Build an L or a T from
+  **two overlapping rectangles** and join the resulting bodies.
+- A new rectangle drawn over existing sketch curves is **split into several sub-profiles**. Extrude
+  all of them — first as a new body, the rest joined into it — or the wire comes out a fragment.
+- `sketch.isComputeDeferred = True` raises `InternalValidationError` on these sketches. Don't.
+- Crossing convention, in parameter terms: the interrupted wire stops **`wire_od` + 0.002** short on
+  each side, and where two crossing wires are adjacent the space between them is exactly
+  **`wire_space`** (1 mm), filled by a stub of that width.
+
+#### Second pass — 2026-09-10
+
+Also done in the model, same rules (drawn into each component's existing `Sketch1`, extruded by
+`wire_od`, parts mounted with joints):
+
+- **A0–A2 → GND.** A black comb ties the mux's three address pins and runs right into the ground
+  wire at the `GND` pin, interrupted at the `SCL` and `SDA` drops with a `wire_space` stub between
+  them. The mux address is now explicitly 0x70 in the drawing.
+- **ESP-rail LM1117 Vin → its 1.1 A fuse: connected.** The gap was one crossing wide; the run from
+  the fuse and the run to Vin were both already drawn and just never met. That whole input rail
+  (fuse output, Vin, and its two input capacitors) is now **5 V red**, matching the sensor side.
+- **Sensor-rail LM1117 output ceramic: added.** A new `Ceramic Capacitor v3` occurrence sits between
+  the existing output electrolytic and the input ceramic, jointed as `sensor rail output ceramic`,
+  with its left lead on the 3.3 V output (same body as the electrolytic's output lead) and its right
+  lead up to the ground bus.
+- **The duplicated black wire body is gone** (two coincident bodies, identical volume and endpoints).
+
+#### SCD41 local caps fitted — 2026-09-10
+
+**Decision: they mount at the SCD41, not at the board end** (user, 2026-09-10). Two
+`Ceramic Capacitor v3` occurrences sit immediately left of the sensor, jointed as
+**`SCD41 local 10uF`** and **`SCD41 local 0.1uF`**, wired across the sensor's own VDD and GND:
+
+- Both lead rows end at the same height, so each bus runs **above** the lead tips with a short stub
+  down to each lead — a bus drawn below the tips would cross the leads themselves and read as a
+  short. VDD bus sits 0.25 above the tips, GND bus 0.25 above that (`wire_od` + `wire_space`).
+- The VDD bus fuses into the sensor's existing VDD wire from the 0.5 A drop fuse; the GND bus runs
+  right and fuses into the existing GND wire at the sensor's GND pin, interrupted where it crosses
+  the VDD feed and the Schottky wire.
+- Which cap is the 10 µF and which the 0.1 µF is carried by the **joint names**, since both use the
+  same ceramic body.
+
+⚠ **Join needs overlap, not contact.** Extruding a profile with `JoinFeatureOperation` and
+`participantBodies` only merges if the new material *overlaps* the target; a profile that merely
+abuts it produces a **separate body with the default appearance** (renders grey-blue), which is easy
+to miss. Four comb fragments came out that way and had to be merged with a Combine-join afterwards.
+After any join-extrude, check for bodies whose colour is not one of the palette values.
+
+#### Sensor ground bonded, drawing swept clean — 2026-09-10
+
+- **The sensor-ground bus now reaches the regulator ground.** The route was already half-drawn in
+  the model — a black run heading down from screw terminal 4 pin 3 toward the sensor-rail LM1117's
+  ground pin, with two gaps left in it. Both gaps are filled, and the lane now walks continuously
+  from the terminal down to that ground pin, interrupted only where other wires legitimately cross.
+  **Assumption, easily changed:** the star point is the sensor-rail LM1117's ground pin, which is
+  what the half-built run pointed at. If it belongs somewhere else — the buck's negative, say — it
+  is a short re-route of two pieces.
+- **Palette sweep.** Three wire bodies carried the default `Steel - Satin` appearance, which renders
+  steel-blue and therefore lies about its rail: two were fragments of this session's work that failed
+  to merge, and one was the pre-existing zener-bottom-to-sensor-rail wire, now green. A
+  zero-volume 2 µm sliver left by a join was deleted. **Sweep for non-palette colours and
+  sub-0.0006 bodies after any batch of join-extrudes** — both are silent.
+- The SCL riser's 1 mm short reach is closed; it now abuts its crossing properly.
+
+#### Three dangling leads found by a proper terminal audit — 2026-09-10
+
+The user spotted two parts that looked unwired. He was right, and a proper audit found a third:
+
+| Part | Was | Now |
+|---|---|---|
+| Output electrolytic on the sensor rail | left (−) lead in the air | tied up to the ground bus |
+| Input ceramic on the sensor rail | right lead in the air | tied up to the ground bus |
+| **3.6 V zener** | **top lead in the air — the clamp was inert** | top lead down into the ground bus |
+
+⚠ **Why they were missed, and the check that catches them.** The net tracer matched a wire end to a
+part when the end fell within 0.25 cm of the part's **bounding box**. A wire that merely ends *near*
+a capacitor therefore reads as connected to it, which is how "the zener is now wired" and "the
+ceramic's lead is on the rail" were both reported as fixed when neither was. **Probe the actual lead
+point instead**: for a vertical two-lead part the leads sit at the bbox centre ± 0.255 at the bbox
+top; step outward from there and see whether a wire body actually contains that point. A full sweep
+over every part on the board now shows two or more wired terminals everywhere, with one exception:
+**screw terminal 5 has all three pins bare** — spare block, or an unfinished drop.
+
+**The SCD41's two capacitors are both ceramic, and that is correct** — the spec is 10 µF + 0.1 µF
+X7R right at the sensor, ceramic for the low ESR that a 205 mA pulse needs. Both values are inside
+the BOJACK MLCC kit's 0.1–10 µF range, so nothing needs buying.
+
+**Star point confirmed by the user: the LM1117's ground pin.**
+
+#### Read the part markings — they are there, under the wires (2026-09-10)
+
+Several conclusions in this file had been *inferred* from wire colours because the part markings
+looked absent. They are not absent — they are **hidden behind the wire bodies**. Switch the five
+wiring components' light bulbs off, look from the front, and the silkscreen is readable; switch them
+back on afterwards. Doing that settled three things:
+
+- **SCD41 silkscreen reads `VCC · GND · SCL · SDA`**, left to right. The drawing's I²C mapping is
+  therefore **confirmed correct** — SCL to `SC4`, SDA to `SD4`. No need to check the physical board.
+- **The rectifier diodes DO carry a band**, a grey ring at the high-X end of the body. With GND on the
+  low-X lead and VDD on the high-X lead throughout, all five really are **cathode-to-VDD** — verified
+  by eye now, not deduced.
+- **The zener model carries no band at all** — a plain red cylinder with a text label. Its orientation
+  genuinely cannot be read from the drawing. As wired (top lead to ground, bottom lead to the 3.3 V
+  rail) the physical part must go in **banded end down, toward the rail**. Worth putting a band on
+  that part model so the drawing can state it.
+
+**Every item from the 2026-09-06 review is now closed and verified in the model**, and the user has
+confirmed **the parts list is complete — nothing further is needed for this board**. Screw terminal 5
+is therefore a **deliberate spare**; its three bare pins are not an omission, so don't re-raise them.
+**Zener orientation is now settled and stated by the drawing.** The user added a cathode band to the
+part; it landed on the top end while the top lead was wired to ground, which would have put the
+cathode on ground and the anode on +3.3 V — a forward-biased zener, i.e. a short across the sensor
+rail rather than a clamp. The part was rotated 180° (his choice of the two fixes), so the **banded
+cathode end now sits on the 3.3 V rail and the plain end on ground**, which is the correct shunt
+clamp. Verified by face appearance, not by eye alone: the black band/lead faces span the lower half,
+the bare aluminium lead the upper.
+
+The zener is held at the corrected pose by an as-built joint, **`zener 3.6V clamp`**.
+
+⚠ **Two old joints in that cluster stay suppressed** — `Rigid 54` (zener ↔ input ceramic) and
+`Rigid 65` (input ceramic ↔ output electrolytic). **Do not un-suppress `Rigid 54`:** it holds the
+zener's pre-flip pose and would undo the orientation fix. It is now redundant and safe to delete, but
+**it cannot be deleted through the API** — see below. Delete it from the browser by hand, or leave it.
+
+#### The wiring sketches carry orphaned projections — forced recomputes fail
+
+Deleting `Rigid 54` from a script fails and rolls back with a wall of
+`PROJECT_SOURCE_LOST — the project source is lost, Cache is used!` and `TARGET_OCCURRENCE_LOST`
+errors naming `Project1`…`Project76` across **three wiring `Sketch1`s** (Power Wiring, ESP-32/TCA9548A,
+Sensor Power), plus a `Combine1` whose target body reference is lost.
+
+What that means: those sketches **project geometry from the part bodies** to place wires, and some of
+those projections have lost their source — consistent with the four occurrences removed earlier (the
+two mini step-downs and their two electrolytics), though which specific projections broke has not been
+traced. The design **works and displays correctly on the cached geometry**; the failure only appears
+when an operation forces those sketches to fully re-resolve. Deleting a joint is one such operation.
+
+**Diagnosed 2026-09-10, and the verdict is leave it alone.** Every wiring sketch is built almost
+entirely on **projected geometry from the part bodies** — that is how wires get placed on pins:
+
+| Sketch | curves | of which projected | unreadable | flagged |
+|---|---|---|---|---|
+| Power Wiring | 388 | 302 | 0 | yes |
+| ESP-32 / TCA9548A | 612 | 263 | 0 | yes |
+| Sensor Power | 842 | 514 | 0 | yes |
+| Rectifier Diode | 362 | 248 | 0 | no |
+| Sensor Logic | 1499 | 1297 | 0 | no |
+
+**Not one projected curve fails to resolve** — the cache is complete, which is why the drawing measures
+and renders correctly. The three flagged sketches are exactly the three components where parts or
+bodies were removed or consumed during this session (the two mini step-downs and their electrolytics,
+and the bodies pulled across components by the bridge joins). Cleaning them would mean deleting
+orphaned projections out of sketches holding 300–500 of them with live profiles built on top — real
+risk, no functional gain, since every wire is already solid geometry that no longer depends on a live
+projection. **Recommendation: leave it.**
+
+**Practical rule:** avoid API operations that force a full recompute of the wiring sketches. Adding
+geometry to them and extruding it is fine (that is all this session did). Deleting joints or features
+that trigger re-resolution is not — do those in the UI, where Fusion negotiates the cache, and check
+the result.
+
+**Model state at close (2026-09-10):** 54 occurrences, 38 joints plus 5 as-built joints holding the
+parts added this session (`SDA resistor 200R`, `SCL resistor 200R`, `sensor rail output ceramic`,
+`SCD41 local 10uF`, `SCD41 local 0.1uF`), 122 wire bodies, 274 timeline features, **zero invalid
+features**, nothing left hidden. The user saved; the document is at v51.
+
+**Already right in v44, do not "fix":** the LM1117s each already carry their own input *and* output
+electrolytic; only the two electrolytics on the mini modules go with them.
+
+#### After deleting the two mini modules — 2026-09-10
+
+Decided: they were not deliberate. Both modules and their input electrolytics come out. The
+intended segment is exactly the chain above, twice:
+
+```
+HW-083B 5.00 V ─[PPTC 1.1 A]─ LM1117T-3.3 (I)  → sensor rail
+               └[PPTC 1.1 A]─ LM1117T-3.3 (II) → ESP rail
+```
+
+Deleting the modules is **not** the whole edit. Five things go with it:
+
+1. **Capacitors — corrected against the v44 trace.** The two electrolytics that come out with the
+   modules are the *modules'* input caps; both LM1117s already carry their own electrolytic on Vin
+   and on Vout, so nothing has to be put back. The one real gap is that the **sensor-rail LM1117
+   has no 0.1 µF ceramic on its output** — add it. (An output cap must not be ceramic alone
+   either: the LM1117 needs some output ESR or it can oscillate.)
+2. **Both branches get their 1.1 A PPTC.** The left one was never wired (finding 5), so before
+   this edit LM1117 (I) Vin was unfused. After the edit, check both.
+3. **Recolour the two runs.** Buck → LM1117 Vin now carries **5 V**; the module outputs were
+   drawn green (3.3 V). Rendered colour is truth in this model, so a stale green here reads as a
+   3.3 V feed into a regulator that cannot regulate — the exact error being fixed.
+4. **Re-fuse the wire bodies where each module sat.** In this drawing a connection is one fused
+   body and abutting ends are a *crossing*. Two wire stubs left touching where a module used to
+   be will trace as a crossing, i.e. **not connected**.
+5. **Check ground continuity through the gap.** The modules' GND pins sat in the regulator
+   ground bus. Confirm buck GND → both LM1117 pin 1 → star point is still continuous after the
+   deletion. This is the same net as finding 4, still open.
+
+Still open and unaffected by this edit: findings 2, 3, 6, 7, and the star-point question in 4.
+Also still undecided: whether the buck moves to the board end so the 15 ft run carries 24 V —
+that changes where these two 5 V runs are drawn, so settle it before redrawing much (see
+§“The 15-foot run”).
+
 **Trap that produced two of these:** the diode models carry no visible cathode band, so a
 reversed diode looks identical to a correct one from the front. Put a band on the model before
 trusting any diode orientation in it. **The ESP32 model has no pin text either** — D21 / D22 /
 3V3 / GND were inferred from a standard 30-pin DevKit V1 laid USB-left; label the model from the
 silkscreen before wiring from it.
 
-### The 15-foot run
+### The 15-foot run — SETTLED 2026-09-10, see §"Where the buck lives"
 
-The HW-083B sits about 15 ft of wire from the boards. As drawn that carries **5 V** over the run
-and regulates at the wrong end — the buck holds 5.00 V at its own terminals, not at the LDO
-inputs, and 22 AWG loses roughly 0.35 V round trip at full draw. Proposed: run **24 V** over the
-15 ft and put the buck at the board end — five times less current, regulation at the load, and the
-0.5 A fuse at the Mean Well still protects the run. Not yet decided.
+The HW-083B sits about 15 ft of wire from the boards. The review draft carried **5 V** over that
+run and regulated at the wrong end — the buck holds 5.00 V at its own terminals, not at the LDO
+inputs, and 22 AWG loses roughly 0.35 V round trip at full draw.
+
+**Decided: the buck goes in the tent at the board end, so the 15 ft carries 24 V**, and the
+0.5 A PPTC goes at the Mean Well, ahead of the run. The reasoning is in §"Where the buck lives,
+and therefore where the 0.5 A goes" and is not repeated here. This paragraph said "not yet
+decided" for a day after it was; it is kept only because the voltage-drop number is the reason.
 
 ---
 
 ## Sensor connector
 
-The SCD41 is unclipped and carried outdoors for FRC **at the start of every grow**, so
-its drop must detach without tools. Chosen 2026-09-02: **JST-XH, 2.54 mm pitch, 4-pin.**
+**SETTLED 2026-09-13: GX16 aviation, 16 mm, panel-mount at the control box. The sensor end
+is hardwired.** Ordered: FULARR 6-pair GX16 kit (metal shell, solder cups, rubber caps,
+screwdriver) — six pairs covers the four drops with two spare.
 
-- **Keyed and shrouded** — cannot mate backwards. This matters more than the original
-  analysis assumed, which was written for a connector mated once; repeated mating is
-  exactly when that error becomes likely. With the 1N5819 and the 0.5 A fuse already on
-  that branch, this becomes the best-protected drop on the board.
-- **2.54 mm pitch matches the breakout's own header row**, so the through-hole header
-  solders straight into the holes already on the SCD41 board — no adapter.
-- Positive detent latch; ~30 mating cycles rated; once per grow is decades.
+⚠ **The kit that shipped is GX16-*5*, not GX16-4.** Same shell, same cups; land four
+conductors and leave the fifth cup empty. If a 4-pin kit is bought later the pin map below
+is unchanged — the fifth position simply stops existing.
 
-Rejected: **Qwiic / JST-SH 1.0 mm** — unsolderable by hand, wires too fragile for a tent
-drop; the Eyewink board was chosen over the LaskaKit specifically to avoid it.
-**Dupont** — no keying, no retention, useless in damp. **GX12 aviation** — solder cups
-and a screw lock are appealing, but it is metal and heavy hanging on a drop lead 4" above
-canopy.
+### Why this and not the alternatives
 
-**Before ordering:** count the pads on the breakout and note their order. Most are a
-4-pin 0.1" row (VIN / GND / SCL / SDA) but some break out 5 or 6.
+| Rejected | Why |
+|---|---|
+| **JST-XH 4-pin** (the 2026-09-02 choice) | Superseded. It was chosen to give the SCD41 a tool-free detach *at the sensor*; with the drop hardwired, the detach point moved to the box and JST-XH has no panel-mount form. |
+| **RJ45 / 8P8C** | A socket carrying 3.3 V that looks exactly like a network port. PoE puts 48 V on pins 1-2/3-6 or 4-5/7-8 — every one of those is a rail here, and neither the 3.6 V zener nor the TVS survives it. One wrong patch cord destroys both LDOs and the ESP32. Also unsealed, unkeyed, and needs a rectangular cutout. |
+| **Qwiic / JST-SH 1.0 mm** | Unsolderable by hand, wires too fragile for a tent drop. The Eyewink board was chosen over the LaskaKit specifically to avoid it. |
+| **Dupont** | No keying, no retention, useless in damp. |
+| **M12 4-pin A-coded** | Correct and IP67, but ~$30 for sealing the box end does not need. Revisit only if a connector ends up somewhere that actually gets wet. |
 
-**Placement:** put the connector at the **fixture end** of the drop, not down at canopy
-level — it is not sealed and the tent is wet. Mate it pointing down so nothing pools in
-the housing. At 3.3 V and microamps corrosion is slow, but there is no reason to sit it
-in the spray.
+**The GX12 rejection of 2026-09-02 does not apply here.** That entry rejected aviation
+connectors because they are *metal and heavy hanging on a drop lead 4″ above canopy* — a
+statement about the **sensor** end. Nothing hangs at the box end, and the sensor end is now
+hardwired, so the objection has no target.
 
-**Pin order:** pick one and use it on every drop ever made. Low stakes here — all five
-drops carry the same four signals, so a cross-plug puts a sensor on the wrong mux channel
-rather than damaging anything, and that is a *fix the wiring, not the YAML* annoyance.
-Decide once and record it beside the Cat5 pinout.
+### What it buys
+
+- **Keyed shell** — one orientation only, cannot mate backwards.
+- **Screw coupling** — will not vibrate or pull out; no plastic latch to snap off.
+- **Solder cups on both halves** — the joint this build prefers, and 16 mm rather than 12 mm
+  so four cups are workable by hand.
+- **Round hole** in the enclosure wall, drilled, not filed square.
+- **Cannot be confused with a network port.** The PoE failure mode is designed out, not
+  labelled around.
+- Rated 5 A / 125 V AC against 3.3 V at milliamps — enormous margin.
+- Rubber caps included: cap any unused socket.
+
+### Pin map — decide once, use on every drop ever made
+
+| GX16 pin | Function | Cat5 conductor |
+|---|---|---|
+| 1 | **3.3 V** | orange |
+| 2 | **GND** | brown + the four whites, commoned into one tail |
+| 3 | **SCL** | blue |
+| 4 | **SDA** | green |
+| 5 | *unused* — leave the cup empty (5-pin shells only) | — |
+
+**Why this order:** it mirrors the sensor breakout's own silkscreen, `VCC GND SCL SDA`,
+confirmed by eye on the SCD41 on 2026-09-10. Connector pin order then equals pad order at the
+far end of the cable, which removes a whole class of transcription error while soldering.
+
+⚠ **Verify the pin numbers on the actual part before soldering.** GX16 numbering is moulded
+into the insulator face and is easy to read mirrored — the socket half counts the opposite way
+round from the plug half. Number one cup, ohm it through to the mating half, then do the rest.
+
+**Which half goes on the box: the female contacts.** The box side is the powered side, and
+exposed pins on a live connector are a bad habit even at 3.3 V — an unmated plug left dangling
+against the chassis shorts the rail through the 0.05 A fuse. Check which half of the kit carries
+the panel-mount thread before committing to a hole.
+
+**Placement:** at the **fixture end** of the drop, not down at canopy level. Mate it pointing
+down so nothing pools in the shell. At 3.3 V and microamps corrosion is slow, but there is no
+reason to sit it in the spray.
+
+**All four drops are identical**, so a cross-plug puts a sensor on the wrong mux channel. That
+is harmless — a *fix the wiring, not the YAML* annoyance — but label both halves of every pair
+as it is made.
 
 ### Cat5 drop pinout (unchanged, 2026-07-26)
 
@@ -540,11 +1051,22 @@ brown       = GND      white/brown  = GND
 ```
 
 Each signal is twisted with a ground return, SDA and SCL never in the same pair, white
-partners **must** be landed rather than left floating. T568B straight-through both ends.
+partners **must** be landed rather than left floating.
 
-⚠ **orange (3.3 V) and white/orange (GND) are the same pair**, so a T568A/B mismatch at
-one end reverses power **and still passes a continuity test**. Ohm every drop cable
-**pin-for-pin**, never just for continuity.
+**The colour map above is unchanged. What changed on 2026-09-13 is how each end terminates.**
+No RJ45, no screw terminals, no T568A/B — the cable is now soldered directly into cups.
+
+**Both ends common the five grounds into one tail** — the four whites plus brown, twisted and
+soldered together. At the **box** end that tail goes into GX16 **pin 2**; at the **sensor** end
+it goes to the breakout's single GND pad. Every drop uses the same four conductors in the same
+four positions; see §"Sensor connector" for the pin map.
+
+⚠ **Ohm every drop cable pin-for-pin before it is powered, never just for continuity.**
+The old failure mode here was a T568A/B mismatch reversing power while still passing a
+continuity test. That one is gone with the RJ45, but the replacement is at least as easy to
+make: **orange (3.3 V) and brown (GND) are one cup apart in the shell**, and a cup soldered a
+position out reverses power on a sensor that has no reverse protection beyond its 1N5819.
+Confirm pin 1 → orange → VCC pad, end to end, on every cable.
 
 ---
 
@@ -562,14 +1084,19 @@ listing. ⚠ On that listing the variant code is hold current × 100, so `005` =
 **Unused:** the 2 A PPTC. Nothing in this chain is above 1.1 A, so it would need over
 4 A to trip and protects nothing here.
 
-**Still to buy:** a JST-XH assortment — not on the 09-02 order. Needed before the first
-outdoor FRC, not before commissioning.
+**Connector — ORDERED 2026-09-13.** FULARR 6-pair **GX16** aviation kit, arriving with the
+brass tees. Supersedes the JST-XH assortment that was listed here and never ordered; do not
+buy JST-XH for this board. ⚠ The kit that shipped is the **5-pin** variant — see
+§"Sensor connector".
 
 **Still open:** what else was in the order that got stopped.
 
-**Nothing blocks the build.** The drop fuses are a finishing pass — break one wire per
-drop when they land. The connector is needed before the first FRC, which happens at the
-start of a grow, not at commissioning.
+**The drop fuses are still a finishing pass** — break one wire per drop when they land.
+
+⚠ **The connector is now on the critical path, which it was not before.** As the JST-XH it
+was the SCD41's detach point only, needed before the first outdoor FRC and not before
+commissioning. As the GX16 it is the **only** way any of the four drops reaches the board, so
+nothing can be commissioned until the kit arrives and the shells are soldered.
 
 ---
 
