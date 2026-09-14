@@ -5,7 +5,7 @@ description: >
   (write -> flash -> verify), outside a full stack update. Use when the user says
   "flash <device>", "reflash the esp", "install the code on the esp32", "push the
   firmware", "change the esp code and flash it", or is iterating on a single ESP32's
-  config (grow-tent-env, tent-irrigation-controller, test-esp32, etc.). For a full
+  config (grow-tent-climate, tent-irrigation-controller, test-esp32, etc.). For a full
   homelab update pass (HA Core + OS + all devices) use `update-homelab` instead.
 ---
 
@@ -42,7 +42,7 @@ uvx esphome@2026.6.5 run <name>.yaml --device <device-ip> --no-logs 2>&1 | Selec
   PlatformIO with a native ESP-IDF toolchain, so the first build downloads several GB and
   the cache is invalidated (full recompile, not incremental). `~/.platformio` becomes dead
   weight for every `esp-idf` config — only `grow-tower.yaml` is still `framework: arduino`.
-- `--device <device-ip>` forces OTA to that address (e.g. `192.168.2.54`). Boards with a
+- `--device <device-ip>` forces OTA to that address (e.g. `192.168.2.236`). Boards with a
   dead USB bootloader flash fine this way as long as they're online.
 - `| Select-Object -Last 40` is REQUIRED: raw PlatformIO output has box-drawing chars that
   crash the cp1252 console. Success = `INFO OTA successful` + `Successfully uploaded program.`
@@ -112,13 +112,21 @@ mid-run (`script.run_feed_now`/`run_flush_now` = `off`, `tent_stir_burst`/`tent_
 close) — safe when idle, disruptive mid-cycle.
 
 ## Device quick-map
-- **grow-tent-env** @ `192.168.2.54` — SCD41 CO2 + 4x BME280 (two I2C buses). Dead USB → OTA only.
+- **grow-tent-climate** @ `192.168.2.236` — SCD41 CO2 + 4x SHT41 behind one TCA9548A mux
+  (all four SHT41s share `0x44`, so each gets its own channel). ESP32-WROOM-32 30-pin devkit.
+  ⚠ **There is no `grow-tent-env`.** That was this board's predecessor — SCD41 + 4x BME280 on
+  two I²C buses — and the name is dead: no such config exists, and nothing answers on the
+  `192.168.2.54` this entry used to claim. It survives only as history in the comments of
+  `grow-tent-one.yaml:73` and `grow-tent-two.yaml:53`, which record the CO2 sensing being
+  moved off those boards onto it. Corrected 2026-09-14.
 - **test-esp32** — **DHCP, no static.** Windows bench board (`reference-esphome-windows-bench`);
   flash over USB or read its current address off the Device Builder.
 - tent-irrigation-controller / grow-tent-one / grow-tent-two / grow-tower — see memory.
   (grow-tower @ `192.168.2.248` was named hydro-tower until 2026-07-15.)
 
-## I2C sensor-bring-up cheatsheet (hard-won on grow-tent-env)
+## I2C sensor-bring-up cheatsheet
+*Hard-won on `grow-tent-env`, the retired predecessor of `grow-tent-climate` — the lessons
+carried over, the device did not.*
 - Each device shows in the boot scan when it ACKs its address; role = **bus + SDO strap**,
   not any label. On one bus, two BME280/BMP280 must be strapped **opposite**: one SDO->GND
   (0x76), one SDO->3.3V (0x77). Four of them need both buses (two per bus).
