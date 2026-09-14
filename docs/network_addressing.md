@@ -24,7 +24,7 @@ YAML, on **both** network entries (grow AP and router fallback).
 | `grow-tent-two` | **192.168.2.242** | moved from `.39` 2026-08-07 |
 | `grow-tent-climate` | **192.168.2.236** | already above the pool |
 | `grow-tower` | **192.168.2.248** | already above the pool — **committed but NOT flashed**, node is offline on July firmware |
-| `test-esp32` | **192.168.2.53** | Windows bench board, normally powered off |
+| `test-esp32` | **DHCP — no `manual_ip`** | Windows bench board, normally powered off. Flash over USB, or read its current address off the Device Builder. The `.53` listed here until 2026-09-14 was a stale lease, never an assignment |
 
 Infrastructure: Proxmox host `.100` · HA VM 101 `.151` · ESPHome LXC 100 `.14` ·
 Brentons grow-area AP (GT784WN bridge) `.250` · HS300 irrigation strip `.182`.

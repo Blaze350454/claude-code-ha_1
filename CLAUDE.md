@@ -95,7 +95,10 @@ prefix — expect to re-run one after any reflash that adds entities.
   `.200+` to stay clear of the DHCP pool. **Changing one also requires re-pointing HA by
   hand — zeroconf does NOT follow the device**, and every entity goes `unavailable` until
   you do (`tools/ha_repoint_esphome.py`). Current: irrigation `.240` · tent-one `.241` ·
-  tent-two `.242` · climate `.236` · tower `.248` · test-esp32 `.53`.
+  tent-two `.242` · climate `.236` · tower `.248`.
+  **`test-esp32` pins no static — it is DHCP.** Flash it over USB or read its current
+  address off the Device Builder. (An earlier `.53` here was a stale lease, never an
+  assignment. Corrected 2026-09-14 against the flashed configs.)
 - **HS300 "Tent Irrigation Power Strip"** — `192.168.2.182`, MAC suffix `c074`,
   model **HS300**, 6 sockets. This is the **live feed/flush strip**. Its six sockets,
   verified against the registry 2026-08-07, are exactly: `air_pump`, `feed_pump`,

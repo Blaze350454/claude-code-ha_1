@@ -62,8 +62,10 @@ no SSH key (password auth only); VM 101 `homeadmin@192.168.2.151` uses key auth.
 **⚠ `<name>.local` does NOT resolve** from the LXC 100 or VM 101 shells (no `nss-mdns`) —
 you get "Name or service not known" on perfectly healthy devices. Use the static IP from
 the config's `manual_ip:` block: `grow-tent-climate` **.236** · `grow-tent-one` **.241** ·
-`grow-tent-two` **.242** · `tent-irrigation-controller` **.240** · `grow-tower` **.248** ·
-`test-esp32` **.53**.
+`grow-tent-two` **.242** · `tent-irrigation-controller` **.240** · `grow-tower` **.248**.
+⚠ **`test-esp32` has NO `manual_ip` — it is DHCP.** Flash it over USB, or read its current
+address off the Device Builder. (An earlier `.53` here was a stale lease, never an
+assignment. Corrected 2026-09-14.)
 **Renumbered 2026-08-07** — irrigation `.55`→`.240`, tent-one `.96`→`.241`,
 tent-two `.39`→`.242`, to lift every static above the DHCP pool (the router refuses
 reservations, and DHCP demonstrably hands out into the .180s, so statics down there
@@ -111,7 +113,8 @@ close) — safe when idle, disruptive mid-cycle.
 
 ## Device quick-map
 - **grow-tent-env** @ `192.168.2.54` — SCD41 CO2 + 4x BME280 (two I2C buses). Dead USB → OTA only.
-- **test-esp32** @ `192.168.2.53` — Windows bench board (`reference-esphome-windows-bench`).
+- **test-esp32** — **DHCP, no static.** Windows bench board (`reference-esphome-windows-bench`);
+  flash over USB or read its current address off the Device Builder.
 - tent-irrigation-controller / grow-tent-one / grow-tent-two / grow-tower — see memory.
   (grow-tower @ `192.168.2.248` was named hydro-tower until 2026-07-15.)
 
