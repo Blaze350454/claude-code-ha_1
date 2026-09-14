@@ -106,8 +106,16 @@ batch (they usually all get approved together, but ask).
    shells (no `nss-mdns`); you get "Name or service not known" even though the devices are
    perfectly healthy and device-builder's own mDNS browser sees them. Flash by static IP,
    taken from each config's `manual_ip:` block:
-   `grow-tent-climate` **.236** · `grow-tent-one` **.96** · `grow-tent-two` **.39** ·
-   `tent-irrigation-controller` **.55** · `grow-tower` **.248** · `test-esp32` **.53**
+   `grow-tent-climate` **.236** · `grow-tent-one` **.241** · `grow-tent-two` **.242** ·
+   `tent-irrigation-controller` **.240** · `grow-tower` **.248**
+   ⚠ **`test-esp32` has NO `manual_ip` — it is DHCP.** Flash it over USB, or read its
+   current address off the Device Builder. (An earlier `.53` here was a stale lease, never
+   an assignment.)
+   *Renumbered 2026-08-07 to lift every static above the DHCP pool; this list re-verified
+   against the flashed configs on LXC 100 on 2026-08-27. The previous values here
+   (one `.96`, two `.39`, irrigation `.55`) were the pre-renumber addresses.*
+   **Changing a static also requires re-pointing HA by hand** — zeroconf does not follow
+   the device; use `tools/ha_repoint_esphome.py`.
    A core-version bump busts the build cache, so expect a **full** recompile per device
    (~2-3 min each once ESP-IDF is installed; the first one also downloads the toolchain).
    **Windows console gotcha**: pipe/print the SSH stdout through
