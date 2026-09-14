@@ -35,3 +35,7 @@ tmpclaude-*
 .claude/skills/caveman
 .claude/skills/flash-esp32
 .claude/skills/update-homelab
+
+# Session recaps live outside every repo, in D:\Claude\Knowledge\recaps\.
+# This repo is PUBLIC; agent notes have no business in it.
+knowledge/
