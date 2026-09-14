@@ -182,6 +182,27 @@ if (Test-Path $aliaser) {
   Say ("  by-time aliases: SKIPPED - {0} is missing" -f $aliaser) Yellow
 }
 
+# One folder per feed: <Dest>y-feedeed-13\+13h31m starter_20260828_1116.jpg,
+# hardlinked like the above. The offset in the name is what this project actually
+# reasons in - the peak is "+12 h 36 m", never "at 11:16" - so sorting the folder
+# by name sorts by elapsed time. Feed times come from docs\starter-log.md in the
+# Recipes project, which is the only place they are recorded. Added 2026-08-28.
+$feedAliaser = Join-Path $PSScriptRoot 'alias_by_feed.py'
+if (Test-Path $feedAliaser) {
+  try {
+    & uv run --no-project python $feedAliaser --root $Dest
+    if ($LASTEXITCODE -eq 2) {
+      Say "  by-feed folders: COULD NOT LOOK - frame folder or starter log unreadable" Yellow
+    } elseif ($LASTEXITCODE -ne 0) {
+      Say ("  by-feed folders: FAILED (exit {0}) - frames synced, grouping not" -f $LASTEXITCODE) Yellow
+    }
+  } catch {
+    Say ("  by-feed folders: FAILED - {0}" -f $_.Exception.Message) Yellow
+  }
+} else {
+  Say ("  by-feed folders: SKIPPED - {0} is missing" -f $feedAliaser) Yellow
+}
+
 $total = ($camData | ForEach-Object { $_.frames.Count } | Measure-Object -Sum).Sum
 Say ""
 Say ("Gallery rebuilt: {0}" -f $index) Cyan
