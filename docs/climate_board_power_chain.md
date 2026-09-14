@@ -119,9 +119,36 @@ broken or the wrong one — keep going, then check again.
 **Set CV to 5.00 V** with nothing downstream.
 
 **Set CC to ~3 A — deliberately high.** Short the output **through your ammeter** — the
-meter in 10 A mode *is* the short — and adjust CC until it reads the target. The voltage
+meter in its 20 A range *is* the short — and adjust CC until it reads the target. The voltage
 collapsing while you do this is correct; that is what constant-current means. Remove the
 short and confirm CV returns to 5.00 V.
+
+**⚠ The 20 A jack on the Mastercraft 052-0052-2 is dead (2026-09-14) — use the wire-shunt
+method below instead.** Its fuse read `OL`, and a replacement 20 A fuse did not restore the
+path: poking the red probe (V/Ω jack, ohms) into the **COM** socket reads 0.2 Ω, into the
+**20A** socket reads `OL`. Same probe, same technique — that is a physically open shunt path,
+most likely holder clips sprung open by the original failure. The µA/mA path is fine, proven
+at 2.5 mA. Do not use it for this step: 3 A into a 400 mA jack kills that fuse instantly.
+
+#### Setting CC with a wire shunt and a voltmeter (no ammeter needed)
+
+**A length of wire IS a calculable resistor**, and `I = V / R` needs only the DC V range.
+1/4 W resistors cannot do this job — 1 Ω at 3 A is 9 W — and the meter cannot measure a
+sub-ohm shunt either: leads alone are ~0.2 Ω and the low range steps in 0.1 Ω, so **compute
+the shunt from a wire table, never from an ohms reading.**
+
+Copper 18 AWG is 0.00637 Ω/ft; **copper-clad aluminium (CCA) is ~1.6× that**, and speaker
+wire is usually CCA — nick a strand and look for a silver-white core. Joining the two
+conductors of a zip cord at the far end doubles the length and the volts you read.
+
+**What was actually used, 2026-09-14:** 64 in of 18 AWG **CCA** speaker wire, both conductors
+joined at the far end = 10.67 ft ≈ **0.109 Ω**. Landed on OUT+/OUT−, probes on the wire
+itself at the terminals (not the screw heads — contact resistance is the same order as the
+shunt), CC wound up until the shunt read **0.38 V ≈ 3.5 A**. Aim ~15 % high like this on
+purpose: overshoot toward the module's ceiling is harmless, while an undershoot below
+**2.2 A** means a faulted branch never trips its RXEF110 — the whole point of the setting.
+With the shunt on, the buck's own terminals sit at 0.25–0.45 V; 5 V there means the shunt is
+not really connected.
 
 ### Why CC goes high, and never to ~1.3 A
 
@@ -214,6 +241,18 @@ U9.OUT ─┬─[0.05 ch3]─ SHT41 Controller (on board, no connector)
         ├─[0.05 ch2]─ J3 pin 1 → Stem
         └─[0.5  ch4]─ J4 pin 1 → SCD41
 ```
+
+⚠ **The screw terminals STAY — changed 2026-09-14 (user).** Earlier notes had the GX16
+*replacing* TB1–TB6. It does not: the drop now runs **board fuse → screw terminal → GX16 →
+sensor**, with the terminal as the board's own landing point and the connector as the detach
+point in the enclosure wall. Only the on-board **ch3 Controller SHT41 has no connector** — it is
+hardwired, as it always was.
+
+**Both halves are in the drawing (2026-09-14):** `J1`–`J4` are the **female panel** sockets, on
+the box side because that is the powered side, and `P1`–`P4` are the **male cable** plugs whose
+drop is hardwired at the sensor. J1/P1 = ch0 Canopy · J2/P2 = ch1 Flower · J3/P3 = ch2 Stem ·
+J4/P4 = ch4 SCD41, matching the fuse map above. Each drop's Schottky and, on the SCD41, its
+local caps sit **downstream of the connector**, at the sensor, where the spec puts them.
 
 **Discrimination is unchanged and still the reason for the layout.** A fuse only discriminates
 if it sits downstream of the branch. Four PPTCs feeding one common node are four resistors in
@@ -381,6 +420,35 @@ that branch is fused.
 
 ---
 
+## Pre-power checks on a finished board
+
+The bench sequence assumes the board grows in stages, so step 11 only asks for Vin→GND and
+Vout→GND. **This board was built complete before any of it was metered** (2026-09-14), so the
+short hunt has to cover every net at once. All of it is **unpowered, buck disconnected from the
+board's 5 V input**, meter on OHM with the leads shorted and **Relative** pressed first.
+
+**Every reading starts low and climbs** — you are charging the electrolytics through the meter.
+Take the settled value, and reverse the probes on anything that looks wrong before believing it.
+
+| Probe between | Expect | Near 0 Ω means |
+|---|---|---|
+| 5 V bus ↔ GND | kΩ+ | backwards electrolytic or solder bridge |
+| Sensor 3V3 ↔ GND | kΩ+ | same, or a reversed Schottky |
+| ESP 3V3 ↔ GND | few hundred Ω to kΩ | same |
+| **Sensor 3V3 ↔ ESP 3V3** | **high / `OL`** | **the two rails are bridged — that undoes the rail split, which is what designs out the 2026-07-27 bus jam** |
+| Each LM1117 tab ↔ its middle pin | ≈ 0 Ω | (expected — tab IS Vout) |
+| Tab ↔ tab | high | the tabs are touching: the two 3.3 V rails are shorted together |
+| GPIO21 ↔ mux SDA · GPIO22 ↔ mux SCL | **≈ 200 Ω** each | resistor bridged. `OL` instead = dry joint |
+| SDA ↔ SCL | high | a bridge between the two I²C lines |
+| Buck OUT− ↔ ESP GND, mux GND, both LM1117 pin 1, each drop ground | **< 1 Ω** | (expected — `OL` here is the fault: the ground star is not common) |
+
+Two things that look like faults and are not: the **ESP32 devkit gives drifting, asymmetric
+numbers** because the meter's test voltage leaks through its protection diodes and its own
+AMS1117; and **any reading that changes when you swap the probes is a diode**, not a short.
+
+**A missing TVS does not block bring-up.** D8 is a clamp — inert until a fault arrives — so the
+board powers up and commissions without it. Fit it when it lands.
+
 ## I²C — the resistors, not the map
 
 The channel map lives in the ESPHome config and the device memory note. What belongs on
@@ -410,14 +478,14 @@ been metered unloaded first.**
 | 1 | ~~Adjust-up test on the DFR0379~~ — **DONE 2026-09-06** | **Genuinely dead.** Would not come up off 1.23 V with nothing downstream. No spare buck from it. |
 | 2 | Ohm the SCD41 that was connected 2026-08-14 | kΩ+ VDD↔GND ⇒ that sensor is alive and the buck died of something else |
 | 3 | Identify the two pots on the HW-083B — silkscreen, LED count, or turn each unloaded | only the CV pot moves the output voltage |
-| 4 | Set CV, nothing downstream | 5.00 V |
-| 5 | Set CC by shorting the output **through the ammeter** | ~3 A in limit · CV returns to 5.00 V when the short is removed · **not 1.3 A — see above** |
+| 4 | ~~Set CV, nothing downstream~~ — **DONE 2026-09-14** | **5.00 V set** (user-metered) |
+| 5 | ~~Set CC by shorting the output **through the ammeter**~~ — **DONE 2026-09-14 via the wire shunt** (the 20 A jack is dead; see §"Setting CC with a wire shunt") | **~3.5 A set**, read as 0.38 V across a 0.109 Ω CCA shunt · CV returns to 5.00 V when the shunt is removed · **not 1.3 A — see above** |
 | 6 | Lock **both** pots; photograph them | — |
-| 7 | Continuity-check both LM1117s | tab ↔ middle pin ≈ 0 Ω |
+| 7 | ~~Continuity-check both LM1117s loose~~ — **MOOT 2026-09-14, the board was already fully soldered**; superseded by §"Pre-power checks on a finished board" | tab ↔ middle pin ≈ 0 Ω — in circuit this now only confirms the Vout NET, not the part |
 | 8 | Ohm the **new** SCD41 bare, all wires off, before any diode is near it | kΩ+ VDD↔GND — anything near 0 Ω does not get connected |
 | 9 | Ohm every drop cable **pin-for-pin** | each conductor to its own pin at the far end, no cross-pairs |
-| 10 | Build the LDO stage: caps, fuses, clamp, Schottkys | — |
-| 11 | **Unpowered**, ohm Vin→GND and Vout→GND at each regulator | kΩ+. Near 0 Ω is a backwards electrolytic or a solder bridge — find it now, not with 5 V on it |
+| 10 | ~~Build the LDO stage: caps, fuses, clamp, Schottkys~~ — **DONE 2026-09-14** | Built complete **except D8, the 1.5KE6.8A TVS** (on order). Both 200 Ω I²C resistors, all caps, fuses, zener and Schottkys are in |
+| 11 | **Unpowered**, ohm Vin→GND and Vout→GND at each regulator — on a finished board run the fuller table in §"Pre-power checks on a finished board" | kΩ+. Near 0 Ω is a backwards electrolytic or a solder bridge — find it now, not with 5 V on it |
 | 12 | Power up with **no sensors connected** | each rail 3.25 – 3.35 V |
 | 13 | Land the drops **one at a time**, re-metering after each | rail holds 3.3 V after every drop |
 | 14 | Boot with logs, read the I²C scan | 0x70 + 4 serials + 0x62 on ch4 · `Tent CO2` publishing within 30 s |
@@ -580,7 +648,7 @@ Printed face toward you, legs down:
 | tab | **Vout** | GND |
 
 Wiring it from 78xx muscle memory puts the input on the ground pin. The continuity check
-in step 4 confirms both the pinout and which way round the part is, before any power,
+in **step 7** confirms both the pinout and which way round the part is, before any power,
 for free.
 
 Order by `LD1117V33` or `LM1117T-3.3` — the **V** suffix is what means TO-220.
