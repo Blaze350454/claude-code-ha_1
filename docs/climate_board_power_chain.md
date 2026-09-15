@@ -420,11 +420,235 @@ that branch is fused.
 
 ---
 
+## Build-as-you-go verification — the 2026-09-15 rebuild
+
+**Why this section exists.** The first board was assembled complete and metered afterwards, and
+that made every fault invisible: on a finished board each probe pair has dozens of parallel paths
+through it, so nothing reads clean and every number needs an argument. The 2026-09-14 short hunt
+ran two hours and produced three wrong theories before the fault fell out. **The board is being
+rebuilt from scratch (user, 2026-09-15), re-laid with more space between parts**, and this is the
+order to build it in — each stage proves itself before the next one is connected.
+
+### The fault that caused the rebuild, and the test that catches it in 30 seconds
+
+**At the ESP regulator, ground and output were swapped.** The centre leg and tab — the LM1117's
+*output* — were wired to the ground net, and the ground leg was wired to the 3.3 V rail. Symptoms
+on the finished board: tab-to-ground read 0.1 Ω (looks like a dead short), the ground leg read
+~560 Ω to ground (looks like a broken ground), and the output read `OL` to the ESP's 3V3 pin.
+Three faults' worth of symptoms out of one swap. Nothing was damaged — it had never been powered.
+
+**The test: on a bare rail, an LM1117's tab reads ~600 Ω to ground, and that number is the chip's
+own internal divider.** Confirm it on a loose part from the same bag first — tab ↔ centre leg = 0,
+tab ↔ ground leg ≈ 600 Ω, tab ↔ input leg = megohms — then expect the same tab-to-ground number
+once it is soldered with nothing else on the rail. **0 Ω means the output is on the ground net.
+`OL` means the ground pin never landed.** It only works while the rail is bare; once loads are on
+it the number changes and the fault hides.
+
+### Standing rules for the whole build
+
+- **One ground reference.** Pick a single screw or pad, mark it `GND REF`, and every black-probe
+  reading lands there for the whole build. The 2026-09-14 contradictions came from the reference
+  moving between steps — and a floating ESP ground wire, fallen out of its screw terminal,
+  poisoned a reading nobody knew to distrust.
+- **Read the units.** `0.598` was 598 Ω, not 0.6 Ω. That one misread drove three wrong theories.
+- **After every stage, re-run the same four:** 5 V ↔ GND · ESP 3V3 ↔ GND · sensor 3V3 ↔ GND ·
+  **ESP 3V3 ↔ sensor 3V3, which must stay `OL` forever.** A short then shows up in the stage that
+  introduced it.
+- **Tug every screw-terminal wire.** One fell out on its own during the 09-14 hunt.
+- **Photograph the back after each stage.** A bridge is easier to see in a photo than in the flesh.
+
+**What a reading means on the bench meter** (Mastercraft 052-0052-2, leads ~0.1–0.2 Ω):
+
+| Reading | Means |
+|---|---|
+| 0.0–0.2 Ω | connected — this is the floor, it cannot tell 0.2 Ω from a bolt |
+| `OL` | open |
+| climbing toward megohms | a capacitor charging. Normal, not a fault |
+| ~600 Ω tab ↔ ground leg on an LM1117 | the chip's internal divider — the "landed correctly" fingerprint |
+| ~600 Ω ESP32 3V3 ↔ GND | the devkit's own internals, and asymmetric: it can read `OL` with the probes one way |
+
+### Stage 0 — bare board, no parts
+
+| Test | Want |
+|---|---|
+| across every drilled break | `OL` — a break you can see is not a break you have measured |
+| along each strip, end to end | 0.1–0.2 Ω |
+| each strip ↔ its neighbours | `OL` |
+
+Layout: **give the two regulator tabs real distance.** On the first build they sat within a
+millimetre of each other, and the tab is the output. A break column between the ESP-rail group and
+the sensor-rail group makes the rail split physical rather than interleaved.
+
+### Stage 1 — ground star, nothing else
+
+| Test | Want |
+|---|---|
+| `GND REF` ↔ every point that will ever land a ground | 0.1–0.2 Ω |
+| ground network ↔ every other strip | `OL` |
+
+### Stage 2 — 5 V distribution and both 1.1 A fuses
+
+Buck disconnected.
+
+| Test | Want |
+|---|---|
+| each 5 V screw ↔ its fuse output | a few Ω, the PPTC's cold resistance |
+| 5 V ESP leg ↔ 5 V sensor leg | `OL` — independent legs is the point of the block |
+| either 5 V leg ↔ ground | `OL` (no caps fitted yet) |
+
+### Stage 3 — first regulator, ESP side
+
+Calibrate on a loose part first (above), tape which physical leg is which, then solder.
+
+| Test | Want | If wrong |
+|---|---|---|
+| ground leg ↔ `GND REF` | 0.1–0.2 Ω | ground pin not landed |
+| input leg ↔ 5 V ESP screw | a few Ω through the fuse | |
+| **tab ↔ `GND REF`** | **~600 Ω, same as the loose part** | **0 Ω = output on the ground net** · `OL` = ground pin not landed |
+| tab ↔ input leg | `OL` one way, a diode drop reversed | |
+
+### Stage 4 — that regulator's capacitors
+
+| Test | Want |
+|---|---|
+| input cap stripe leg ↔ `GND REF` | 0.1–0.2 Ω |
+| input cap + leg ↔ input leg | 0.1–0.2 Ω |
+| output cap stripe leg ↔ `GND REF` | 0.1–0.2 Ω |
+| output cap + leg ↔ tab | 0.1–0.2 Ω |
+| tab ↔ `GND REF` again | climbs, settles back to ~600 Ω |
+
+### Stage 5 — first power, one rail, nothing downstream
+
+Buck at 5.00 V, **CC wound down to ~100–200 mA for this step only** — nothing is connected, so a
+bridge sags the rail instead of being fed.
+
+| Test | Want |
+|---|---|
+| tab ↔ `GND REF`, meter on **DC volts** | 3.25–3.35 V |
+| buck output | still 5.00 V |
+
+Reads high unloaded: hang ~1 kΩ across it. **Wind CC back to ~3 A before anything else goes on.**
+
+### Stage 6 — second regulator, sensor side
+
+Stages 3–5 again, then the pair test the whole two-regulator design exists for:
+
+| Test | Want |
+|---|---|
+| sensor tab ↔ ESP tab | **`OL`** |
+| each tab ↔ `GND REF` | ~600 Ω each |
+| powered, on DC volts | 3.3 V each |
+
+### Stage 7 — ESP32, mux, and the two 200 Ω resistors
+
+| Test | Want |
+|---|---|
+| ESP 3V3 pin ↔ ESP regulator tab | 0.1–0.2 Ω |
+| ESP GND ↔ `GND REF` | 0.1–0.2 Ω |
+| mux power pin ↔ sensor regulator tab | 0.1–0.2 Ω |
+| GPIO21 ↔ mux SDA · GPIO22 ↔ mux SCL | ~200 Ω each |
+| SDA ↔ SCL | `OL` |
+| mux A0/A1/A2 ↔ `GND REF` | 0.1–0.2 Ω each — this is what makes it 0x70 |
+
+Then power up: the scan finds **0x70 and nothing else**, sensor rail still dead.
+
+### Stage 8 — drop fuses, terminals, connectors
+
+Per drop, unpowered:
+
+| Test | Want |
+|---|---|
+| sensor tab ↔ that drop's power position | a few Ω through its 0.05 A fuse — reads higher than the 1.1 A ones |
+| drop ground ↔ `GND REF` | 0.1–0.2 Ω |
+| drop SDA ↔ **its own** mux channel | 0.1–0.2 Ω |
+| drop SDA ↔ **any neighbouring** channel | `OL` |
+| drop power ↔ drop ground | `OL` |
+
+**The neighbour test is not optional** — a crossed channel looks perfect until a sensor answers on
+the wrong one, and that is a wiring fix, never a YAML fix. Check each against the fuse map above.
+Mated cables get ohmed pin-for-pin end to end; the two halves of a GX16 number in opposite
+directions, which is how a harness gets built backwards.
+
+### Stage 9 — the on-board Controller SHT41
+
+The only sensor with no connector, so it proves the whole chain before a single cable exists.
+
+- supply ↔ ground: kΩ+. **Reversed probes read low — that is its Schottky, and it is correct**
+- powered: answers on its channel, publishes temperature and humidity
+- breathe on it, humidity moves — buck → terminal → regulator → fuse → sensor → mux → ESP → HA
+
+### Stage 10 — drops, one at a time
+
+Ohm each sensor bare before it touches anything, land one drop, re-meter the sensor rail, repeat.
+A drop that pulls the rail down is the drop just landed.
+
+---
+
+## Board layout — the Fusion model, verified 2026-09-15
+
+The rebuild is being laid out in Fusion before it is soldered: **"Grow Tent Climate Board Layout"**
+(v11 on 2026-09-15), project **Aqua**, folder **Tent** — parts placed into the exact holes of two
+`Breadboard 74 X 100` stripboards. Board 1 carries the ESP32 and the TCA9548A; board 2 carries the
+power chain.
+
+**Read it by geometry, never by eye.** The strips run along the board's **75 mm axis**, so **a
+column at constant X is one net** and everything sharing an X shares a strip. Part bounding-box
+centres are *not* lead positions — several models' origins sit off their own leads. To get the
+real lead columns, pull the faces that are **tall in Y (≥ 3 mm) and ≤ 1.6 mm in both X and Z** and
+cluster them; those are the lead shanks passing through the board.
+
+### ESP-side regulator, as drawn — correct
+
+| Leg | Column | Net |
+|---|---|---|
+| left | 122.4 | **GND** |
+| centre + tab | 124.9 | **OUT** |
+| right | 127.5 | **IN** |
+
+That matches the real `LM1117T-3.3` pinout for the way the part faces in the model — **tab toward
+the fuse end, printed face toward the output pin.**
+
+**Power path, verified:** the **5 V input pin sits on column 130.0**, the **1.1 A PPTC bridges
+130.0 → 127.5**, and 127.5 is the regulator's IN leg. The **3.3 V output pin sits on column
+124.9**, the OUT column. In through the fuse, out on the output column. Correct.
+
+**Capacitor order, verified by which columns each pair straddles:**
+
+| Part | Straddles | Role |
+|---|---|---|
+| electrolytic, z 22.9 | 122.4 ↔ 127.5 | GND–IN, input bulk ✓ |
+| 0.1 µF ceramic, z 17.8 | 122.4 ↔ 127.5 | GND–IN ✓ |
+| **LM1117**, z 13.4 | — | — |
+| 0.1 µF ceramic, z 7.6 | 122.4 ↔ 124.9 | GND–OUT ✓ |
+| electrolytic, z 2.5 | 122.4 ↔ 124.9 | GND–OUT ✓ |
+
+**Both ceramics sit closer to the regulator than their electrolytics, on both sides.** That is the
+right order — the small cap wants the short loop to the pin.
+
+### Open against this layout
+
+1. ⚠ **The input ceramic is ~0.6 mm from the regulator tab, and the tab is the OUTPUT.** Contact
+   there shorts IN to OUT and bypasses the regulator. Move it a hole or lay it over.
+2. The input ceramic and the input electrolytic are **~0.07 mm apart** — touching. Electrically
+   harmless (same two nets) but they will fight on the real board.
+3. The **fuse body leans over the input electrolytic** in plan view. Confirm that is real
+   clearance and not a tilted model.
+4. Confirm the **10 µF/50 V** can is the one on the **input** (the buck is non-synchronous — a
+   high-side short puts 24 V on that node), the **22 µF/16 V** on the output, and that **both
+   stripes land on the GND column, 122.4.** The model cannot show polarity or voltage rating.
+5. The **second LM1117** sits on columns 102.0 / 104.5 / 107.0 with **no caps and no fuse yet**.
+6. The two regulators' **GND columns — 122.4 and 102.0 — are not joined**. The star ground is
+   still undrawn.
+
 ## Pre-power checks on a finished board
 
+⚠ **Superseded for the rebuild — see §"Build-as-you-go verification" above.** This section
+covers the *first* board, which was assembled complete and then metered. The rebuild proves each
+stage as it is built, which is strictly better. Keep this table for any board already finished.
+
 The bench sequence assumes the board grows in stages, so step 11 only asks for Vin→GND and
-Vout→GND. **This board was built complete before any of it was metered** (2026-09-14), so the
-short hunt has to cover every net at once. All of it is **unpowered, buck disconnected from the
+Vout→GND. **The first board was built complete before any of it was metered** (2026-09-14), so the
+short hunt had to cover every net at once. All of it is **unpowered, buck disconnected from the
 board's 5 V input**, meter on OHM with the leads shorted and **Relative** pressed first.
 
 **Every reading starts low and climbs** — you are charging the electrolytics through the meter.
