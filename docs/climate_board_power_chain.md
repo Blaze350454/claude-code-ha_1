@@ -221,7 +221,7 @@ way back through the signal lines instead.
 | 5 V → sensor LDO | **1.1 A** | Sensor rail peaks ~250 mA, so it never nuisance-trips. Sized *up* for discrimination — see below. |
 | 5 V → ESP LDO | **1.1 A** | ESP32 WiFi bursts hit ~500 mA; polyfuse thermal constant is seconds, so no nuisance trip. |
 | SCD41 drop | **0.5 A** | Contains a dead short in under a second. |
-| SHT41 drops ×4 | **0.05 A** | *Not fitted yet — see "Deferred".* One per drop, board-side, feeding pin 1 of that drop's connector — see below. |
+| SHT41 drops ×4 | **0.05 A** | **In hand and fitted, 2026-09-16** — measured 2.6 Ω each on the rebuilt board. One per drop, board-side, feeding pin 1 of that drop's connector — see below. |
 
 ### One fuse per drop, all board-side — revised 2026-09-13 for GX16
 
@@ -306,9 +306,9 @@ variant codes, which is why three near-identical options sit in one dropdown.
 
 | Marking | Hold | Where | Qty |
 |---|---|---|---|
-| `RXEF050` | 0.5 A | 24 V feed · SCD41 drop | 2 |
-| `RXEF110` | 1.1 A | both LDO inputs | 2 |
-| `RXEF005` | 0.05 A | SHT41 drops — on order | 4 |
+| `RXEF050` | 0.5 A | 24 V feed · SCD41 drop — reads **0.6 Ω** | 2 |
+| `RXEF110` | 1.1 A | both LDO inputs — reads **0.3 Ω** with leads | 2 |
+| `RXEF005` | 0.05 A | SHT41 drops — **fitted 2026-09-16**, reads **2.6 Ω** | 4 |
 | `RXEF200` | 2.0 A | nothing here — set it aside | 0 |
 
 `050` and `110` are near-identical in the bag. **Read the body print, not the size.**
@@ -321,12 +321,22 @@ It also sets a floor under the buck's current limit: **nothing on the 5 V side c
 a fault unless the supply can deliver ≥ 2.2 A into it.** That is the whole reason CC is
 set to ~3 A and not to something tight. See *Why CC goes high* above.
 
-### Deferred — the four SHT41 drop fuses
+### Deferred — the four SHT41 drop fuses — **CLOSED 2026-09-16**
 
-The 0.05 A devices were in an order that was stopped without notice; re-ordered
-2026-09-02. **Leave those four drops unfused rather than substituting 0.5 A** — under a
-1.1 A input fuse the ratio is far too tight to discriminate, so a substitute buys a coin
-flip plus series resistance.
+The `RXEF005` parts arrived and all four SHT41 drops are fitted on the rebuilt board, each
+measuring **2.6 Ω**. Nothing runs unfused. The advice below is kept because it is the reasoning
+that would apply again if a value is ever missing:
+
+> The 0.05 A devices were in an order that was stopped without notice; re-ordered
+> 2026-09-02. **Leave those four drops unfused rather than substituting 0.5 A** — under a
+> 1.1 A input fuse the ratio is far too tight to discriminate, so a substitute buys a coin
+> flip plus series resistance.
+
+⚠ **Caught in the same pass: the SCD41 drop was fitted with an `RXEF005` too.** All five drop
+positions measured an identical 2.6 Ω, which is how it was found — five identical readings where
+the design calls for two different values. **That leg must be an `RXEF050` (0.5 A)** or the
+SCD41's 205 mA measurement burst trips it on the first reading. Swap it before that sensor is
+ever landed; the symptom otherwise is a CO2 sensor that dies seconds after being plugged in.
 
 Running unfused there costs **isolation, not hardware.** The LM1117 current-limits at
 ~1.3 A and thermally shuts down; that is precisely the protection the old CN3903-class
@@ -452,7 +462,10 @@ it the number changes and the fault hides.
   poisoned a reading nobody knew to distrust.
 - **Read the units.** `0.598` was 598 Ω, not 0.6 Ω. That one misread drove three wrong theories.
 - **After every stage, re-run the same four:** 5 V ↔ GND · ESP 3V3 ↔ GND · sensor 3V3 ↔ GND ·
-  **ESP 3V3 ↔ sensor 3V3, which must stay `OL` forever.** A short then shows up in the stage that
+  **ESP 3V3 ↔ sensor 3V3, which must stay ~1 kΩ or higher — never near the meter floor.** (Once both
+  LM1117s are landed each rail sits ~600 Ω from ground through the chip's own divider, so rail-to-rail
+  reads the two in series. `OL` is only correct while the second regulator is still off the board.)
+  A short then shows up in the stage that
   introduced it.
 - **Tug every screw-terminal wire.** One fell out on its own during the 09-14 hunt.
 - **Photograph the back after each stage.** A bridge is easier to see in a photo than in the flesh.
@@ -466,6 +479,7 @@ it the number changes and the fault hides.
 | climbing toward megohms | a capacitor charging. Normal, not a fault |
 | ~600 Ω tab ↔ ground leg on an LM1117 | the chip's internal divider — the "landed correctly" fingerprint |
 | ~600 Ω ESP32 3V3 ↔ GND | the devkit's own internals, and asymmetric: it can read `OL` with the probes one way |
+| ~1 kΩ rail ↔ rail (tab ↔ tab, ESP 3V3 ↔ sensor 3V3) | **the two LM1117 dividers in series through the common ground.** Confirmed on the bench 2026-09-16: the sensor rail read 0.6 kΩ to ground, symmetric. This is why rail-to-rail is NOT `OL` once both regulators are landed — only near the meter floor means bridged |
 
 ### Stage 0 — bare board, no parts
 
@@ -535,7 +549,7 @@ Stages 3–5 again, then the pair test the whole two-regulator design exists for
 
 | Test | Want |
 |---|---|
-| sensor tab ↔ ESP tab | **`OL`** |
+| sensor tab ↔ ESP tab | **~1 kΩ** — the two dividers in series. `OL` only before the second regulator lands; **near the floor = shorted** |
 | each tab ↔ `GND REF` | ~600 Ω each |
 | powered, on DC volts | 3.3 V each |
 
@@ -547,7 +561,7 @@ Stages 3–5 again, then the pair test the whole two-regulator design exists for
 | ESP GND ↔ `GND REF` | 0.1–0.2 Ω |
 | mux power pin ↔ sensor regulator tab | 0.1–0.2 Ω |
 | GPIO21 ↔ mux SDA · GPIO22 ↔ mux SCL | ~200 Ω each |
-| SDA ↔ SCL | `OL` |
+| SDA ↔ SCL | **~20 kΩ** — the mux board's own 10k pull-ups to VIN, in series. `OL` means the mux is not fitted; **under ~100 Ω is the real bridge** |
 | mux A0/A1/A2 ↔ `GND REF` | 0.1–0.2 Ω each — this is what makes it 0x70 |
 
 Then power up: the scan finds **0x70 and nothing else**, sensor rail still dead.
@@ -573,7 +587,9 @@ directions, which is how a harness gets built backwards.
 
 The only sensor with no connector, so it proves the whole chain before a single cable exists.
 
-- supply ↔ ground: kΩ+. **Reversed probes read low — that is its Schottky, and it is correct**
+- supply ↔ ground: **~650 Ω** — it sits on the sensor rail through F8, so it reads that rail's
+  ~600 Ω LM1117 divider plus the fuse's tens of ohms. **Not kΩ+** (corrected 2026-09-16).
+  **Reversed probes read lower — that is its Schottky forward-biased, and it is correct**
 - powered: answers on its channel, publishes temperature and humidity
 - breathe on it, humidity moves — buck → terminal → regulator → fuse → sensor → mux → ESP → HA
 
@@ -657,13 +673,13 @@ Take the settled value, and reverse the probes on anything that looks wrong befo
 | Probe between | Expect | Near 0 Ω means |
 |---|---|---|
 | 5 V bus ↔ GND | kΩ+ | backwards electrolytic or solder bridge |
-| Sensor 3V3 ↔ GND | kΩ+ | same, or a reversed Schottky |
+| Sensor 3V3 ↔ GND | **~600 Ω** — the LM1117's own divider, *not* kΩ+ | `0.1 Ω` = output on the ground net · `OL` = ground leg not landed |
 | ESP 3V3 ↔ GND | few hundred Ω to kΩ | same |
-| **Sensor 3V3 ↔ ESP 3V3** | **high / `OL`** | **the two rails are bridged — that undoes the rail split, which is what designs out the 2026-07-27 bus jam** |
+| **Sensor 3V3 ↔ ESP 3V3** | **~1 kΩ** — the two dividers in series through the common ground, *not* `OL` | **near the meter floor = the rails are bridged, which undoes the rail split that designs out the 2026-07-27 bus jam** |
 | Each LM1117 tab ↔ its middle pin | ≈ 0 Ω | (expected — tab IS Vout) |
-| Tab ↔ tab | high | the tabs are touching: the two 3.3 V rails are shorted together |
+| Tab ↔ tab | **~1 kΩ**, the two dividers in series | near the meter floor: the tabs are touching and the two 3.3 V rails are shorted together |
 | GPIO21 ↔ mux SDA · GPIO22 ↔ mux SCL | **≈ 200 Ω** each | resistor bridged. `OL` instead = dry joint |
-| SDA ↔ SCL | high | a bridge between the two I²C lines |
+| SDA ↔ SCL | **~20 kΩ** (the mux's own pull-ups) | under ~100 Ω: a bridge between the two I²C lines |
 | Buck OUT− ↔ ESP GND, mux GND, both LM1117 pin 1, each drop ground | **< 1 Ω** | (expected — `OL` here is the fault: the ground star is not common) |
 
 Two things that look like faults and are not: the **ESP32 devkit gives drifting, asymmetric
