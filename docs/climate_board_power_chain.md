@@ -309,6 +309,7 @@ variant codes, which is why three near-identical options sit in one dropdown.
 | `RXEF050` | 0.5 A | 24 V feed · SCD41 drop — reads **0.6 Ω** | 2 |
 | `RXEF110` | 1.1 A | both LDO inputs — reads **0.3 Ω** with leads | 2 |
 | `RXEF005` | 0.05 A | SHT41 drops — **fitted 2026-09-16**, reads **2.6 Ω** | 4 |
+| `RXEF050` | 0.5 A | SCD41 drop (ch4) — **fitted, confirmed 2026-09-19**, reads ~**0.6 Ω** | 1 |
 | `RXEF200` | 2.0 A | nothing here — set it aside | 0 |
 
 `050` and `110` are near-identical in the bag. **Read the body print, not the size.**
@@ -335,8 +336,11 @@ that would apply again if a value is ever missing:
 ⚠ **Caught in the same pass: the SCD41 drop was fitted with an `RXEF005` too.** All five drop
 positions measured an identical 2.6 Ω, which is how it was found — five identical readings where
 the design calls for two different values. **That leg must be an `RXEF050` (0.5 A)** or the
-SCD41's 205 mA measurement burst trips it on the first reading. Swap it before that sensor is
-ever landed; the symptom otherwise is a CO2 sensor that dies seconds after being plugged in.
+SCD41's 205 mA measurement burst trips it on the first reading; the symptom otherwise is a CO2
+sensor that dies seconds after being plugged in.
+**✅ CLOSED 2026-09-19 — ch4 is on the 0.5 A (user-stated at the bench).** Confirm by meter
+rather than by body print if it is ever in doubt: **0.5 A reads ~0.6 Ω, 0.05 A reads 2.6 Ω**.
+The print is the trap — `050` = 0.5 A, `005` = 0.05 A.
 
 Running unfused there costs **isolation, not hardware.** The LM1117 current-limits at
 ~1.3 A and thermally shuts down; that is precisely the protection the old CN3903-class
