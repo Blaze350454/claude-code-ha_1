@@ -22,7 +22,10 @@ def esphome_read_config(configuration: str) -> str:
 
 @mcp_server.tool()
 def esphome_write_config(configuration: str, content: str) -> Dict[str, str]:
-    """Write/update an ESPHome YAML config. Creates the file if it doesn't exist.
+    """Overwrite an existing ESPHome YAML config on the Device Builder.
+
+    Empty content is refused server-side. Creating a brand-new device is not
+    covered by this tool — untested against `devices/update_config`.
 
     Args:
         configuration: Filename, e.g. 'tent-irrigation-controller.yaml'
