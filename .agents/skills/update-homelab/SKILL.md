@@ -38,7 +38,7 @@ upgrades before device reflashing so devices get the newest ESPHome core in one 
   That is normal, not a failure; leave them.
   **The NIC-hang caveat (`project-ha-down-20260709`) does NOT apply to rebooting VM 101** —
   that e1000e/I219-LM fault is the *Proxmox host's* physical NIC; VM 101 is `virtio_net`.
-  A guest reboot is cheap and safe: measured ~30 s end to end on 2026-08-06, both
+  A guest reboot is cheap and safe, but NOT as fast as this file used to claim: the "~30 s end to end" figure from 2026-08-06 did not hold on 2026-09-20, when HA took roughly FOUR MINUTES to answer on :8123 after `systemctl reboot`. Allow minutes, not seconds, and poll rather than assuming. Both
   containers return on their own (`restart: unless-stopped`), and the ESPs are untouched.
   Only rebooting the **host** carries the e1000e risk.
 - **ESPHome tool**: on LXC 100 via Proxmox host (`pct exec 100 -- ...`), run
