@@ -48,6 +48,14 @@ uvx esphome@2026.6.5 run <name>.yaml --device <device-ip> --no-logs 2>&1 | Selec
   crash the cp1252 console. Success = `INFO OTA successful` + `Successfully uploaded program.`
 - Compile is incremental (build cache in `.esphome\build\<name>`), usually well under a
   minute after the first build; give the tool a long timeout anyway.
+- **⚠ OTA IS ENCRYPTED AS OF 2026-09-20 — there is no OTA password any more.** All six
+  configs had `password: !secret <dev>_ota_password` REPLACED by a bare `encryption:` under
+  `ota: - platform: esphome`. The two are mutually exclusive — ESPHome rejects the combination
+  with "'password' cannot be combined with 'encryption'". Bare `encryption:` resolves to that
+  device's existing `<dev>_api_key`, so no new secret was added. Every device was reflashed, so
+  **a plaintext OTA is now REFUSED by all five boards**. Both config copies (LXC 100
+  `/root/config/` and `C:\esphome-test\`) were patched together; `.bak-preota-20260920`
+  sits beside each. Plaintext fallback disappears entirely in ESPHome 2027.3.0.
 - **The api encryption `key:` in `secrets.yaml` MUST match what HA already stored** for the
   device, or HA loses the connection after the flash. The existing `C:\esphome-test\secrets.yaml`
   is already correct for grow-* devices — reuse it, don't regenerate keys.
