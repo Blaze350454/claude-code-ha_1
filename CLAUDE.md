@@ -24,7 +24,7 @@ Everything pushed here is world-readable immediately.
 
 1. **MCP Server** (`mcp_server/`) — A FastMCP server that combines semantic search over crawled documentation with live Home Assistant control via REST API. Consumed by AI agents (Claude Code, Cursor) over stdio.
 2. **ESPHome MCP** (`esphome_mcp/`) — A separate, self-contained MCP server specifically for ESPHome documentation. Has its own `pyproject.toml` and `uv` environment.
-3. **Grow Tent Automation** (`grow_tent_automation/`) — HA YAML configs for the tent irrigation system. Hardware/entity documentation is in `docs/tent_irrigation_esphome.md`.
+3. **Grow Tent Automation** (`grow_tent_automation/`) — HA YAML configs for the tent irrigation system. Hardware/entity documentation is in `grow_tent_automation/docs/tent_irrigation_esphome.md`.
 
    ⚠ **`grow_tent_automation/grow_tent_package.yaml` is NOT the live package** —
    it is a 374-line snapshot untouched since the initial commit (1cab613,
