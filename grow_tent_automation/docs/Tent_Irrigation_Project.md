@@ -29,11 +29,14 @@
 | | Check valve #2 | After Main Valve (protects all upstream) |
 | **Manual Valves** | Ball valve #1 | Main system shutoff (after merge) |
 | | Ball valve #2 | Final shutoff before orbits |
+| | Ball valve #3 — bypass/recirc | Throttles the BOKYWOX recirc leg back to the feed reservoir (user's choice over a needle valve, 2026-10-07) |
+| | Foot valves | Water pickup in the reservoirs — hold prime on the suction line |
 | **Filtration** | 200 micron filter | |
 | **Pressure** | Adjustable pressure regulator | |
 | | Pressure gauge #1 | On tee after filter (pre-regulator) |
 | | Pressure gauge #2 | On/after pressure regulator (post-regulator) |
 | **Sensors** | Pressure transducer | 1/8" NPT, 0-100 PSI, 5V DC, stainless steel — ⚠️ firmware uses a 0-30 psi transfer function; confirm the installed range |
+| | Pressure transducer, 0-60 PSI | Owned (2026-10-07), for the pre-regulator spot — firmware span constant must change when fitted |
 | | Hall flow sensor | 3/4", 1-100 L/min, 5V DC (see note) |
 | **Electronics** | ESP32 | Microcontroller for sensor data |
 | | LM2596 buck converter | 12V → 5V DC for sensors |
@@ -71,7 +74,7 @@ Ball Valve → Filter → Tee(Air Bleed↑) → Tee(Pressure Gauge #1↑) → Pr
 
 | Step | Component | Function |
 |------|-----------|----------|
-| 1 | BOKYWOX Diaphragm Pump | Draws from 25 gal nutrient reservoir (external mount, suction strainer) |
+| 1 | BOKYWOX Diaphragm Pump | Draws from 25 gal nutrient reservoir (external mount, foot valve on the pickup) |
 | 2 | Check Valve #1 | Prevents backflow to nutrient reservoir |
 | 2a | Expansion Tank Tee | Eastman 60008 mini tank — pulsation damping / hammer arrest |
 | 3 | **MERGE** | Flush line joins main line |
@@ -111,7 +114,7 @@ re-deriving for a new flow rate.
 
 Corollary for pump sizing: the BOKYWOX passes ~6 L/min at 35 psi while the emitters accept
 0.85 L/min — a ~7x mismatch, so its demand switch **will** rapid-cycle. A bypass/recirc leg
-back to the feed reservoir (shedding ~5 L/min, tuned with a needle valve) is required, not
+back to the feed reservoir (shedding ~5 L/min, throttled with a ball valve) is required, not
 optional. The mini expansion tank is far too small to absorb this on its own (~29 mL usable
 drawdown ≈ 1 s of run time).
 
@@ -193,7 +196,7 @@ All solenoid valves in this system are the same model.
 - Set cut-out **45–50 psi** (cut-in lands ~35) so the regulator keeps ≥10 psi of headroom
   above its 25 psi setpoint. A 35 psi cut-out drops cut-in to ~25 and starves the regulator
   at the bottom of every cycle.
-- Needs a **suction strainer + dip tube/bulkhead** — it is not submersible like the FloraFlex.
+- Needs a **foot valve (owned) + dip tube/bulkhead** on the suction — it is not submersible like the FloraFlex.
 - Needs a **bypass/recirc leg** — see the pressure-compensating note under Flow Calculations.
 - Thread adaptation to the 1/2" female NPT reducing couplings is a deliberate
   **NPSM-male-into-NPT-female jimmy rig** (no sourceable NPSM adapters). Plastic male port,
@@ -257,7 +260,7 @@ it has always been the 1-100 L/min unit.)*
 during the steady portion. Adequate for the idle-flow watchdog and for "did a feed happen",
 not for accurate per-feed volume totalling.
 
-**Recommended replacement:** DIGITEN FL-308D (G3/8, 0.3-10 L/min, F=23.6Q, ±3%) — covers 0.85
+**Recommended replacement (NOT owned):** DIGITEN FL-308D (G3/8, 0.3-10 L/min, F=23.6Q, ±3%) — covers 0.85
 L/min properly. **Mount it downstream of the bypass tee**, otherwise it reads recirculation
 rather than delivery to the plants.
 
@@ -418,13 +421,13 @@ Location: `C:\Users\bbcbg\Pictures\Fusion 360\Irrigation`
 | Issue | Details | Status/Recommendation |
 |-------|---------|----------------------|
 | **Flush pump pressure** | ~~075DV needs 15 PSI min; DEKOPRO provides ~11.7 PSI~~ | **RESOLVED** - Using U.S. Solid 12V DC valves (no minimum pressure requirement) |
-| **Feed pump oversized** | BOKYWOX passes ~6 L/min at 35 psi; PC emitters accept 0.85 L/min (~7x mismatch) | Demand switch will rapid-cycle. **Bypass/recirc leg back to the feed reservoir is required**, tuned with a needle valve to shed ~5 L/min. Returns below the surface so it doesn't aerate/foam. Bonus: stirs the reservoir during every feed |
+| **Feed pump oversized** | BOKYWOX passes ~6 L/min at 35 psi; PC emitters accept 0.85 L/min (~7x mismatch) | Demand switch will rapid-cycle. **Bypass/recirc leg back to the feed reservoir is required**, throttled with a ball valve to shed ~5 L/min. Returns below the surface so it doesn't aerate/foam. Bonus: stirs the reservoir during every feed |
 | **Pipe sizing** | Flora Flex pump is 1"+ outlet | Need reducers to 3/4" |
 | **Low flow operation** | At 13.5 GPH (0.225 GPM), below 3 GPM threshold | Add 200 mesh filter upstream |
 | **12V controller** | U.S. Solid valves need 12V DC | Use relay module for control |
 | **Flush water temp** | Flora Flex max 86°F — now applies to the flush reservoir, not the nutrient one | Keep flush reservoir cool |
 | **Check valve quality** | Must seal properly to prevent cross-contamination | Use spring-loaded, quality seals (Viton/EPDM) |
-| **Flow sensor range** | Sensor min 1 L/min; steady system flow 0.85 L/min | Reads the feed's leading burst but drops out on the steady portion. Replace with DIGITEN FL-308D (0.3-10 L/min) for accurate per-feed volume |
+| **Flow sensor range** | Sensor min 1 L/min; steady system flow 0.85 L/min | Reads the feed's leading burst but drops out on the steady portion. Candidate (not owned): DIGITEN FL-308D (0.3-10 L/min) for accurate per-feed volume |
 
 ---
 
