@@ -1,0 +1,216 @@
+tent_irrigation_maintenance_mode:
+  # ================================================
+  # Maintenance Mode — hands-on control of every pump and valve
+  # ================================================
+  # For draining a reservoir, priming, or testing hardware by hand. While ON,
+  # the interlocks and schedulers that would fight a manual command are paused:
+  #
+  #   PAUSED   dry blocks (feed/flush/table-drain), reservoir auto-fill,
+  #            idle-flow watchdog, feed trigger, lights-off cleanup, and every
+  #            air/stir scheduler (alternation, maintenance cycle, night pulses,
+  #            pre-feed air/stir).
+  #   ARMED    run-time watchdog (stir/air 65 min, feed/flush 16 min, drain
+  #            valve 10 min, fill valves 7 min), reservoir-FULL fill blocks,
+  #            table drain pump, flood stop, startup + reconnect recovery.
+  #
+  # Not to be confused with automation.tent_irrigation_maintenance_cycle — that
+  # is the scheduled baseline stir, and it is one of the things paused here.
+  #
+  # Entering aborts any running feed/burst and stops air/stir for a clean slate.
+  # Leaving turns every pump off and closes every valve (table drain pump
+  # excepted), THEN re-arms — a pump left running on a dry tank would otherwise
+  # never be caught, since the dry blocks only fire on a state change. Re-arming
+  # honours the kill toggles: nothing a held STOP switch disabled is turned back on.
+  #
+  # Auto-releases after 2 h, and on any HA restart.
+
+  input_boolean:
+    irrigation_tent_maintenance_mode:
+      name: "Irrigation Tent — Maintenance Mode"
+      icon: mdi:wrench
+
+  automation:
+    - id: tent_irrigation_maintenance_mode_enter
+      alias: Tent Irrigation — Maintenance Mode Enter
+      description: >
+        Pauses the interlocks and schedulers that block manual pump/valve control.
+        Also re-asserts the pause if a kill toggle is released while maintenance
+        mode is held — the kill release re-enables automations on its own.
+      triggers:
+        - trigger: state
+          entity_id: input_boolean.irrigation_tent_maintenance_mode
+          from: 'off'
+          to: 'on'
+          id: enter
+        - trigger: state
+          entity_id:
+            - input_boolean.irrigation_tent_kill
+            - input_boolean.irrigation_tent_kill_water
+            - input_boolean.irrigation_tent_kill_aeration
+            - input_boolean.tent_irrigation_kill_automations
+          from: 'on'
+          to: 'off'
+          id: kill_released
+      conditions:
+        - condition: state
+          entity_id: input_boolean.irrigation_tent_maintenance_mode
+          state: 'on'
+      actions:
+        # Let the kill toggle's own release automation finish first.
+        - if:
+            - condition: trigger
+              id: kill_released
+          then:
+            - delay: '00:00:02'
+        - action: automation.turn_off
+          target:
+            entity_id:
+              - automation.fill_feed_reservoir
+              - automation.fill_flush_reservoir
+              - automation.tent_irrigation_block_feed_when_reservoir_dry
+              - automation.tent_irrigation_block_flush_when_reservoir_dry
+              - automation.tent_irrigation_block_table_drain_pump_when_dry
+              - automation.tent_irrigation_idle_flow_watchdog
+              - automation.tent_irrigation_feed_trigger
+              - automation.tent_irrigation_lights_off_cleanup
+              - automation.tent_irrigation_maintenance_cycle
+              - automation.tent_irrigation_air_alternation
+              - automation.tent_irrigation_night_pulses_veg
+              - automation.tent_irrigation_night_pulses_flower
+              - automation.tent_irrigation_pre_feed_air_stir_start
+              - automation.tent_irrigation_pre_feed_air_stir_stop
+              - automation.tent_irrigation_re_enable_maintenance_on_enable
+          data:
+            stop_actions: true
+        - if:
+            - condition: trigger
+              id: enter
+          then:
+            - action: script.turn_off
+              target:
+                entity_id:
+                  - script.tent_irrigation_advance_to_next_feed
+                  - script.run_feed_cycle
+                  - script.run_night_pulse
+                  - script.tent_air_burst
+                  - script.tent_stir_burst
+            - action: script.stop_alternating
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.tent_irrigation_status
+              data:
+                value: Maintenance mode
+            - action: notify.mobile_app_sm_a166w
+              data:
+                title: Irrigation Maintenance Mode ON
+                message: >
+                  Dry blocks, auto-fill and schedulers paused — pumps and valves
+                  are yours. Run-time watchdog still armed (stir 65 min). Auto-off
+                  in 2 h.
+      mode: queued
+
+    - id: tent_irrigation_maintenance_mode_exit
+      alias: Tent Irrigation — Maintenance Mode Exit
+      description: >
+        Stops everything that was run by hand, then re-arms what Enter paused —
+        skipping anything a held kill toggle has disabled.
+      triggers:
+        - trigger: state
+          entity_id: input_boolean.irrigation_tent_maintenance_mode
+          from: 'on'
+          to: 'off'
+      actions:
+        - action: script.stop_alternating
+        - action: switch.turn_off
+          target:
+            entity_id:
+              - switch.feed_pump_irrigation_tent
+              - switch.flush_pump_irrigation_tent
+              - switch.air_pump_irrigation_tent
+              - switch.feed_stir_pump_irrigation_tent
+              - switch.flush_stir_pump_irrigation_tent
+        - action: valve.close_valve
+          target:
+            entity_id:
+              - valve.feed_valve_irrigation_tent
+              - valve.flush_valve_irrigation_tent
+              - valve.feed_fill_valve_irrigation_tent
+              - valve.flush_fill_valve_irrigation_tent
+              - valve.flush_drain_valve_irrigation_tent
+        - action: automation.turn_on
+          target:
+            entity_id: automation.tent_irrigation_idle_flow_watchdog
+        - if:
+            - condition: state
+              entity_id: input_boolean.irrigation_tent_kill
+              state: 'off'
+            - condition: state
+              entity_id: input_boolean.tent_irrigation_kill_automations
+              state: 'off'
+          then:
+            - action: automation.turn_on
+              target:
+                entity_id:
+                  - automation.fill_feed_reservoir
+                  - automation.fill_flush_reservoir
+                  - automation.tent_irrigation_block_feed_when_reservoir_dry
+                  - automation.tent_irrigation_block_flush_when_reservoir_dry
+                  - automation.tent_irrigation_block_table_drain_pump_when_dry
+                  - automation.tent_irrigation_lights_off_cleanup
+            - if:
+                - condition: state
+                  entity_id: input_boolean.irrigation_tent_kill_water
+                  state: 'off'
+              then:
+                - action: automation.turn_on
+                  target:
+                    entity_id: automation.tent_irrigation_feed_trigger
+            - if:
+                - condition: state
+                  entity_id: input_boolean.irrigation_tent_kill_aeration
+                  state: 'off'
+              then:
+                - action: automation.turn_on
+                  target:
+                    entity_id:
+                      - automation.tent_irrigation_maintenance_cycle
+                      - automation.tent_irrigation_air_alternation
+                      - automation.tent_irrigation_night_pulses_veg
+                      - automation.tent_irrigation_night_pulses_flower
+                      - automation.tent_irrigation_pre_feed_air_stir_start
+                      - automation.tent_irrigation_pre_feed_air_stir_stop
+                      - automation.tent_irrigation_re_enable_maintenance_on_enable
+        - action: input_text.set_value
+          target:
+            entity_id: input_text.tent_irrigation_status
+          data:
+            value: Idle
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Irrigation Maintenance Mode OFF
+            message: All pumps off, valves closed, interlocks and schedules re-armed.
+      mode: single
+
+    - id: tent_irrigation_maintenance_mode_auto_off
+      alias: Tent Irrigation — Maintenance Mode Auto-Off
+      description: >
+        Releases maintenance mode after 2 h so it can't be forgotten, and on HA
+        start (a restart loses the 2 h timer, and Startup Recovery has already
+        stopped everything anyway).
+      triggers:
+        - trigger: state
+          entity_id: input_boolean.irrigation_tent_maintenance_mode
+          to: 'on'
+          for:
+            hours: 2
+        - trigger: homeassistant
+          event: start
+      conditions:
+        - condition: state
+          entity_id: input_boolean.irrigation_tent_maintenance_mode
+          state: 'on'
+      actions:
+        - action: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.irrigation_tent_maintenance_mode
+      mode: single
