@@ -79,6 +79,9 @@ batch (they usually all get approved together, but ask).
 2. **HA Core**: SSH to VM 101, `cd ~/homeassistant && docker compose pull && docker compose
    up -d`. Poll `http://192.168.2.151:8123/` until it responds (usually back in
    10-30s), then `ha_check_connection` to confirm the new version.
+   Then `docker image prune -f` — each pull leaves the previous HA image dangling
+   (~3.4 GB apiece). On 2026-10-14 nine had piled up and the VM rootfs was at 89%;
+   pruning freed 27 GB. `prune` only removes untagged images, never the running one.
 3. **VM 101 OS packages**: `sudo -S -E apt-get -y -o Dpkg::Options::=--force-confold
    full-upgrade`, then `sudo -S -E apt-get -y autoremove --purge`. Check
    `/var/run/reboot-required` — only reboot if it's actually required (kernel bump);
