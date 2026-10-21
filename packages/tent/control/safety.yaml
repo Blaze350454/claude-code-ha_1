@@ -92,6 +92,13 @@ tent_control_safety:
               - sys_irrigation
               - fn_valve
               - sub_irrigation_flush_loop
+        # Single-pump valves (2026-10-20) by name, so they are covered even
+        # before the registry labels are applied after the first flash.
+        - action: valve.close_valve
+          target:
+            entity_id:
+              - valve.main_valve_irrigation_tent
+              - valve.feed_return_valve_irrigation_tent
         - action: switch.turn_off
           target:
             entity_id: switch.feed_pump_irrigation_tent

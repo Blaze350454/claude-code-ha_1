@@ -1,0 +1,79 @@
+tent_irrigation_lines:
+  # ================================================
+  # Feed / flush LINE open + close — the one place valve order lives
+  # ================================================
+  # Single-pump redesign (2026-10-20) added two valves on the irrigation ESP:
+  #   MAIN         valve.main_valve_irrigation_tent         GPIO2 — delivery valve after the flow meter
+  #   FEED-RETURN  valve.feed_return_valve_irrigation_tent  GPIO5 — pump bypass back to the feed tank
+  #
+  # Every feed/flush sequence calls these scripts instead of opening valves
+  # itself, so when the single-pump plumbing lands only this file changes.
+  #
+  # ORDER MATTERS. The ESP refuses to open FEED-RETURN unless the Feed Valve
+  # (FEED-IN) is already open, and closing the Feed Valve closes FEED-RETURN on
+  # the device. So: Feed Valve first, then FEED-RETURN + MAIN. On the way out
+  # MAIN closes first (stops delivery), then the Feed Valve, which takes
+  # FEED-RETURN with it — it is listed anyway so HA never relies on that alone.
+  #
+  # Callers still switch the pump themselves: open the line BEFORE the pump,
+  # stop the pump BEFORE closing the line.
+
+  script:
+    tent_feed_line_open:
+      alias: Tent Feed Line — Open
+      icon: mdi:valve-open
+      mode: queued
+      sequence:
+        - action: valve.open_valve
+          target:
+            entity_id: valve.feed_valve_irrigation_tent
+        # Commands share one API connection and the ESP handles them in order,
+        # so this wait is a backstop, not the interlock. It times out quietly
+        # if the ESP is offline rather than hanging the feed.
+        - wait_template: "{{ is_state('valve.feed_valve_irrigation_tent', 'open') }}"
+          timeout: "00:00:05"
+          continue_on_timeout: true
+        - action: valve.open_valve
+          target:
+            entity_id:
+              - valve.feed_return_valve_irrigation_tent
+              - valve.main_valve_irrigation_tent
+
+    tent_feed_line_close:
+      alias: Tent Feed Line — Close
+      icon: mdi:valve-closed
+      mode: queued
+      sequence:
+        - action: valve.close_valve
+          target:
+            entity_id: valve.main_valve_irrigation_tent
+        - action: valve.close_valve
+          target:
+            entity_id:
+              - valve.feed_valve_irrigation_tent
+              - valve.feed_return_valve_irrigation_tent
+
+    tent_flush_line_open:
+      alias: Tent Flush Line — Open
+      icon: mdi:valve-open
+      mode: queued
+      sequence:
+        # No flush return by design (2026-10-08): during a flush the open DRAIN
+        # is the relief path.
+        - action: valve.open_valve
+          target:
+            entity_id:
+              - valve.flush_valve_irrigation_tent
+              - valve.main_valve_irrigation_tent
+
+    tent_flush_line_close:
+      alias: Tent Flush Line — Close
+      icon: mdi:valve-closed
+      mode: queued
+      sequence:
+        - action: valve.close_valve
+          target:
+            entity_id: valve.main_valve_irrigation_tent
+        - action: valve.close_valve
+          target:
+            entity_id: valve.flush_valve_irrigation_tent

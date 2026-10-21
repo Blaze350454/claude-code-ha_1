@@ -264,6 +264,8 @@ tent_irrigation_schedule:
               - valve.feed_valve_irrigation_tent
               - valve.flush_valve_irrigation_tent
               - valve.flush_drain_valve_irrigation_tent
+              - valve.main_valve_irrigation_tent
+              - valve.feed_return_valve_irrigation_tent
         - action: automation.turn_off
           target:
             entity_id: automation.tent_irrigation_maintenance_cycle

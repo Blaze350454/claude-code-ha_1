@@ -18,7 +18,8 @@ tent_irrigation_safety:
           for 7+ hours with the feed pump off — pump-only watchdog had no
           coverage for that case):
           - feed/flush valve 25 min (longer than max feed cycle; catches stuck-
-            open from missed close-command after a network blip)
+            open from missed close-command after a network blip). MAIN and
+            FEED-RETURN (single-pump redesign, 2026-10-20) share this tier.
           - feed/flush fill valves 7 min (fills are short — anything longer is
             either a sensor failure or a real overfill risk)
           - flush drain valve 10 min (drain pulses are seconds during line
@@ -53,6 +54,8 @@ tent_irrigation_safety:
           entity_id:
             - valve.feed_valve_irrigation_tent
             - valve.flush_valve_irrigation_tent
+            - valve.main_valve_irrigation_tent
+            - valve.feed_return_valve_irrigation_tent
           to: open
           for:
             minutes: 25
@@ -74,6 +77,8 @@ tent_irrigation_safety:
           target:
             entity_id:
               - script.run_feed_cycle
+              - script.tent_feed_line_open
+              - script.tent_flush_line_open
           data: {}
         - action: switch.turn_off
           target:
@@ -93,6 +98,8 @@ tent_irrigation_safety:
               - valve.feed_fill_valve_irrigation_tent
               - valve.flush_fill_valve_irrigation_tent
               - valve.flush_drain_valve_irrigation_tent
+              - valve.main_valve_irrigation_tent
+              - valve.feed_return_valve_irrigation_tent
         - action: input_text.set_value
           target:
             entity_id: input_text.tent_irrigation_status
@@ -144,6 +151,8 @@ tent_irrigation_safety:
               - valve.feed_fill_valve_irrigation_tent
               - valve.flush_fill_valve_irrigation_tent
               - valve.flush_drain_valve_irrigation_tent
+              - valve.main_valve_irrigation_tent
+              - valve.feed_return_valve_irrigation_tent
         - action: input_text.set_value
           target:
             entity_id: input_text.tent_irrigation_status
@@ -168,6 +177,8 @@ tent_irrigation_safety:
           target:
             entity_id:
               - script.run_feed_cycle
+              - script.tent_feed_line_open
+              - script.tent_flush_line_open
           data: {}
         - action: input_boolean.turn_off
           target:
@@ -188,6 +199,8 @@ tent_irrigation_safety:
               - valve.feed_valve_irrigation_tent
               - valve.flush_valve_irrigation_tent
               - valve.flush_drain_valve_irrigation_tent
+              - valve.main_valve_irrigation_tent
+              - valve.feed_return_valve_irrigation_tent
               - valve.feed_fill_valve_irrigation_tent
               - valve.flush_fill_valve_irrigation_tent
         - action: input_text.set_value
@@ -227,6 +240,8 @@ tent_irrigation_safety:
             - valve.feed_fill_valve_irrigation_tent
             - valve.flush_fill_valve_irrigation_tent
             - valve.flush_drain_valve_irrigation_tent
+            - valve.main_valve_irrigation_tent
+            - valve.feed_return_valve_irrigation_tent
           from: unavailable
           to: open
       conditions:
@@ -248,6 +263,8 @@ tent_irrigation_safety:
               - valve.feed_fill_valve_irrigation_tent
               - valve.flush_fill_valve_irrigation_tent
               - valve.flush_drain_valve_irrigation_tent
+              - valve.main_valve_irrigation_tent
+              - valve.feed_return_valve_irrigation_tent
         - action: notify.mobile_app_sm_a166w
           data:
             title: Irrigation Valve Reconnect Recovery
@@ -299,9 +316,15 @@ tent_irrigation_safety:
             entity_id:
               - switch.feed_pump_irrigation_tent
               - switch.feed_stir_pump_irrigation_tent
+        - action: script.turn_off
+          target:
+            entity_id: script.tent_feed_line_open
+        # Own-tank valves only: MAIN is shared, and a flush may be using it.
         - action: valve.close_valve
           target:
-            entity_id: valve.feed_valve_irrigation_tent
+            entity_id:
+              - valve.feed_valve_irrigation_tent
+              - valve.feed_return_valve_irrigation_tent
         - action: notify.mobile_app_sm_a166w
           data:
             title: Feed Blocked — Reservoir Dry
@@ -351,6 +374,10 @@ tent_irrigation_safety:
             entity_id:
               - switch.flush_pump_irrigation_tent
               - switch.flush_stir_pump_irrigation_tent
+        - action: script.turn_off
+          target:
+            entity_id: script.tent_flush_line_open
+        # Own-tank valve only: MAIN is shared, and a feed may be using it.
         - action: valve.close_valve
           target:
             entity_id: valve.flush_valve_irrigation_tent
@@ -587,6 +614,8 @@ tent_irrigation_safety:
                     entity_id:
                       - script.tent_irrigation_advance_to_next_feed
                       - script.run_feed_cycle
+                      - script.tent_feed_line_open
+                      - script.tent_flush_line_open
                       - script.stop_alternating
                 - action: switch.turn_off
                   target:
@@ -602,6 +631,8 @@ tent_irrigation_safety:
                       - valve.feed_fill_valve_irrigation_tent
                       - valve.feed_valve_irrigation_tent
                       - valve.flush_drain_valve_irrigation_tent
+                      - valve.main_valve_irrigation_tent
+                      - valve.feed_return_valve_irrigation_tent
                       - valve.flush_fill_valve_irrigation_tent
                       - valve.flush_valve_irrigation_tent
             - conditions:
@@ -679,6 +710,8 @@ tent_irrigation_safety:
                     entity_id:
                       - script.tent_irrigation_advance_to_next_feed
                       - script.run_feed_cycle
+                      - script.tent_feed_line_open
+                      - script.tent_flush_line_open
                       - script.run_feed_now
                       - script.run_flush_now
                 - action: input_boolean.turn_off
@@ -702,6 +735,8 @@ tent_irrigation_safety:
                       - valve.feed_valve_irrigation_tent
                       - valve.flush_valve_irrigation_tent
                       - valve.flush_drain_valve_irrigation_tent
+                      - valve.main_valve_irrigation_tent
+                      - valve.feed_return_valve_irrigation_tent
             - conditions:
                 - condition: state
                   entity_id: input_boolean.irrigation_tent_kill_water

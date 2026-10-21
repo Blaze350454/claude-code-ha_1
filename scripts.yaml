@@ -168,9 +168,7 @@ run_feed_cycle:
             entity_id: input_text.tent_irrigation_status
           data:
             value: Feeding
-        - action: valve.open_valve
-          target:
-            entity_id: valve.feed_valve_irrigation_tent
+        - action: script.tent_feed_line_open
         - action: switch.turn_on
           target:
             entity_id: switch.feed_pump_irrigation_tent
@@ -179,9 +177,7 @@ run_feed_cycle:
         - action: switch.turn_off
           target:
             entity_id: switch.feed_pump_irrigation_tent
-        - action: valve.close_valve
-          target:
-            entity_id: valve.feed_valve_irrigation_tent
+        - action: script.tent_feed_line_close
       # Fully aerate the flush reservoir, then homogenize (pH Down stratifies),
       # right before the line clear — oxygenate, then mix, then draw.
       - action: script.tent_air_burst
@@ -192,9 +188,7 @@ run_feed_cycle:
         data:
           tank: flush
           turnover: "{{ states('input_number.stir_turnover_prefeed') | float(0.5) }}"
-      - action: valve.open_valve
-        target:
-          entity_id: valve.flush_valve_irrigation_tent
+      - action: script.tent_flush_line_open
       - action: input_text.set_value
         target:
           entity_id: input_text.tent_irrigation_status
@@ -221,9 +215,7 @@ run_feed_cycle:
       - action: switch.turn_off
         target:
           entity_id: switch.flush_pump_irrigation_tent
-      - action: valve.close_valve
-        target:
-          entity_id: valve.flush_valve_irrigation_tent
+      - action: script.tent_flush_line_close
       # Stamp the last successful line-clear flush (mirrors last_feed_time).
       - action: input_datetime.set_datetime
         target:
@@ -248,9 +240,7 @@ run_feed_cycle:
           entity_id: input_text.tent_irrigation_status
         data:
           value: Feeding
-      - action: valve.open_valve
-        target:
-          entity_id: valve.feed_valve_irrigation_tent
+      - action: script.tent_feed_line_open
       - action: switch.turn_on
         target:
           entity_id: switch.feed_pump_irrigation_tent
@@ -259,9 +249,7 @@ run_feed_cycle:
       - action: switch.turn_off
         target:
           entity_id: switch.feed_pump_irrigation_tent
-      - action: valve.close_valve
-        target:
-          entity_id: valve.feed_valve_irrigation_tent
+      - action: script.tent_feed_line_close
       # Hold counter at (interval - 1) so tomorrow's daily_setup increment
       # makes tomorrow another flush-day attempt. Without this the counter
       # would drift higher each day until the daily_setup safety net at
@@ -278,9 +266,7 @@ run_feed_cycle:
         entity_id: input_text.tent_irrigation_status
       data:
         value: Feeding
-    - action: valve.open_valve
-      target:
-        entity_id: valve.feed_valve_irrigation_tent
+    - action: script.tent_feed_line_open
     - action: switch.turn_on
       target:
         entity_id: switch.feed_pump_irrigation_tent
@@ -289,9 +275,7 @@ run_feed_cycle:
     - action: switch.turn_off
       target:
         entity_id: switch.feed_pump_irrigation_tent
-    - action: valve.close_valve
-      target:
-        entity_id: valve.feed_valve_irrigation_tent
+    - action: script.tent_feed_line_close
   - action: input_text.set_value
     target:
       entity_id: input_text.tent_irrigation_status
@@ -383,11 +367,10 @@ run_flush_now:
     - action: switch.turn_off
       target:
         entity_id: switch.flush_pump_irrigation_tent
+    - action: script.tent_flush_line_close
     - action: valve.close_valve
       target:
-        entity_id:
-          - valve.flush_valve_irrigation_tent
-          - valve.flush_drain_valve_irrigation_tent
+        entity_id: valve.flush_drain_valve_irrigation_tent
     - action: input_boolean.turn_off
       target:
         entity_id: input_boolean.flush_now_running
@@ -447,9 +430,7 @@ run_flush_now:
       entity_id: input_text.tent_irrigation_status
     data:
       value: Flushing
-  - action: valve.open_valve
-    target:
-      entity_id: valve.flush_valve_irrigation_tent
+  - action: script.tent_flush_line_open
   - action: switch.turn_on
     target:
       entity_id: switch.flush_pump_irrigation_tent
@@ -482,11 +463,10 @@ run_flush_now:
   - action: switch.turn_off
     target:
       entity_id: switch.flush_pump_irrigation_tent
+  - action: script.tent_flush_line_close
   - action: valve.close_valve
     target:
-      entity_id:
-        - valve.flush_valve_irrigation_tent
-        - valve.flush_drain_valve_irrigation_tent
+      entity_id: valve.flush_drain_valve_irrigation_tent
   - action: input_boolean.turn_off
     target:
       entity_id: input_boolean.flush_now_running
@@ -516,9 +496,7 @@ run_feed_now:
     - action: switch.turn_off
       target:
         entity_id: switch.feed_pump_irrigation_tent
-    - action: valve.close_valve
-      target:
-        entity_id: valve.feed_valve_irrigation_tent
+    - action: script.tent_feed_line_close
     - action: input_boolean.turn_off
       target:
         entity_id: input_boolean.feed_now_running
@@ -558,9 +536,7 @@ run_feed_now:
       entity_id: input_text.tent_irrigation_status
     data:
       value: Feeding
-  - action: valve.open_valve
-    target:
-      entity_id: valve.feed_valve_irrigation_tent
+  - action: script.tent_feed_line_open
   - action: switch.turn_on
     target:
       entity_id: switch.feed_pump_irrigation_tent
@@ -571,9 +547,7 @@ run_feed_now:
   - action: switch.turn_off
     target:
       entity_id: switch.feed_pump_irrigation_tent
-  - action: valve.close_valve
-    target:
-      entity_id: valve.feed_valve_irrigation_tent
+  - action: script.tent_feed_line_close
   - action: input_boolean.turn_off
     target:
       entity_id: input_boolean.feed_now_running
