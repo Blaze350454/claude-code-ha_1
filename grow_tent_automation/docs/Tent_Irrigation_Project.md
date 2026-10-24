@@ -36,7 +36,7 @@
 | | Pressure gauge #1 | On tee after filter (pre-regulator) |
 | | Pressure gauge #2 | On/after pressure regulator (post-regulator) |
 | **Sensors** | Pressure transducer | 1/8" NPT, 0-100 PSI, 5V DC, stainless steel — ⚠️ firmware uses a 0-30 psi transfer function; confirm the installed range |
-| | Pressure transducer, 0-60 PSI | Owned (2026-10-07), for the pre-regulator spot — firmware span constant must change when fitted |
+| | Pressure transducer, 0-60 PSI | Owned (2026-10-07), for the pre-regulator spot. Firmware span changed 30 → 60 on GPIO34 (esphome-config `31a26f0`, 2026-10-24), not flashed yet |
 | | Hall flow sensor | 3/4", 1-100 L/min, 5V DC (see note) |
 | **Electronics** | ESP32 | Microcontroller for sensor data |
 | | LM2596 buck converter | 12V → 5V DC for sensors |
