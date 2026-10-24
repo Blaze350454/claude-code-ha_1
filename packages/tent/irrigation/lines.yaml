@@ -2,18 +2,20 @@ tent_irrigation_lines:
   # ================================================
   # Feed / flush LINE open + close — the one place valve order lives
   # ================================================
-  # Single-pump redesign (2026-10-20) added two valves on the irrigation ESP:
-  #   MAIN         valve.main_valve_irrigation_tent         GPIO2 — delivery valve after the flow meter
+  # Single-pump redesign (2026-10-20) added one valve on the irrigation ESP:
   #   FEED-RETURN  valve.feed_return_valve_irrigation_tent  GPIO5 — pump bypass back to the feed tank
+  # A MAIN delivery valve (GPIO2) was planned too and DROPPED 2026-10-23 (user):
+  # the end-of-line check valve keeps the line full, the tanks sit below the
+  # emitters, and a shut FEED-IN/FLUSH-IN already stops the pump drawing. So the
+  # IN valve is what opens and closes a line.
   #
   # Every feed/flush sequence calls these scripts instead of opening valves
   # itself, so when the single-pump plumbing lands only this file changes.
   #
   # ORDER MATTERS. The ESP refuses to open FEED-RETURN unless the Feed Valve
   # (FEED-IN) is already open, and closing the Feed Valve closes FEED-RETURN on
-  # the device. So: Feed Valve first, then FEED-RETURN + MAIN. On the way out
-  # MAIN closes first (stops delivery), then the Feed Valve, which takes
-  # FEED-RETURN with it — it is listed anyway so HA never relies on that alone.
+  # the device. So: Feed Valve first, then FEED-RETURN. On the way out both are
+  # listed, so HA never relies on the device closing FEED-RETURN alone.
   #
   # Callers still switch the pump themselves: open the line BEFORE the pump,
   # stop the pump BEFORE closing the line.
@@ -35,18 +37,13 @@ tent_irrigation_lines:
           continue_on_timeout: true
         - action: valve.open_valve
           target:
-            entity_id:
-              - valve.feed_return_valve_irrigation_tent
-              - valve.main_valve_irrigation_tent
+            entity_id: valve.feed_return_valve_irrigation_tent
 
     tent_feed_line_close:
       alias: Tent Feed Line — Close
       icon: mdi:valve-closed
       mode: queued
       sequence:
-        - action: valve.close_valve
-          target:
-            entity_id: valve.main_valve_irrigation_tent
         - action: valve.close_valve
           target:
             entity_id:
@@ -62,18 +59,13 @@ tent_irrigation_lines:
         # is the relief path.
         - action: valve.open_valve
           target:
-            entity_id:
-              - valve.flush_valve_irrigation_tent
-              - valve.main_valve_irrigation_tent
+            entity_id: valve.flush_valve_irrigation_tent
 
     tent_flush_line_close:
       alias: Tent Flush Line — Close
       icon: mdi:valve-closed
       mode: queued
       sequence:
-        - action: valve.close_valve
-          target:
-            entity_id: valve.main_valve_irrigation_tent
         - action: valve.close_valve
           target:
             entity_id: valve.flush_valve_irrigation_tent

@@ -137,7 +137,6 @@ tent_irrigation_maintenance_mode:
               - valve.feed_fill_valve_irrigation_tent
               - valve.flush_fill_valve_irrigation_tent
               - valve.flush_drain_valve_irrigation_tent
-              - valve.main_valve_irrigation_tent
               - valve.feed_return_valve_irrigation_tent
         - action: automation.turn_on
           target:
