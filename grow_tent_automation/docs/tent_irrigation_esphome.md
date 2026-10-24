@@ -92,22 +92,24 @@ Device: `tent-irrigation-controller`
 | Flush Fill Valve | GPIO25 | Flush reservoir fill valve — `valve.flush_fill_valve_irrigation_tent` |
 | Feed Fill Valve | GPIO26 | Feed reservoir fill valve — `valve.feed_fill_valve_irrigation_tent` |
 | Feed Valve | GPIO27 | Feed distribution valve — `valve.feed_valve_irrigation_tent` |
-| Main Valve | GPIO2 | **Added 2026-10-20, NOT flashed yet.** Delivery valve after the flow meter (single-pump redesign) — `valve.main_valve_irrigation_tent` |
 | Feed Return Valve | GPIO5 | **Added 2026-10-20, NOT flashed yet.** Pump bypass back to the feed tank, own relay — `valve.feed_return_valve_irrigation_tent`. Firmware refuses to open it unless the Feed Valve is open; closing the Feed Valve closes it |
 
 > **GPIO25 = Flush Fill, GPIO26 = Feed Fill** — confirmed against the wiring 2026-06-19 (an earlier revision of this doc had these two reversed).
 
-> **Board = 38-pin DevKitC, ESP32-WROOM-32E** (user, 2026-10-20). The two new relays (same
-> active-HIGH 12 V type as the other five) had to go on **strapping pins** — no plain GPIO was left:
-> - **GPIO2 (MAIN):** internal pull-down, so the relay is off at boot. Caveat: if held HIGH it can
->   block **USB** download mode — OTA is unaffected; close MAIN before a USB flash.
+> **Board = 38-pin DevKitC, ESP32-WROOM-32E** (user, 2026-10-20). The new relay (same
+> active-HIGH 12 V type as the other five) had to go on a **strapping pin** — no plain GPIO was left:
 > - **GPIO5 (FEED-RETURN):** weak pull-up at boot, so the relay may click for a few ms before
 >   `on_boot` closes it. Harmless (pump is off at boot). Verify with a 3× dry power-cycle test.
-> - **Nothing plain is free now.** Left: GPIO0/12/15 (avoid — boot mode / flash-voltage strap) and
->   GPIO36/39 (input-only; 36 reserved for the deferred suction transducer).
+> - **MAIN (GPIO2) was DROPPED 2026-10-23** (user), along with the check valve right after the
+>   pump. The end-of-line check valve keeps the line full, both tanks sit below the emitters, and a
+>   shut FEED-IN/FLUSH-IN already stops the pump drawing — so MAIN had no job. **GPIO2 is free**
+>   (strapping pin: internal pull-down; held HIGH it can block USB download mode).
+> - Left: GPIO2 (above), GPIO0/12/15 (avoid — boot mode / flash-voltage strap) and GPIO36/39
+>   (input-only; 36 reserved for the deferred suction transducer).
 > - HA never opens these valves directly: every feed/flush calls the 4 line scripts in
->   `homeassistant-config/packages/tent/irrigation/lines.yaml` (commit `6709963`), which own the
->   valve order. Firmware commit `aa6bc01` (esphome-config). 12 V rail = Mean Well LRS-150-12.
+>   `homeassistant-config/packages/tent/irrigation/lines.yaml`, which own the valve order
+>   (MAIN removed in `ff37b53`). Firmware: FEED-RETURN `aa6bc01`, MAIN removed `6f2bf93`
+>   (esphome-config). 12 V rail = Mean Well LRS-150-12.
 
 ### Air Diverter Servo (added 2026-08-16)
 | Entity | GPIO | Description |
@@ -250,7 +252,7 @@ filters:
 
 *Future addition — no timeline set. See `reservoir_temp_mixing.md` for full context.*
 
-Append the following blocks to the `tent-irrigation-controller` ESPHome config. Assign step/dir GPIOs to free pins at install time (⚠ as of 2026-10-20 **no plain GPIO is free** — GPIO5 and GPIO33 are taken; only GPIO0/12/15 strapping pins remain, so this needs an I/O expander or a pin freed first).
+Append the following blocks to the `tent-irrigation-controller` ESPHome config. Assign step/dir GPIOs to free pins at install time (⚠ **no plain GPIO is free** — GPIO5 and GPIO33 are taken; since 2026-10-23 strapping pin GPIO2 is free again (MAIN dropped), otherwise only GPIO0/12/15 remain, so this needs GPIO2, an I/O expander, or a pin freed first).
 
 ```yaml
 # --- Phase 2: Needle valve stepper (hot/cold mixing) ---
