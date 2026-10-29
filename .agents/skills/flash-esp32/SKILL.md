@@ -30,6 +30,11 @@ There are two config copies and they drift; update both when you change one:
 esphome is not on PATH and not in a venv here — it runs via **uv's cache with `uvx`**.
 Secrets live in `C:\esphome-test\secrets.yaml`.
 
+**⚠ 2026-10-29: ESP32-C3 boards (grow-tent-one / grow-tent-two) do NOT build on Windows** —
+the cached riscv toolchain is incomplete (`fatal error: bits/os_defines.h: No such file or
+directory`). Use **Step 2 alt (LXC)** for them; it compiled + OTA'd grow-tent-one cleanly.
+Device Builder on the LXC auto-commits MCP-written configs, so `git push` there after the flash.
+
 ```powershell
 Set-Location C:\esphome-test
 uvx esphome@2026.6.5 run <name>.yaml --device <device-ip> --no-logs 2>&1 | Select-Object -Last 40
