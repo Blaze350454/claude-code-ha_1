@@ -30,10 +30,13 @@ There are two config copies and they drift; update both when you change one:
 esphome is not on PATH and not in a venv here — it runs via **uv's cache with `uvx`**.
 Secrets live in `C:\esphome-test\secrets.yaml`.
 
-**⚠ 2026-10-29: ESP32-C3 boards (grow-tent-one / grow-tent-two) do NOT build on Windows** —
-the cached riscv toolchain is incomplete (`fatal error: bits/os_defines.h: No such file or
-directory`). Use **Step 2 alt (LXC)** for them; it compiled + OTA'd grow-tent-one cleanly.
-Device Builder on the LXC auto-commits MCP-written configs, so `git push` there after the flash.
+**IDF toolchain lives at `C:\esphome-idf` (user env `ESPHOME_ESP_IDF_PREFIX`, 2026-10-29).** The
+default `%LOCALAPPDATA%\esphome\Cache\idf` pushed riscv include paths to 260 chars with
+`LongPathsEnabled=0` → `fatal error: bits/os_defines.h: No such file or directory` (header
+present; path too long). If a build says `...is currently active in the environment while the
+project was configured with '<old path>'`, that device's `.esphome\build\<name>` predates the
+move: back it up/move it aside (grow-tent-one's is in `.esphome\build-backup-20261029\` with a
+MANIFEST) and rebuild. Device Builder on the LXC auto-commits MCP-written configs — `git push` there.
 
 ```powershell
 Set-Location C:\esphome-test
