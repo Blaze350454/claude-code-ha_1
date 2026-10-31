@@ -100,20 +100,22 @@ prefix — expect to re-run one after any reflash that adds entities.
   address off the Device Builder. (An earlier `.53` here was a stale lease, never an
   assignment. Corrected 2026-09-14 against the flashed configs.)
 - **HS300 "Tent Irrigation Power Strip"** — `192.168.2.182`, MAC suffix `c074`,
-  model **HS300**, 6 sockets. This is the **live feed/flush strip**. Its six sockets,
-  verified against the registry 2026-08-07, are exactly: `air_pump`, `feed_pump`,
-  `feed_stir_pump`, `flush_pump`, `flush_stir_pump`, `irrigation_controller`
+  model **HS300**, 6 sockets. This is the **live irrigation strip**. Its six sockets
+  as of 2026-10-31 (single-pump rebuild): `air_pump`, `feed_pump` (= the ONE
+  irrigation pump, BOKYWOX), `feed_stir_pump`, `irrigation_controller` (Plug 3, the
+  old flush-pump socket), `flush_stir_pump`, `irrigation_strip_spare` (Plug 6)
   (plus the strip master and its LED, which are not sockets).
   (MAC verified 2026-06-16 — an earlier `53db` here was wrong; don't "correct" it back.)
-  - **⚠ Corrected 2026-08-07: the irrigation ESP32 is NOT on this strip — it is not
-    on a smart plug at all.** `switch.irrigation_controller_tent` is a real HS300
-    socket (platform `tplink`, on the `c074` strip) and it is named after the ESP,
-    but **it does not power it** — confirmed by the user, who has eyes on the wiring.
-    What that socket actually feeds is **unrecorded**; fill this in when known.
-    **Consequence: you cannot power-cycle the irrigation ESP32 from Home Assistant.**
-    Recovery from a wedged controller is a physical unplug, or a reflash. This file
-    previously claimed the socket powered the ESP, which sent a session (2026-08-07)
-    to recommend a power-cycle that would have done nothing.
+  - **2026-10-31: the irrigation ESP32 is now on this strip — Plug 3,
+    `switch.irrigation_controller_tent`** (entity IDs swapped in the registry: the
+    old Plug 6 "Irrigation Controller", which never powered the ESP and whose load is
+    unrecorded, is now `switch.irrigation_strip_spare_tent`). So the ESP **can** be
+    power-cycled from HA (once the user's move of the plug is confirmed by an uptime
+    reset when Plug 3 is toggled). Turning it off leaves the valves uncontrollable (the ESP's
+    boot closes them all), so nothing may switch it off in automation; flood stop
+    turns it back ON if it finds it off. Before 2026-10-31 the ESP was on no smart
+    plug at all; a 2026-08-07 session recommended a power-cycle via Plug 6 that would
+    have done nothing.
   - **Corrected 2026-08-07: the table-drain pump is NOT on this strip.**
     `switch.table_drain_pump_irrigation_tent` is an **ESPHome** switch on
     **grow-tent-one** (esp32-c3-devkitm-1), as are `binary_sensor.table_drain_empty`
