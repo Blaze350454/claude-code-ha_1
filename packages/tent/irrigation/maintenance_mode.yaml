@@ -9,9 +9,10 @@ tent_irrigation_maintenance_mode:
   #            idle-flow watchdog, feed trigger, lights-off cleanup, and every
   #            air/stir scheduler (alternation, maintenance cycle, night pulses,
   #            pre-feed air/stir).
-  #   ARMED    run-time watchdog (stir/air 65 min, feed/flush 16 min, drain
+  #   ARMED    run-time watchdog (stir/air 65 min, pump 16 min, drain
   #            valve 10 min, fill valves 7 min), reservoir-FULL fill blocks,
-  #            table drain pump, flood stop, startup + reconnect recovery.
+  #            table drain pump, flood stop, startup + reconnect recovery,
+#            single-pump interlock (one IN valve at a time).
   #
   # Not to be confused with automation.tent_irrigation_maintenance_cycle — that
   # is the scheduled baseline stir, and it is one of the things paused here.
@@ -125,7 +126,6 @@ tent_irrigation_maintenance_mode:
           target:
             entity_id:
               - switch.feed_pump_irrigation_tent
-              - switch.flush_pump_irrigation_tent
               - switch.air_pump_irrigation_tent
               - switch.feed_stir_pump_irrigation_tent
               - switch.flush_stir_pump_irrigation_tent

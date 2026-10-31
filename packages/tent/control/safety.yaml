@@ -61,7 +61,7 @@ tent_control_safety:
       alias: "Safety — Table Drain Flood Stop"
       description: >
         When the table drain float reports FULL, close inflow valves and stop
-        feed/flush pumps so no more water enters the tent. Drain loop is
+        the irrigation pump so no more water enters the tent. Drain loop is
         intentionally untouched — the existing `Irrigation — Table Drain Pump`
         automation runs the drain pump and must keep power.
 
@@ -104,10 +104,6 @@ tent_control_safety:
         - delay: "00:00:00.300"
         - action: switch.turn_off
           target:
-            entity_id: switch.flush_pump_irrigation_tent
-        - delay: "00:00:00.300"
-        - action: switch.turn_off
-          target:
             entity_id: switch.feed_stir_pump_irrigation_tent
         - delay: "00:00:00.300"
         - action: switch.turn_off
@@ -121,7 +117,7 @@ tent_control_safety:
         # Conditional guardrails — only re-power controllers that actually dropped.
         # Unconditional switch.turn_on against the HS300 master triggers a firmware
         # quirk that cascades ALL child outlets to ON, spuriously running every pump.
-        # If the master really did drop, we stagger-off the 5 pump outlets afterward
+        # If the master really did drop, we stagger-off the 4 pump outlets afterward
         # to cancel that auto-on cascade. Drain pump outlet is intentionally left
         # alone — it must stay free to run.
         - if:
@@ -136,10 +132,6 @@ tent_control_safety:
             - action: switch.turn_off
               target:
                 entity_id: switch.feed_pump_irrigation_tent
-            - delay: "00:00:00.300"
-            - action: switch.turn_off
-              target:
-                entity_id: switch.flush_pump_irrigation_tent
             - delay: "00:00:00.300"
             - action: switch.turn_off
               target:
@@ -173,7 +165,7 @@ tent_control_safety:
             title: "TENT FLOOD STOP"
             message: >
               Table drain reported FULL at {{ now().strftime('%H:%M:%S') }}.
-              Closed feed+flush inflow valves, stopped feed+flush pumps.
+              Closed feed+flush inflow valves, stopped the irrigation pump.
               Drain pump is handling overflow. Investigate before resuming.
         - action: persistent_notification.create
           data:

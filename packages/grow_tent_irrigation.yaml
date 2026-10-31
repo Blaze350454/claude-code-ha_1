@@ -163,22 +163,24 @@ grow_tent_irrigation:
 
     # Manual feed length (script.run_feed_now / "Feed Now"). Separate from the
     # automated scheduled feed cycle.
+    # Max 15 keeps it under the 16 min pump watchdog (2026-10-31).
     feed_now_duration:
       name: Feed Now Duration
       min: 1
-      max: 60
+      max: 15
       step: 1
       unit_of_measurement: min
       mode: box
       icon: mdi:watering-can
 
     # Manual end-of-day plant flush length (script.run_flush_now / "Flush Now"):
-    # TOTAL time the flush pump + flush valve are open. Separate from the
-    # automated in-feed daily flush above.
+    # TOTAL time the pump + flush line are open. Separate from the
+    # automated in-feed daily flush above. Max 15 keeps it under the 16 min
+    # pump watchdog (2026-10-31).
     flush_now_duration:
       name: Flush Now Duration
       min: 1
-      max: 60
+      max: 15
       step: 1
       unit_of_measurement: min
       mode: box
@@ -462,7 +464,7 @@ grow_tent_irrigation:
       name: "Irrigation Tent — All Off"
       icon: mdi:power-off
 
-    # Stops only water DELIVERY to the table (feed/flush pumps + feed/flush/drain
+    # Stops only water DELIVERY to the table (irrigation pump + feed/flush/drain
     # valves) and aborts any running feed/flush. Reservoir fills + table drain + air
     # + stir keep running. Reacted to by "Toggle — Irrigation Tent Stop Water".
     irrigation_tent_kill_water:

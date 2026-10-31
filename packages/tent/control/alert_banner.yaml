@@ -188,8 +188,8 @@ tent_control_alert_banner:
             {% elif off | length >= 1 %}{% set ns.e = ns.e + [1] %}{% endif %}
             {# --- TIER 2: real faults, each gated on its source being online. --- #}
             {% if 'irrig_offline' not in down %}
-              {% if is_state('binary_sensor.feed_reservoir_dry','on') and (is_state('switch.feed_pump_irrigation_tent','on') or is_state('valve.feed_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [1] %}{% endif %}
-              {% if is_state('binary_sensor.flush_reservoir_dry','on') and (is_state('switch.flush_pump_irrigation_tent','on') or is_state('valve.flush_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [1] %}{% endif %}
+              {% if is_state('binary_sensor.feed_reservoir_dry','on') and is_state('valve.feed_valve_irrigation_tent','open') %}{% set ns.e = ns.e + [1] %}{% endif %}
+              {% if is_state('binary_sensor.flush_reservoir_dry','on') and is_state('valve.flush_valve_irrigation_tent','open') %}{% set ns.e = ns.e + [1] %}{% endif %}
             {% endif %}
             {# Climate checks disabled 2026-06-28 (AC/dehum/humidifier intentionally offline
                during commissioning). To re-enable, restore here AND in the errors block:
@@ -240,8 +240,8 @@ tent_control_alert_banner:
               {% endif %}
               {# --- TIER 2 --- #}
               {% if 'irrig_offline' not in down %}
-                {% if is_state('binary_sensor.feed_reservoir_dry','on') and (is_state('switch.feed_pump_irrigation_tent','on') or is_state('valve.feed_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [{'key':'feed_dry','msg':'Feed reservoir DRY while feeding'}] %}{% endif %}
-                {% if is_state('binary_sensor.flush_reservoir_dry','on') and (is_state('switch.flush_pump_irrigation_tent','on') or is_state('valve.flush_valve_irrigation_tent','open')) %}{% set ns.e = ns.e + [{'key':'flush_dry','msg':'Flush reservoir DRY while flushing'}] %}{% endif %}
+                {% if is_state('binary_sensor.feed_reservoir_dry','on') and is_state('valve.feed_valve_irrigation_tent','open') %}{% set ns.e = ns.e + [{'key':'feed_dry','msg':'Feed reservoir DRY while feeding'}] %}{% endif %}
+                {% if is_state('binary_sensor.flush_reservoir_dry','on') and is_state('valve.flush_valve_irrigation_tent','open') %}{% set ns.e = ns.e + [{'key':'flush_dry','msg':'Flush reservoir DRY while flushing'}] %}{% endif %}
               {% endif %}
               {# Climate checks disabled 2026-06-28 — see note in the state block above. #}
               {% if 'climate_offline' not in down %}

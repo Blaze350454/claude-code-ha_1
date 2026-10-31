@@ -19,6 +19,17 @@ tent_irrigation_lines:
   #
   # Callers still switch the pump themselves: open the line BEFORE the pump,
   # stop the pump BEFORE closing the line.
+  #
+  # ONE PUMP (2026-10-31): the old feed and flush pumps are gone. A single
+  # BOKYWOX on the old Feed Pump socket (switch.feed_pump_irrigation_tent — the
+  # entity ID was kept) draws from whichever tank's IN valve is open:
+  #   FEED-IN   valve.feed_valve_irrigation_tent   GPIO27
+  #   FLUSH-IN  valve.flush_valve_irrigation_tent  GPIO23
+  # The two IN valves must never be open together (the pump would draw nutrient
+  # into the flush side and vice versa), so each open script shuts the other
+  # line first, and the interlock automation below is the backstop.
+  # switch.flush_pump_irrigation_tent is an EMPTY HS300 socket now — nothing
+  # may switch it.
 
   script:
     tent_feed_line_open:
@@ -26,6 +37,10 @@ tent_irrigation_lines:
       icon: mdi:valve-open
       mode: queued
       sequence:
+        # Only one IN valve at a time — shut the flush line first.
+        - action: valve.close_valve
+          target:
+            entity_id: valve.flush_valve_irrigation_tent
         - action: valve.open_valve
           target:
             entity_id: valve.feed_valve_irrigation_tent
@@ -55,6 +70,12 @@ tent_irrigation_lines:
       icon: mdi:valve-open
       mode: queued
       sequence:
+        # Only one IN valve at a time — shut the feed line (and its return) first.
+        - action: valve.close_valve
+          target:
+            entity_id:
+              - valve.feed_valve_irrigation_tent
+              - valve.feed_return_valve_irrigation_tent
         # No flush return by design (2026-10-08): during a flush the open DRAIN
         # is the relief path.
         - action: valve.open_valve
@@ -69,3 +90,60 @@ tent_irrigation_lines:
         - action: valve.close_valve
           target:
             entity_id: valve.flush_valve_irrigation_tent
+
+  automation:
+    - id: tent_irrigation_single_pump_interlock
+      alias: Tent Irrigation — Single-Pump Interlock
+      description: >
+        Backstop for the one-pump plumbing (2026-10-31). The pump may run only
+        with EXACTLY one IN valve open.
+          BOTH IN valves open  -> pump off, both lines closed, FAULT.
+          Pump on, NO IN valve open for 15 s -> pump off (it is pulling against
+          a shut suction). 15 s absorbs command latency and HS300 lag.
+        Stays armed in maintenance mode and under every kill toggle — it only
+        acts on hardware that is already running.
+      triggers:
+        - trigger: template
+          value_template: >
+            {{ is_state('valve.feed_valve_irrigation_tent', 'open')
+               and is_state('valve.flush_valve_irrigation_tent', 'open') }}
+          # Debounce: a line swap closes one valve then opens the other, and the
+          # two state updates can land out of order for a moment.
+          for:
+            seconds: 2
+          id: both_open
+        - trigger: template
+          value_template: >
+            {{ is_state('switch.feed_pump_irrigation_tent', 'on')
+               and not is_state('valve.feed_valve_irrigation_tent', 'open')
+               and not is_state('valve.flush_valve_irrigation_tent', 'open') }}
+          for:
+            seconds: 15
+          id: no_suction
+      actions:
+        - action: switch.turn_off
+          target:
+            entity_id: switch.feed_pump_irrigation_tent
+        - if:
+            - condition: trigger
+              id: both_open
+          then:
+            - action: valve.close_valve
+              target:
+                entity_id:
+                  - valve.feed_valve_irrigation_tent
+                  - valve.feed_return_valve_irrigation_tent
+                  - valve.flush_valve_irrigation_tent
+            - action: input_text.set_value
+              target:
+                entity_id: input_text.tent_irrigation_status
+              data:
+                value: FAULT — Feed and Flush IN valves both open
+        - action: notify.mobile_app_sm_a166w
+          data:
+            title: Irrigation Pump Interlock
+            message: >
+              {% if trigger.id == 'both_open' %}Feed and Flush IN valves were open
+              together — pump stopped and both lines closed.{% else %}Pump ran 15 s
+              with no IN valve open — pump stopped.{% endif %}
+      mode: single

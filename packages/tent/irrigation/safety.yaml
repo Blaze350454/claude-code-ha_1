@@ -7,8 +7,9 @@ tent_irrigation_safety:
         than its expected max. State-based triggers — fires regardless of how
         the pump/valve was activated. Tiered thresholds:
           PUMPS:
-          - feed/flush 16 min (covers feed_duration capped at 13 min;
-            low-flow safety also catches abnormal feed/flush at 2 min mark)
+          - irrigation pump 16 min (the ONE pump since 2026-10-31, on the old
+            Feed Pump socket; covers feed_duration capped at 13 min and the
+            Feed Now / Flush Now durations, which are capped at 15)
           - stir 65 min (5 min buffer over stir_on_duration_minutes max 60,
             also covers maintenance_stir/night_pulse_stir maxes)
           - air 65 min (5 min buffer over air_on_duration_minutes max 60)
@@ -26,9 +27,7 @@ tent_irrigation_safety:
             clear; 10 min is generous slack)
       triggers:
         - trigger: state
-          entity_id:
-            - switch.feed_pump_irrigation_tent
-            - switch.flush_pump_irrigation_tent
+          entity_id: switch.feed_pump_irrigation_tent
           to: 'on'
           for:
             minutes: 16
@@ -83,7 +82,6 @@ tent_irrigation_safety:
           target:
             entity_id:
               - switch.feed_pump_irrigation_tent
-              - switch.flush_pump_irrigation_tent
               - switch.air_pump_irrigation_tent
               - switch.feed_stir_pump_irrigation_tent
               - switch.flush_stir_pump_irrigation_tent
@@ -114,7 +112,7 @@ tent_irrigation_safety:
     - id: tent_irrigation_idle_flow_watchdog
       alias: Tent Irrigation — Idle-Flow Watchdog
       description: >
-        Sustained flow while both water pumps have been off 10+ min means
+        Sustained flow while the irrigation pump has been off 10+ min means
         water is moving when nothing should run (stuck valve, siphon, leak
         past a pump). Closes all line valves, flags FAULT and notifies.
         Threshold 0.2 L/min clears the ~0.19 single-pulse blips from
@@ -132,11 +130,6 @@ tent_irrigation_safety:
       conditions:
         - condition: state
           entity_id: switch.feed_pump_irrigation_tent
-          state: 'off'
-          for:
-            minutes: 10
-        - condition: state
-          entity_id: switch.flush_pump_irrigation_tent
           state: 'off'
           for:
             minutes: 10
@@ -160,7 +153,7 @@ tent_irrigation_safety:
             title: Idle Flow Detected
             message: >
               {{ states('sensor.flow_rate_irrigation_tent') }} L/min measured
-              with both water pumps off 10+ min. Line valves closed — check
+              with the irrigation pump off 10+ min. Line valves closed — check
               for a stuck valve, siphon or leak.
       mode: single
     - id: tent_irrigation_startup_recovery
@@ -184,7 +177,6 @@ tent_irrigation_safety:
           target:
             entity_id:
               - switch.feed_pump_irrigation_tent
-              - switch.flush_pump_irrigation_tent
               - switch.air_pump_irrigation_tent
               - switch.feed_stir_pump_irrigation_tent
               - switch.flush_stir_pump_irrigation_tent
@@ -224,7 +216,7 @@ tent_irrigation_safety:
         valves can publish stale/phantom "open" states (2026-07-06 incident:
         all five reported open while physically closed; the flush drain sat
         "open" 10 min until the watchdog FAULTed the system). Guarded so it
-        only acts while both water pumps are off and no feed cycle is
+        only acts while the irrigation pump is off and no feed cycle is
         running — a mid-cycle wifi blip can't abort a legitimate feed. The
         ESP also force-closes/publishes closed on boot (on_boot added same
         date), so this is the HA-side backstop.
@@ -242,9 +234,6 @@ tent_irrigation_safety:
       conditions:
         - condition: state
           entity_id: switch.feed_pump_irrigation_tent
-          state: 'off'
-        - condition: state
-          entity_id: switch.flush_pump_irrigation_tent
           state: 'off'
         - condition: state
           entity_id: script.run_feed_cycle
@@ -269,7 +258,8 @@ tent_irrigation_safety:
     - id: tent_irrigation_block_feed_when_reservoir_dry
       alias: Tent Irrigation — Block Feed When Reservoir Dry
       description: >
-        Turns off feed pump, stir pump, and valve when feed reservoir is dry —
+        Turns off the feed stir pump and the feed line (and the irrigation pump,
+        if it is drawing from feed) when the feed reservoir is dry —
         either because they were activated while already dry, or because the
         reservoir drained while they were running. Keys off
         binary_sensor.feed_reservoir_dry — the single shared "dry" definition
@@ -277,6 +267,8 @@ tent_irrigation_safety:
         level sensor so stir/air splash can't false-trip it. A tank already empty
         when agitation starts still reads dry and is caught immediately; one that
         drains mid-burst is caught once agitation stops and the level steps down.
+        ONE PUMP (2026-10-31): the pump only counts as "feeding" while FEED-IN is
+        open — a dry feed tank must not stop a flush drawing from the flush tank.
       triggers:
         - trigger: state
           entity_id:
@@ -296,20 +288,23 @@ tent_irrigation_safety:
         - condition: or
           conditions:
             - condition: state
-              entity_id: switch.feed_pump_irrigation_tent
-              state: 'on'
-            - condition: state
               entity_id: switch.feed_stir_pump_irrigation_tent
               state: 'on'
             - condition: state
               entity_id: valve.feed_valve_irrigation_tent
               state: open
       actions:
+        - if:
+            - condition: state
+              entity_id: valve.feed_valve_irrigation_tent
+              state: open
+          then:
+            - action: switch.turn_off
+              target:
+                entity_id: switch.feed_pump_irrigation_tent
         - action: switch.turn_off
           target:
-            entity_id:
-              - switch.feed_pump_irrigation_tent
-              - switch.feed_stir_pump_irrigation_tent
+            entity_id: switch.feed_stir_pump_irrigation_tent
         - action: script.turn_off
           target:
             entity_id: script.tent_feed_line_open
@@ -322,12 +317,13 @@ tent_irrigation_safety:
         - action: notify.mobile_app_sm_a166w
           data:
             title: Feed Blocked — Reservoir Dry
-            message: Feed pump, stir pump, or valve turned off. Feed reservoir is dry.
+            message: Feed line and feed stir pump turned off. Feed reservoir is dry.
       mode: single
     - id: tent_irrigation_block_flush_when_reservoir_dry
       alias: Tent Irrigation — Block Flush When Reservoir Dry
       description: >
-        Turns off flush pump, stir pump, and valve when flush reservoir is dry —
+        Turns off the flush stir pump and the flush line (and the irrigation pump,
+        if it is drawing from flush) when the flush reservoir is dry —
         either because they were activated while already dry, or because the
         reservoir drained while they were running. Keys off
         binary_sensor.flush_reservoir_dry — the single shared "dry" definition
@@ -335,10 +331,12 @@ tent_irrigation_safety:
         level sensor so stir/air splash can't false-trip it. A tank already empty
         when agitation starts still reads dry and is caught immediately; one that
         drains mid-burst is caught once agitation stops and the level steps down.
+        ONE PUMP (2026-10-31): the pump only counts as "flushing" while FLUSH-IN
+        is open — a dry flush tank must not stop a feed.
       triggers:
         - trigger: state
           entity_id:
-            - switch.flush_pump_irrigation_tent
+            - switch.feed_pump_irrigation_tent
             - switch.flush_stir_pump_irrigation_tent
           to: 'on'
         - trigger: state
@@ -354,20 +352,23 @@ tent_irrigation_safety:
         - condition: or
           conditions:
             - condition: state
-              entity_id: switch.flush_pump_irrigation_tent
-              state: 'on'
-            - condition: state
               entity_id: switch.flush_stir_pump_irrigation_tent
               state: 'on'
             - condition: state
               entity_id: valve.flush_valve_irrigation_tent
               state: open
       actions:
+        - if:
+            - condition: state
+              entity_id: valve.flush_valve_irrigation_tent
+              state: open
+          then:
+            - action: switch.turn_off
+              target:
+                entity_id: switch.feed_pump_irrigation_tent
         - action: switch.turn_off
           target:
-            entity_id:
-              - switch.flush_pump_irrigation_tent
-              - switch.flush_stir_pump_irrigation_tent
+            entity_id: switch.flush_stir_pump_irrigation_tent
         - action: script.turn_off
           target:
             entity_id: script.tent_flush_line_open
@@ -378,7 +379,7 @@ tent_irrigation_safety:
         - action: notify.mobile_app_sm_a166w
           data:
             title: Flush Blocked — Reservoir Dry
-            message: Flush pump, stir pump, or valve turned off. Flush reservoir is dry.
+            message: Flush line and flush stir pump turned off. Flush reservoir is dry.
       mode: single
     - id: tent_irrigation_block_feed_fill_when_reservoir_full
       alias: Tent Irrigation — Block Feed Fill When Reservoir Full
@@ -579,16 +580,15 @@ tent_irrigation_safety:
                   entity_id: input_boolean.irrigation_tent_kill
                   state: 'on'
               sequence:
+                # Protective automations (dry/full blocks, run-time watchdog,
+                # startup + reconnect recovery) stay ARMED under All Off
+                # (2026-10-31): they only act on hardware that is running, so
+                # disabling them just left a hand-started pump unguarded.
                 - action: automation.turn_off
                   target:
                     entity_id:
                       - automation.fill_feed_reservoir
                       - automation.fill_flush_reservoir
-                      - automation.tent_irrigation_block_feed_when_reservoir_dry
-                      - automation.tent_irrigation_block_flush_when_reservoir_dry
-                      - automation.tent_irrigation_block_feed_fill_when_reservoir_full
-                      - automation.tent_irrigation_block_flush_fill_when_reservoir_full
-                      - automation.tent_irrigation_block_table_drain_pump_when_dry
                       - automation.tent_irrigation_daily_setup_at_lights_on
                       - automation.tent_irrigation_feed_trigger
                       - automation.tent_irrigation_lights_off_cleanup
@@ -597,10 +597,7 @@ tent_irrigation_safety:
                       - automation.tent_irrigation_re_enable_maintenance_on_enable
                       - automation.tent_irrigation_pre_feed_air_stir_start
                       - automation.tent_irrigation_pre_feed_air_stir_stop
-                      - automation.tent_irrigation_startup_recovery
-                      - automation.tent_irrigation_reconnect_valve_recovery
                       - automation.tent_irrigation_table_drain_pump
-                      - automation.tent_irrigation_watchdog
                       - automation.tent_irrigation_maintenance_cycle
                       - automation.tent_irrigation_air_alternation
                 - action: script.turn_off
@@ -616,7 +613,6 @@ tent_irrigation_safety:
                     entity_id:
                       - switch.feed_pump_irrigation_tent
                       - switch.feed_stir_pump_irrigation_tent
-                      - switch.flush_pump_irrigation_tent
                       - switch.flush_stir_pump_irrigation_tent
                       - switch.air_pump_irrigation_tent
                 - action: valve.close_valve
@@ -678,7 +674,7 @@ tent_irrigation_safety:
                           - automation.tent_irrigation_pre_feed_air_stir_start
                           - automation.tent_irrigation_pre_feed_air_stir_stop
 
-    # Scoped kill: stop only WATER delivery to the table. Feed/flush pumps off,
+    # Scoped kill: stop only WATER delivery to the table. Irrigation pump off,
     # feed/flush/drain valves closed, feed trigger disabled, any manual/scheduled
     # feed or flush aborted. Reservoir fills, table drain, air and stir keep running.
     # Off-branch re-enables the feed trigger only if STOP ALL isn't also held.
@@ -721,7 +717,6 @@ tent_irrigation_safety:
                   target:
                     entity_id:
                       - switch.feed_pump_irrigation_tent
-                      - switch.flush_pump_irrigation_tent
                 - action: valve.close_valve
                   target:
                     entity_id:
@@ -816,6 +811,12 @@ tent_irrigation_safety:
             - condition: state
               entity_id: script.run_feed_cycle
               state: "on"
+        # Never stir while the pump is drawing (Feed Now, Flush Now, hand runs):
+        # the vortex feeds bubbles into the suction — the reason the pre-feed
+        # settle window exists.
+        - condition: state
+          entity_id: switch.feed_pump_irrigation_tent
+          state: "off"
         # At least one tank is due for service
         - condition: template
           value_template: >

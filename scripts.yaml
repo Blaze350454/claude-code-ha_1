@@ -194,9 +194,11 @@ run_feed_cycle:
           entity_id: input_text.tent_irrigation_status
         data:
           value: Clearing Lines
+      # One pump (2026-10-31): tent_flush_line_open shut FEED-IN and opened
+      # FLUSH-IN, so the same pump now draws from the flush tank.
       - action: switch.turn_on
         target:
-          entity_id: switch.flush_pump_irrigation_tent
+          entity_id: switch.feed_pump_irrigation_tent
       # clear_minutes (daily_flush_duration) is the TOTAL flush period; the
       # end-of-line drain valve is open for the LAST 30 s of it. Previous
       # behavior: whole period drain-closed + a 5 s purge tacked on the end,
@@ -214,7 +216,7 @@ run_feed_cycle:
           entity_id: valve.flush_drain_valve_irrigation_tent
       - action: switch.turn_off
         target:
-          entity_id: switch.flush_pump_irrigation_tent
+          entity_id: switch.feed_pump_irrigation_tent
       - action: script.tent_flush_line_close
       # Stamp the last successful line-clear flush (mirrors last_feed_time).
       - action: input_datetime.set_datetime
@@ -345,7 +347,7 @@ tent_irrigation_advance_to_next_feed:
 
 # Manual end-of-day plant flush: pushes flush-reservoir water through the lines
 # to the plants for "Flush Now Duration" (input_number.flush_now_duration)
-# minutes TOTAL — pump + flush valve open the whole period — with the
+# minutes TOTAL — pump + flush line (FLUSH-IN) open the whole period — with the
 # end-of-line drain valve open for the LAST "Flush Now Drain Duration"
 # (input_number.flush_now_drain_duration) minutes of it (added 2026-07-05;
 # clamped to the total). Stops early if the flush reservoir runs dry.
@@ -366,7 +368,7 @@ run_flush_now:
     then:
     - action: switch.turn_off
       target:
-        entity_id: switch.flush_pump_irrigation_tent
+        entity_id: switch.feed_pump_irrigation_tent
     - action: script.tent_flush_line_close
     - action: valve.close_valve
       target:
@@ -382,9 +384,15 @@ run_flush_now:
     - stop: "Flush cancelled by user"
   # --- Start guards ---
   - if:
-    - condition: state
-      entity_id: script.run_feed_cycle
-      state: 'on'
+    - condition: or
+      conditions:
+      - condition: state
+        entity_id: script.run_feed_cycle
+        state: 'on'
+      # One pump: a Feed Now holds it.
+      - condition: state
+        entity_id: input_boolean.feed_now_running
+        state: 'on'
     then:
     - action: notify.mobile_app_sm_a166w
       data:
@@ -430,10 +438,12 @@ run_flush_now:
       entity_id: input_text.tent_irrigation_status
     data:
       value: Flushing
+  # One pump (2026-10-31): the flush line open shuts FEED-IN, so the pump
+  # draws from the flush tank.
   - action: script.tent_flush_line_open
   - action: switch.turn_on
     target:
-      entity_id: switch.flush_pump_irrigation_tent
+      entity_id: switch.feed_pump_irrigation_tent
   # Stamp the last flush (mirrors last_feed_time; manual flush updates "last"
   # only, not the automated next_flush schedule).
   - action: input_datetime.set_datetime
@@ -462,7 +472,7 @@ run_flush_now:
   # --- Shutdown ---
   - action: switch.turn_off
     target:
-      entity_id: switch.flush_pump_irrigation_tent
+      entity_id: switch.feed_pump_irrigation_tent
   - action: script.tent_flush_line_close
   - action: valve.close_valve
     target:
@@ -517,10 +527,21 @@ run_feed_now:
         title: Feed Blocked — Feed Cycle Running
         message: A scheduled feed cycle is in progress. Wait for it to finish.
     - stop: "Feed cycle in progress"
+  # One pump: a Flush Now holds it.
   - if:
     - condition: state
-      entity_id: binary_sensor.feed_empty_irrigation_tent
-      state: 'off'
+      entity_id: input_boolean.flush_now_running
+      state: 'on'
+    then:
+    - action: notify.mobile_app_sm_a166w
+      data:
+        title: Feed Blocked — Flush Running
+        message: A Flush Now is in progress. Wait for it to finish.
+    - stop: "Flush in progress"
+  - if:
+    - condition: state
+      entity_id: binary_sensor.feed_reservoir_dry
+      state: 'on'
     then:
     - action: notify.mobile_app_sm_a166w
       data:
@@ -541,7 +562,7 @@ run_feed_now:
     target:
       entity_id: switch.feed_pump_irrigation_tent
   # Run until the feed reservoir empties (float reads dry) or the duration elapses.
-  - wait_template: "{{ is_state('binary_sensor.feed_empty_irrigation_tent', 'off') }}"
+  - wait_template: "{{ is_state('binary_sensor.feed_reservoir_dry', 'on') }}"
     timeout: "{{ (states('input_number.feed_now_duration') | float(15) * 60) | round | int }}"
     continue_on_timeout: true
   - action: switch.turn_off

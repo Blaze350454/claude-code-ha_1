@@ -24,7 +24,7 @@
 
 # --- Latched feed-time readings (added 2026-06-20) ---
 # Flow/pressure sensors read ~0 when pumps are idle. These trigger-based
-# template sensors update ONLY while a feed/flush pump is on, so they HOLD the
+# template sensors update ONLY while the irrigation pump is on, so they HOLD the
 # last active feed reading at idle -- lets the dashboard show the last
 # good/low/high color at a glance even when nothing is running.
 - trigger:
@@ -33,8 +33,7 @@
   condition:
     - condition: template
       value_template: >
-        {{ is_state('switch.feed_pump_irrigation_tent', 'on')
-           or is_state('switch.flush_pump_irrigation_tent', 'on') }}
+        {{ is_state('switch.feed_pump_irrigation_tent', 'on') }}
   sensor:
     - name: "Last Feed Flow"
       unique_id: last_feed_flow
@@ -74,8 +73,7 @@
       state: >
         {% if trigger.id == 'dead' %}
           {{ none }}
-        {% elif (is_state('switch.feed_pump_irrigation_tent', 'on')
-                 or is_state('switch.flush_pump_irrigation_tent', 'on'))
+        {% elif is_state('switch.feed_pump_irrigation_tent', 'on')
                 and has_value('sensor.pressure_post_regulator_irrigation_tent') %}
           {{ states('sensor.pressure_post_regulator_irrigation_tent') | float(0) | round(1) }}
         {% else %}
@@ -102,8 +100,7 @@
       state: >
         {% if trigger.id == 'dead' %}
           {{ none }}
-        {% elif (is_state('switch.feed_pump_irrigation_tent', 'on')
-                 or is_state('switch.flush_pump_irrigation_tent', 'on'))
+        {% elif is_state('switch.feed_pump_irrigation_tent', 'on')
                 and has_value('sensor.pressure_pre_regulator_irrigation_tent') %}
           {{ states('sensor.pressure_pre_regulator_irrigation_tent') | float(0) | round(1) }}
         {% else %}

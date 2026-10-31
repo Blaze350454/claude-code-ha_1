@@ -167,6 +167,11 @@ tent_irrigation_air:
         - condition: state
           entity_id: script.run_night_pulse
           state: "off"
+        # Never aerate while the pump is drawing (Feed Now, hand runs): bubbles
+        # reach the suction — the reason the pre-feed settle window exists.
+        - condition: state
+          entity_id: switch.feed_pump_irrigation_tent
+          state: "off"
         # Not in the feed settle window
         - condition: template
           value_template: >
