@@ -144,6 +144,8 @@ tent_control_safety:
             - action: switch.turn_off
               target:
                 entity_id: switch.air_pump_irrigation_tent
+        # HS300 Plug 3 powers the irrigation ESP32 (2026-10-31) — the valves
+        # must stay controllable to close.
         - if:
             - condition: state
               entity_id: switch.irrigation_controller_tent

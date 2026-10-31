@@ -28,8 +28,9 @@ tent_irrigation_lines:
   # The two IN valves must never be open together (the pump would draw nutrient
   # into the flush side and vice versa), so each open script shuts the other
   # line first, and the interlock automation below is the backstop.
-  # switch.flush_pump_irrigation_tent is an EMPTY HS300 socket now — nothing
-  # may switch it.
+  # The old Flush Pump socket (HS300 Plug 3) now powers the irrigation ESP32 and
+  # is switch.irrigation_controller_tent (2026-10-31); nothing may switch it off.
+  # The old Plug 6 "Irrigation Controller" is switch.irrigation_strip_spare_tent.
 
   script:
     tent_feed_line_open:
