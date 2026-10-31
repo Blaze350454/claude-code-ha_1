@@ -110,8 +110,9 @@ prefix — expect to re-run one after any reflash that adds entities.
     `switch.irrigation_controller_tent`** (entity IDs swapped in the registry: the
     old Plug 6 "Irrigation Controller", which never powered the ESP and whose load is
     unrecorded, is now `switch.irrigation_strip_spare_tent`). So the ESP **can** be
-    power-cycled from HA (once the user's move of the plug is confirmed by an uptime
-    reset when Plug 3 is toggled). Turning it off leaves the valves uncontrollable (the ESP's
+    power-cycled from HA (verified 2026-10-31: Plug 3 on → uptime 3.9 s within 7 s).
+    HA does not mark the ESP unavailable during a short cut, so judge a cycle by the
+    uptime reset, not availability. Turning it off leaves the valves uncontrollable (the ESP's
     boot closes them all), so nothing may switch it off in automation; flood stop
     turns it back ON if it finds it off. Before 2026-10-31 the ESP was on no smart
     plug at all; a 2026-08-07 session recommended a power-cycle via Plug 6 that would
