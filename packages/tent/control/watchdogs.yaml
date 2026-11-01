@@ -68,3 +68,125 @@ tent_control_watchdogs:
               (since {{ trigger.from_state.last_changed }}).
 
               {{ hint[trigger.id] }}
+
+    # ----------------------------------------------------------------------
+    # Load Not Drawing Current Watchdog (2026-10-31)
+    # A strip socket switched ON whose HS300 meter reads ~0 A means the load is
+    # dead, unplugged, or its supply failed. Warn-only: nothing is switched.
+    #
+    # Timing: the HS300 meters poll about once a minute, and last_reported only
+    # moves when the value changes, so a check at exactly 30 s can still hold the
+    # 0 A from before switch-on. After 30 s ON it therefore waits up to 75 s for
+    # a real reading before judging (a dead load alerts ~1.5 min after switch-on).
+    # The second trigger per load catches one that dies mid-run.
+    #
+    # The irrigation controller socket is always on, so it only has the mid-run
+    # style trigger, with a lower threshold: the ESP draws ~0.06 A.
+    # ----------------------------------------------------------------------
+    - id: watchdog_irrigation_load_no_current
+      alias: "Watchdog — Irrigation Load ON But Drawing No Current"
+      description: >
+        Fires when an HS300 irrigation socket is switched on but its current
+        meter still reads ~0 A after a fresh reading. Pushes to phone and posts
+        a persistent notification in HA. Warn-only.
+      mode: parallel
+      max: 6
+      triggers:
+        - trigger: state
+          entity_id: switch.feed_pump_irrigation_tent
+          to: "on"
+          for: "00:00:30"
+          id: feed_pump
+        - trigger: numeric_state
+          entity_id: sensor.feed_pump_current_irrigation_tent
+          below: 0.05
+          for: "00:01:30"
+          id: feed_pump
+        - trigger: state
+          entity_id: switch.feed_stir_pump_irrigation_tent
+          to: "on"
+          for: "00:00:30"
+          id: feed_stir_pump
+        - trigger: numeric_state
+          entity_id: sensor.feed_stir_pump_current_irrigation_tent
+          below: 0.05
+          for: "00:01:30"
+          id: feed_stir_pump
+        - trigger: state
+          entity_id: switch.flush_stir_pump_irrigation_tent
+          to: "on"
+          for: "00:00:30"
+          id: flush_stir_pump
+        - trigger: numeric_state
+          entity_id: sensor.flush_stir_pump_current_irrigation_tent
+          below: 0.05
+          for: "00:01:30"
+          id: flush_stir_pump
+        - trigger: state
+          entity_id: switch.air_pump_irrigation_tent
+          to: "on"
+          for: "00:00:30"
+          id: air_pump
+        - trigger: numeric_state
+          entity_id: sensor.air_pump_current_irrigation_tent
+          below: 0.05
+          for: "00:01:30"
+          id: air_pump
+        - trigger: numeric_state
+          entity_id: sensor.irrigation_controller_current_irrigation_tent
+          below: 0.02
+          for: "00:03:00"
+          id: irrigation_controller
+      variables:
+        names:
+          feed_pump: "Feed Pump (irrigation pump)"
+          feed_stir_pump: "Feed Stir Pump"
+          flush_stir_pump: "Flush Stir Pump"
+          air_pump: "Air Pump"
+          irrigation_controller: "Irrigation Controller (ESP32 supply)"
+        thresholds:
+          feed_pump: 0.05
+          feed_stir_pump: 0.05
+          flush_stir_pump: 0.05
+          air_pump: 0.05
+          irrigation_controller: 0.02
+        load: "{{ trigger.id }}"
+        name: "{{ names[load] }}"
+        threshold: "{{ thresholds[load] }}"
+        switch_entity: "switch.{{ load }}_irrigation_tent"
+        current_entity: "sensor.{{ load }}_current_irrigation_tent"
+      conditions:
+        - condition: template
+          value_template: "{{ is_state(switch_entity, 'on') }}"
+        # Non-numeric (strip unavailable) is the offline watchdog's job, not this one.
+        - condition: template
+          value_template: >-
+            {{ is_number(states(current_entity))
+               and states(current_entity) | float < threshold | float }}
+      actions:
+        - wait_template: >-
+            {{ not is_state(switch_entity, 'on')
+               or states(current_entity) | float(0) >= threshold | float }}
+          timeout: "00:01:15"
+          continue_on_timeout: true
+        - condition: template
+          value_template: >-
+            {{ is_state(switch_entity, 'on')
+               and is_number(states(current_entity))
+               and states(current_entity) | float < threshold | float }}
+        - action: notify.send_message
+          target:
+            entity_id: notify.brenton_s_phone
+          data:
+            title: "Grow tent: {{ name }} not running"
+            message: >-
+              {{ name }} is switched ON but draws {{ states(current_entity) }} A.
+              Dead, unplugged, or its supply failed.
+        - action: persistent_notification.create
+          data:
+            notification_id: "watchdog_irrigation_no_current_{{ load }}"
+            title: "{{ name }} ON but drawing no current"
+            message: >-
+              `{{ switch_entity }}` is **on** but `{{ current_entity }}` reads
+              **{{ states(current_entity) }} A** (threshold {{ threshold }} A) at
+              {{ now().strftime('%H:%M:%S') }}. Check the load is plugged in and alive.
