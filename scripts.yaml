@@ -38,14 +38,17 @@ run_night_pulse:
       - switch.feed_stir_pump_irrigation_tent
   - delay:
       milliseconds: 500
-  - action: switch.turn_on
-    target:
-      entity_id: switch.air_pump_irrigation_tent
-  - delay:
+  # Air goes through the routed burst so the diverter pinches the flush hose and all
+  # the air reaches FEED. Switching the pump directly left the cam at Both Open and
+  # split the air between both tanks (fixed 2026-10-31). Called as an action, so it
+  # blocks until the burst ends, then the burst returns the cam to Both Open.
+  # continue_on_error: if the ESP is offline the burst aborts before the pump starts;
+  # skip the air but still run the post-stir and clear alternating_active.
+  - action: script.tent_air_burst
+    continue_on_error: true
+    data:
+      tank: feed
       minutes: "{{ states('input_number.night_pulse_air_duration') | int }}"
-  - action: switch.turn_off
-    target:
-      entity_id: switch.air_pump_irrigation_tent
   - delay:
       milliseconds: 500
   - action: switch.turn_on
