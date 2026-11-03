@@ -605,19 +605,31 @@ tent_camera_snapshot:
   - action: blink.trigger_camera
     target:
       entity_id: "{{ cam }}"
-  # Poll until Blink actually serves the fresh frame (weak-signal cams need ~40s);
-  # a flat 8s wait grabbed the stale thumbnail. Cap at ~48s.
+  # Same timing as script.camera_timelapse_capture (2026-11-02): the old 6s-poll /
+  # 48s cap saved stale frames when the cap expired, or when the thumbnail URL
+  # changed before Blink's cloud served the new bytes. So: 60s wait, poll every
+  # 10s up to 2 min more, then a 15s settle + refresh. Takes ~1.5-3.5 min.
+  - delay:
+      seconds: 60
+  - action: homeassistant.update_entity
+    target:
+      entity_id: "{{ cam }}"
   - repeat:
+      while:
+      - condition: template
+        value_template: >
+          {{ state_attr(cam, 'thumbnail') == pre_thumb and repeat.index <= 12 }}
       sequence:
       - delay:
-          seconds: 6
+          seconds: 10
       - action: homeassistant.update_entity
         target:
           entity_id: "{{ cam }}"
-      until:
-      - condition: template
-        value_template: >
-          {{ state_attr(cam, 'thumbnail') != pre_thumb or repeat.index >= 8 }}
+  - delay:
+      seconds: 15
+  - action: homeassistant.update_entity
+    target:
+      entity_id: "{{ cam }}"
   - action: camera.snapshot
     target:
       entity_id: "{{ cam }}"
