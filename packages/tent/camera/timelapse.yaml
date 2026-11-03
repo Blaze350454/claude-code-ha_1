@@ -124,15 +124,20 @@ tent_camera_timelapse:
         # URL changed before Blink's cloud served the new bytes, so the snapshot
         # still got the old picture. Frame timing doesn't matter for a timelapse,
         # so: 60s initial wait, then poll every 10s up to 2 min more, then a 15s
-        # settle + one more refresh before saving. Worst case ~3.5 min, well under
+        # settle + one more refresh before saving. Worst case ~4 min, well under
         # the 15 min minimum interval (the scheduler stamps the START of a cycle).
+        # 2026-11-03: a third failure — Blink sometimes IGNORES the trigger
+        # outright (thumbnail ts never moves, nothing in the log; seen on tent_2).
+        # So if nothing new has arrived ~90s in, trigger ONCE more; and if the
+        # thumbnail still hasn't changed when the wait runs out, SKIP the save
+        # (warning in the log) rather than writing the old picture again.
         # Non-Blink (streaming) cams skip straight to the snapshot.
+        - variables:
+            pre_thumb: "{{ state_attr(cam, 'thumbnail') }}"
         - if:
             - condition: template
               value_template: "{{ is_blink }}"
           then:
-            - variables:
-                pre_thumb: "{{ state_attr(cam, 'thumbnail') }}"
             - action: blink.trigger_camera
               target:
                 entity_id: "{{ cam }}"
@@ -145,19 +150,56 @@ tent_camera_timelapse:
                 while:
                   - condition: template
                     value_template: >
-                      {{ state_attr(cam, 'thumbnail') == pre_thumb and repeat.index <= 12 }}
+                      {{ state_attr(cam, 'thumbnail') == pre_thumb and repeat.index <= 3 }}
                 sequence:
                   - delay:
                       seconds: 10
                   - action: homeassistant.update_entity
                     target:
                       entity_id: "{{ cam }}"
+            # Retry: still nothing after ~90s -> Blink likely dropped the trigger.
+            - if:
+                - condition: template
+                  value_template: "{{ state_attr(cam, 'thumbnail') == pre_thumb }}"
+              then:
+                - action: blink.trigger_camera
+                  target:
+                    entity_id: "{{ cam }}"
+                - repeat:
+                    while:
+                      - condition: template
+                        value_template: >
+                          {{ state_attr(cam, 'thumbnail') == pre_thumb and repeat.index <= 12 }}
+                    sequence:
+                      - delay:
+                          seconds: 10
+                      - action: homeassistant.update_entity
+                        target:
+                          entity_id: "{{ cam }}"
             # Settle: the URL can change before the new bytes are served.
             - delay:
                 seconds: 15
             - action: homeassistant.update_entity
               target:
                 entity_id: "{{ cam }}"
+        # Advance the rotation pointer BEFORE the skip check, so a camera that
+        # failed doesn't stall the rotation.
+        - action: input_number.set_value
+          target:
+            entity_id: input_number.timelapse_rotation_index
+          data:
+            value: "{{ idx + 1 }}"
+        # No fresh frame from a Blink cam -> log it and save nothing.
+        - if:
+            - condition: template
+              value_template: "{{ is_blink and state_attr(cam, 'thumbnail') == pre_thumb }}"
+          then:
+            - action: system_log.write
+              data:
+                level: warning
+                logger: tent_timelapse
+                message: "{{ cam }}: no new Blink picture after trigger + retry; frame {{ stamp }} skipped"
+            - stop: "No fresh frame"
         # Timestamped frame for the lapse sequence...
         - action: camera.snapshot
           target:
@@ -171,12 +213,6 @@ tent_camera_timelapse:
             entity_id: "{{ cam }}"
           data:
             filename: "/config/www/timelapse/{{ shortname }}/latest.jpg"
-        # Advance the rotation pointer.
-        - action: input_number.set_value
-          target:
-            entity_id: input_number.timelapse_rotation_index
-          data:
-            value: "{{ idx + 1 }}"
 
   automation:
     - id: camera_timelapse_scheduler

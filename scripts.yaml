@@ -608,7 +608,7 @@ tent_camera_snapshot:
   # Same timing as script.camera_timelapse_capture (2026-11-02): the old 6s-poll /
   # 48s cap saved stale frames when the cap expired, or when the thumbnail URL
   # changed before Blink's cloud served the new bytes. So: 60s wait, poll every
-  # 10s up to 2 min more, then a 15s settle + refresh. Takes ~1.5-3.5 min.
+  # 10s, re-trigger once at ~90s if nothing new, then a 15s settle + refresh. Takes ~1.5-4 min.
   - delay:
       seconds: 60
   - action: homeassistant.update_entity
@@ -618,18 +618,49 @@ tent_camera_snapshot:
       while:
       - condition: template
         value_template: >
-          {{ state_attr(cam, 'thumbnail') == pre_thumb and repeat.index <= 12 }}
+          {{ state_attr(cam, 'thumbnail') == pre_thumb and repeat.index <= 3 }}
       sequence:
       - delay:
           seconds: 10
       - action: homeassistant.update_entity
         target:
           entity_id: "{{ cam }}"
+  # 2026-11-03: Blink sometimes ignores the trigger outright. Nothing new after
+  # ~90s -> trigger once more and keep polling up to 2 min.
+  - if:
+    - condition: template
+      value_template: "{{ state_attr(cam, 'thumbnail') == pre_thumb }}"
+    then:
+    - action: blink.trigger_camera
+      target:
+        entity_id: "{{ cam }}"
+    - repeat:
+        while:
+        - condition: template
+          value_template: >
+            {{ state_attr(cam, 'thumbnail') == pre_thumb and repeat.index <= 12 }}
+        sequence:
+        - delay:
+            seconds: 10
+        - action: homeassistant.update_entity
+          target:
+            entity_id: "{{ cam }}"
   - delay:
       seconds: 15
   - action: homeassistant.update_entity
     target:
       entity_id: "{{ cam }}"
+  # Still no new picture -> say so and keep the old latest.jpg untouched.
+  - if:
+    - condition: template
+      value_template: "{{ state_attr(cam, 'thumbnail') == pre_thumb }}"
+    then:
+    - action: persistent_notification.create
+      data:
+        title: Tent camera photo failed
+        message: "{{ cam }} did not take a new picture after two tries. The tile still shows the previous photo."
+        notification_id: "tent_snapshot_failed_{{ shortname }}"
+    - stop: "No fresh frame"
   - action: camera.snapshot
     target:
       entity_id: "{{ cam }}"
