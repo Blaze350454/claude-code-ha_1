@@ -23,7 +23,7 @@
 ### Step A1: Create Backup Script
 
 ```bash
-nano /home/homeadmin/backup-ha.sh
+nano /home/brakka/backup-ha.sh
 ```
 
 **Paste this script:**
@@ -32,7 +32,7 @@ nano /home/homeadmin/backup-ha.sh
 #!/bin/bash
 
 # Navigate to HA config directory
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 
 # Add all changes
 git add .
@@ -40,12 +40,12 @@ git add .
 # Check if there are changes to commit
 if git diff-index --quiet HEAD --; then
     # No changes
-    echo "$(date): No changes to backup" >> /home/homeadmin/backup.log
+    echo "$(date): No changes to backup" >> /home/brakka/backup.log
 else
     # Changes found, commit and push
     git commit -m "Auto backup $(date '+%Y-%m-%d %H:%M')"
     git push
-    echo "$(date): Backup completed successfully" >> /home/homeadmin/backup.log
+    echo "$(date): Backup completed successfully" >> /home/brakka/backup.log
 fi
 ```
 
@@ -54,13 +54,13 @@ fi
 ### Step A2: Make Script Executable
 
 ```bash
-chmod +x /home/homeadmin/backup-ha.sh
+chmod +x /home/brakka/backup-ha.sh
 ```
 
 ### Step A3: Test the Script
 
 ```bash
-/home/homeadmin/backup-ha.sh
+/home/brakka/backup-ha.sh
 ```
 
 **Should say:** "No changes to backup" (since we just pushed everything)
@@ -76,7 +76,7 @@ crontab -e
 **Add this line at the very bottom:**
 
 ```
-0 2 * * * /home/homeadmin/backup-ha.sh
+0 2 * * * /home/brakka/backup-ha.sh
 ```
 
 **Save:** `Ctrl + O`, `Enter`, `Ctrl + X`
@@ -87,7 +87,7 @@ crontab -e
 crontab -l
 ```
 
-**Should show:** `0 2 * * * /home/homeadmin/backup-ha.sh`
+**Should show:** `0 2 * * * /home/brakka/backup-ha.sh`
 
 ✅ **Done!** Git backups will now run every night at 2 AM.
 
@@ -193,14 +193,14 @@ crontab -l
 
 ```bash
 # Make a small change
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 echo "# Test backup" >> configuration.yaml
 
 # Run backup script
-/home/homeadmin/backup-ha.sh
+/home/brakka/backup-ha.sh
 
 # Check log
-cat /home/homeadmin/backup.log
+cat /home/brakka/backup.log
 
 # Verify on GitHub
 # Go to: https://github.com/Blaze350454/homeassistant-config
@@ -224,7 +224,7 @@ cat /home/homeadmin/backup.log
 **In Ubuntu VM:**
 
 ```bash
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 git pull
 ```
 
@@ -264,7 +264,7 @@ qmrestore /var/lib/vz/dump/vzdump-qemu-101-YYYYMMDD-HHMMSS.vma.zst 101
 **In Ubuntu VM:**
 
 ```bash
-cat /home/homeadmin/backup.log
+cat /home/brakka/backup.log
 ```
 
 ### Check Proxmox Backup Logs

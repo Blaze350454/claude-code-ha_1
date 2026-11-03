@@ -29,7 +29,7 @@ upgrades before device reflashing so devices get the newest ESPHome core in one 
 - **HA Core itself**: check `binary_sensor.ha_core_update_available` (has
   `running_version` / `latest_version` attributes) — there's no `update.home_assistant_core`
   entity because this install is a plain Docker container, not Supervised/HAOS.
-- **VM 101 OS packages**: SSH `homeadmin@192.168.2.151`, then
+- **VM 101 OS packages**: SSH `brakka@192.168.2.151`, then
   `sudo -S -E apt-get update -qq && sudo -S -E apt list --upgradable`. Look for any
   `linux-image-*` package — if present, a reboot will actually be needed; otherwise skip
   the reboot. Also read `/var/run/reboot-required.pkgs`, which can list a reboot pending

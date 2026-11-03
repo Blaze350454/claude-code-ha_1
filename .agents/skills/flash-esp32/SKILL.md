@@ -73,7 +73,7 @@ uvx esphome@2026.6.5 run <name>.yaml --device <device-ip> --no-logs 2>&1 | Selec
 Per `update-homelab`: paramiko `root`/`PROXMOX_PASSWORD` to the Proxmox host, then
 `pct exec 100 -- bash -c 'cd /root/config && /opt/esphome/.venv/bin/esphome run <name>.yaml
 --device <STATIC-IP> --no-logs'`. Config lives in LXC `/root/config`. The Proxmox host has
-no SSH key (password auth only); VM 101 `homeadmin@192.168.2.151` uses key auth.
+no SSH key (password auth only); VM 101 `brakka@192.168.2.151` uses key auth.
 
 **⚠ `<name>.local` does NOT resolve** from the LXC 100 or VM 101 shells (no `nss-mdns`) —
 you get "Name or service not known" on perfectly healthy devices. Use the static IP from
@@ -105,8 +105,8 @@ which asks for the `noise_psk` HA *already has* — so read it back out of
 never leaves the box. `tools/ha_repoint_esphome.py` in this repo does exactly that:
 
 ```bash
-scp tools/ha_repoint_esphome.py homeadmin@192.168.2.151:/tmp/
-ssh homeadmin@192.168.2.151 'python3 /tmp/ha_repoint_esphome.py <entry_id> <new-ip>'
+scp tools/ha_repoint_esphome.py brakka@192.168.2.151:/tmp/
+ssh brakka@192.168.2.151 'python3 /tmp/ha_repoint_esphome.py <entry_id> <new-ip>'
 # <entry_id> from: GET /api/config/config_entries/entry  (filter domain == esphome)
 ```
 

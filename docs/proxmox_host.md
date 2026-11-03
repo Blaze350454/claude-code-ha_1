@@ -5,7 +5,7 @@ storage layout, the VM backup job, and how backup health surfaces in Home Assist
 
 Access: the host has **no SSH key** — password auth as `root` with `PROXMOX_PASSWORD`
 from `.env` (see [`secrets_and_credentials.md`](secrets_and_credentials.md)). VM 101
-(`homeadmin@192.168.2.151`) uses key auth. Guests are reached with `pct exec <id>` (LXC)
+(`brakka@192.168.2.151`) uses key auth. Guests are reached with `pct exec <id>` (LXC)
 or `qm` (VM).
 
 Guests: **VM 101** = `home-assistant` (Ubuntu 24.04, 64 GB, the HA Docker host) ·

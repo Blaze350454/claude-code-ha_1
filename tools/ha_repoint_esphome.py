@@ -25,7 +25,7 @@ which is why this is designed to RUN ON THE HA VM and talk to localhost only.
 is the SUCCESS result. That abort reason means "an entry already matched and its
 data was updated", which is exactly the intent. Entities come back in ~10 s.
 
-USAGE (on the HA VM, e.g. homeadmin@192.168.2.151)
+USAGE (on the HA VM, e.g. brakka@192.168.2.151)
 --------------------------------------------------
     python3 ha_repoint_esphome.py <entry_id> <new_host>
 
@@ -40,8 +40,8 @@ import sys
 import urllib.request
 
 BASE = "http://localhost:8123"
-TOKEN_FILE = "/home/homeadmin/.ha_token"
-ENTRIES = "/home/homeadmin/homeassistant/.config/.storage/core.config_entries"
+TOKEN_FILE = "/home/brakka/.ha_token"
+ENTRIES = "/home/brakka/homeassistant/.config/.storage/core.config_entries"
 
 
 def main() -> None:

@@ -141,7 +141,7 @@ prefix — expect to re-run one after any reflash that adds entities.
   layer was deleted, so don't reintroduce an HA-side mirror. Options name the hose that is
   **PINCHED**, so the HA mapping is deliberately crossed (`tank=feed` → `Flush Air Blocked`).
 - Full irrigation entity IDs and HS300 outlet mappings: see `MEMORY.md` and `grow_tent_automation/docs/tent_irrigation_esphome.md`.
-- HA config on host VM: `/home/homeadmin/homeassistant/.config/configuration.yaml`
+- HA config on host VM: `/home/brakka/homeassistant/.config/configuration.yaml`
 - **Proxmox host (`192.168.2.100`) — storage, VM backups, backup monitoring, guest agent
   and the "rebooting VM 101" checklist: see `docs/proxmox_host.md`.** Read it before
   touching `local` storage or debugging a backup — `vzdump`'s `Broken pipe` error means

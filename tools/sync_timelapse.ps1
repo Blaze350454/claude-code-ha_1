@@ -19,7 +19,7 @@
 [CmdletBinding()]
 param(
   [string]$Dest   = 'D:\Claude\Pictures\timelapse',
-  [string]$Remote = 'homeadmin@192.168.2.151',
+  [string]$Remote = 'brakka@192.168.2.151',
   [int]   $Batch  = 200,
   [switch]$NoOpen,          # don't launch the gallery when finished
   [switch]$GalleryOnly      # skip the network sync, just rebuild index.html

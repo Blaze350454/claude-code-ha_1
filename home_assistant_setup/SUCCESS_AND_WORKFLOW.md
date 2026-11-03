@@ -5,7 +5,7 @@
 **Date:** 2025-12-29
 **Repository:** https://github.com/Blaze350454/homeassistant-config
 **Branch:** master
-**Config Location:** `/home/homeadmin/homeassistant/config`
+**Config Location:** `/home/brakka/homeassistant/config`
 
 ### What's Been Done
 ✅ Git initialized in HA config directory
@@ -32,7 +32,7 @@ Anytime you modify your Home Assistant configuration (add automations, change se
 
 ```bash
 # 1. Go to config directory
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 
 # 2. Add all changes
 git add .
@@ -50,7 +50,7 @@ git push
 
 **Added a new automation:**
 ```bash
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 git add .
 git commit -m "Added motion sensor automation for hallway"
 git push
@@ -58,7 +58,7 @@ git push
 
 **Updated configuration.yaml:**
 ```bash
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 git add .
 git commit -m "Updated MQTT settings and added new sensor"
 git push
@@ -66,7 +66,7 @@ git push
 
 **Installed new custom component:**
 ```bash
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 git add .
 git commit -m "Installed Xiaomi Gateway 3 custom component"
 git push
@@ -90,11 +90,11 @@ If you ever need to restore your configuration:
 
 ```bash
 # Clone the repository
-cd /home/homeadmin
+cd /home/brakka
 git clone https://github.com/Blaze350454/homeassistant-config.git ha-config-backup
 
 # Or pull latest changes into existing directory
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 git pull
 ```
 
@@ -125,13 +125,13 @@ You can set up automatic daily backups:
 
 **Create a backup script:**
 ```bash
-nano /home/homeadmin/backup-ha.sh
+nano /home/brakka/backup-ha.sh
 ```
 
 Paste this:
 ```bash
 #!/bin/bash
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 git add .
 git commit -m "Auto backup $(date '+%Y-%m-%d %H:%M')"
 git push
@@ -139,7 +139,7 @@ git push
 
 Make it executable:
 ```bash
-chmod +x /home/homeadmin/backup-ha.sh
+chmod +x /home/brakka/backup-ha.sh
 ```
 
 **Add to cron (run daily at 2 AM):**
@@ -149,7 +149,7 @@ crontab -e
 
 Add this line:
 ```
-0 2 * * * /home/homeadmin/backup-ha.sh >> /home/homeadmin/backup.log 2>&1
+0 2 * * * /home/brakka/backup-ha.sh >> /home/brakka/backup.log 2>&1
 ```
 
 Now your config automatically backs up to GitHub every night!
@@ -188,7 +188,7 @@ git push --force
 Your docker-compose file is important too:
 
 ```bash
-cd /home/homeadmin/homeassistant
+cd /home/brakka/homeassistant
 git init
 echo "*.env" > .gitignore
 git add docker-compose.yml
@@ -208,7 +208,7 @@ Consider adding a README to your GitHub repo explaining your setup!
 
 **Push changes to GitHub:**
 ```bash
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 git add .
 git commit -m "Your change description"
 git push
@@ -216,13 +216,13 @@ git push
 
 **Pull changes from GitHub:**
 ```bash
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 git pull
 ```
 
 **Check status:**
 ```bash
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 git status
 ```
 

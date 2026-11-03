@@ -1,10 +1,10 @@
 # GitHub Setup Commands - Ready to Execute
 
 ## Your Setup (Confirmed)
-- **Username:** homeadmin
+- **Username:** brakka
 - **HA Config Location:** `/home/homeassistant/.config`
 - **Git Version:** 2.43.0 ✅ (already installed)
-- **Docker Compose:** `/home/homeadmin/homeassistant/docker-compose.yml`
+- **Docker Compose:** `/home/brakka/homeassistant/docker-compose.yml`
 
 ---
 
@@ -252,7 +252,7 @@ git push
 ## Optional: Also Version Control Docker Compose
 
 ```bash
-cd /home/homeadmin/homeassistant
+cd /home/brakka/homeassistant
 git init
 nano .gitignore
 ```

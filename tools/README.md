@@ -19,12 +19,12 @@ and the frame dirs mounted). Pipe it in over SSH:
 
 ```bash
 # all three styles, defaults (fps 24, 1280x720 canvas for interleave/grid)
-ssh homeadmin@192.168.2.151 \
+ssh brakka@192.168.2.151 \
   'docker exec -i homeassistant python3 - --mode all' \
   < tools/build_timelapse_movies.py
 
 # just the interleaved film at 30 fps
-ssh homeadmin@192.168.2.151 \
+ssh brakka@192.168.2.151 \
   'docker exec -i homeassistant python3 - --mode interleave --fps 30' \
   < tools/build_timelapse_movies.py
 ```

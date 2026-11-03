@@ -11,8 +11,8 @@
 - **Schedule:** Every day at 2:00 AM
 - **Location:** https://github.com/Blaze350454/homeassistant-config
 - **What's backed up:** Configuration files, automations, custom components
-- **Script:** `/home/homeadmin/backup-ha.sh`
-- **Log:** `/home/homeadmin/backup.log`
+- **Script:** `/home/brakka/backup-ha.sh`
+- **Log:** `/home/brakka/backup.log`
 
 ### ✅ Layer 2: Weekly Proxmox VM Backups
 - **Status:** Active and Running
@@ -39,7 +39,7 @@
 ### Check Git Backup Status
 **In Ubuntu VM console:**
 ```bash
-cat /home/homeadmin/backup.log
+cat /home/brakka/backup.log
 ```
 
 ### Check Proxmox Backup Status
@@ -64,7 +64,7 @@ https://github.com/Blaze350454/homeassistant-config
 ### Manual Git Backup
 **In Ubuntu VM:**
 ```bash
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 git add .
 git commit -m "Manual backup - describe your changes"
 git push
@@ -99,7 +99,7 @@ vzdump 101 --compress zstd --storage local --mode snapshot
 
 **Quick restore single file:**
 ```bash
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 git pull
 ```
 
@@ -138,14 +138,14 @@ qmrestore /var/lib/vz/dump/vzdump-qemu-101-YYYYMMDD-HHMMSS.vma.zst 101
 **In Ubuntu VM:**
 ```bash
 # Make a test change
-cd /home/homeadmin/homeassistant/config
+cd /home/brakka/homeassistant/config
 echo "# Backup test $(date)" >> configuration.yaml
 
 # Run backup script manually
-/home/homeadmin/backup-ha.sh
+/home/brakka/backup-ha.sh
 
 # Check log
-cat /home/homeadmin/backup.log
+cat /home/brakka/backup.log
 
 # View on GitHub - should see new commit!
 ```
@@ -168,7 +168,7 @@ ls -lh /var/lib/vz/dump/ | grep 101
 ### Ubuntu VM Cron
 **View with:** `crontab -l`
 ```
-0 2 * * * /home/homeadmin/backup-ha.sh
+0 2 * * * /home/brakka/backup-ha.sh
 ```
 - Runs at 2:00 AM every day
 - Backs up HA config to GitHub

@@ -70,7 +70,7 @@ Since you don't have the built-in backup system, here are your options:
 **Commands:**
 ```bash
 # Create backup script
-nano /home/homeadmin/backup-ha.sh
+nano /home/brakka/backup-ha.sh
 
 # Add to cron for automatic daily backups
 crontab -e
@@ -102,7 +102,7 @@ vzdump 101 --compress zstd --storage local
 sudo docker inspect homeassistant | grep -A 10 Mounts
 
 # Backup the volume
-sudo tar -czf ha-backup-$(date +%Y%m%d).tar.gz /home/homeadmin/homeassistant/config
+sudo tar -czf ha-backup-$(date +%Y%m%d).tar.gz /home/brakka/homeassistant/config
 ```
 
 ### Option 5: Rsync to NAS/Network Storage
@@ -113,7 +113,7 @@ sudo tar -czf ha-backup-$(date +%Y%m%d).tar.gz /home/homeadmin/homeassistant/con
 sudo apt install rsync
 
 # Sync to NAS (example)
-rsync -av /home/homeadmin/homeassistant/config/ user@nas:/backups/homeassistant/
+rsync -av /home/brakka/homeassistant/config/ user@nas:/backups/homeassistant/
 ```
 
 ---

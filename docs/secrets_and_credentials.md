@@ -21,7 +21,7 @@ sanctioned locations, all gitignored:
 | `.cursor/mcp.json` | `HA_URL`, `HA_TOKEN` | the `tag_migration_*.py` / `registry_export.py` family |
 | `.claude/mcp.json` | MCP server env | Claude Code |
 | `.mcp.json` | `${env}` placeholders only | Claude Code (expands from launch environment) |
-| `/home/homeadmin/.ha_token` (VM 101) | HA token, bare, no trailing newline, `chmod 600` | `pull-ha.sh` cron |
+| `/home/brakka/.ha_token` (VM 101) | HA token, bare, no trailing newline, `chmod 600` | `pull-ha.sh` cron |
 
 `.cursor/mcp.json.example` is the tracked, placeholder-only template. Copy it, never
 commit the filled-in version.
@@ -40,7 +40,7 @@ The token exists in **four** places. Miss one and something breaks silently.
    (e.g. `grow-home-tooling-2026-08`) so the old and new are unambiguous in the list.
    The old token stays valid until explicitly revoked, so nothing breaks mid-swap.
 2. **Update all four**: `.env`, `.cursor/mcp.json`, `.claude/mcp.json`, and
-   `/home/homeadmin/.ha_token` on VM 101. The VM file must be exactly the token —
+   `/home/brakka/.ha_token` on VM 101. The VM file must be exactly the token —
    183 bytes, **no trailing newline**, mode `600`.
 3. **Verify before revoking** — see the next section. This step is not optional.
 4. **Then** revoke the old token in the same HA UI page.
@@ -48,7 +48,7 @@ The token exists in **four** places. Miss one and something breaks silently.
 
 ### ⚠ The verification that matters: `pull-ha.sh` fails OPEN
 
-`/home/homeadmin/pull-ha.sh` runs from cron at `:05 :20 :35 :50` — four times an
+`/home/brakka/pull-ha.sh` runs from cron at `:05 :20 :35 :50` — four times an
 hour. Before restarting Home Assistant it checks whether irrigation is mid-cycle:
 
 ```sh
@@ -70,8 +70,8 @@ flush, with valves dropping closed on reboot.
 So after any rotation, confirm the guard still works:
 
 ```sh
-ssh homeadmin@192.168.2.151 'bash -s' <<'EOF'
-status=$(curl -s -m 5 -H "Authorization: Bearer $(cat /home/homeadmin/.ha_token)" \
+ssh brakka@192.168.2.151 'bash -s' <<'EOF'
+status=$(curl -s -m 5 -H "Authorization: Bearer $(cat /home/brakka/.ha_token)" \
     http://localhost:8123/api/states/input_text.tent_irrigation_status \
     | sed -n 's/.*"state": *"\([^"]*\)".*/\1/p' | head -1)
 [ -n "$status" ] && echo "guard ACTIVE (status=$status)" || echo "guard BROKEN"

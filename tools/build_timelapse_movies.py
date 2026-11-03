@@ -18,7 +18,7 @@ WHERE TO RUN
 Run INSIDE the Home Assistant container (it has python3 + ffmpeg, and the frame
 dirs are mounted there). Pipe this file to the container's python over SSH:
 
-  ssh homeadmin@192.168.2.151 \
+  ssh brakka@192.168.2.151 \
     'docker exec -i homeassistant python3 - --mode all' \
     < tools/build_timelapse_movies.py
 
