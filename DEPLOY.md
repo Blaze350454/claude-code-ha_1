@@ -34,7 +34,7 @@ Do not deploy to the VM if either job failed.
 
 ## 3. Deploy to VM
 
-**A cron auto-deploys for you.** `*/15 * * * * /home/homeadmin/pull-ha.sh`
+**A cron auto-deploys for you.** `*/15 * * * * /home/brakka/pull-ha.sh`
 runs every 15 min: it `git pull`s, and **restarts HA only when warranted**:
 
 - **No new commits** → nothing.
@@ -47,7 +47,7 @@ runs every 15 min: it `git pull`s, and **restarts HA only when warranted**:
   ticks) so a deploy can't interrupt irrigation, then restarts regardless.
 
 So after a `git push`, a runtime change goes live within ≤15 min on its own.
-Log: `/home/homeadmin/pull.log`. Original script: `pull-ha.sh.bak`.
+Log: `/home/brakka/pull.log`. Original script: `pull-ha.sh.bak`.
 
 The deferral needs a long-lived token to read HA's state. It's **off until you
 create one** — without it the script restarts immediately (no defer). Enable:
@@ -60,7 +60,7 @@ printf '%s' 'YOUR_LONG_LIVED_TOKEN' > ~/.ha_token && chmod 600 ~/.ha_token
 **Deploy now instead of waiting** for the next cron tick — SSH in and pull:
 
 ```bash
-ssh homeadmin@192.168.2.151
+ssh brakka@192.168.2.151
 cd ~/homeassistant/.config
 git pull --rebase && docker restart homeassistant   # restart only if needed
 ```
@@ -117,13 +117,13 @@ pulled the bad commit yet.)
 
 ## Nightly auto-backup
 
-`/home/homeadmin/backup-ha.sh` runs at 2 AM via cron. It:
+`/home/brakka/backup-ha.sh` runs at 2 AM via cron. It:
 
 1. `git pull --rebase` — picks up anything pushed from Windows during the day.
 2. `git add -A && git commit` — captures UI-edited state (dashboards, etc.).
 3. `git push` — sends VM-side changes back to GitHub.
 
-Log: `/home/homeadmin/backup.log`.
+Log: `/home/brakka/backup.log`.
 
 If Windows and VM both edit the same file the same day, the 2 AM rebase
 handles clean cases automatically. A true conflict will abort the backup

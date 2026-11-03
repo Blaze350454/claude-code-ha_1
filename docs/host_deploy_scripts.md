@@ -1,17 +1,17 @@
-# Host deploy scripts (VM `homeadmin@192.168.2.151`)
+# Host deploy scripts (VM `brakka@192.168.2.151`)
 
-These live on the HA VM's host filesystem (`/home/homeadmin/`), **not** in this
+These live on the HA VM's host filesystem (`/home/brakka/`), **not** in this
 repo's deploy path, so HA never loads them. This file is the version‑controlled
 record of them. See [DEPLOY.md](../DEPLOY.md) for the deploy flow.
 
 Last captured / revised: **2026-06-27**.
 
-## crontab (`crontab -l`, user `homeadmin`)
+## crontab (`crontab -l`, user `brakka`)
 
 ```cron
-0 2 * * * /home/homeadmin/backup-ha.sh
-0 3 * * * /home/homeadmin/ha_backup_helpers.sh >> /home/homeadmin/ha_backup.log 2>&1
-5,20,35,50 * * * * /home/homeadmin/pull-ha.sh
+0 2 * * * /home/brakka/backup-ha.sh
+0 3 * * * /home/brakka/ha_backup_helpers.sh >> /home/brakka/ha_backup.log 2>&1
+5,20,35,50 * * * * /home/brakka/pull-ha.sh
 ```
 
 - `backup-ha.sh` (02:00) — nightly: `git pull --rebase`, commit UI-edited state, push.
@@ -22,7 +22,7 @@ Last captured / revised: **2026-06-27**.
     daily "cannot lock ref → git pull failed" at 02:00).
 - Pre-change crontab backed up on the VM at `~/.crontab.bak.20260627`.
 
-## `/home/homeadmin/pull-ha.sh`
+## `/home/brakka/pull-ha.sh`
 
 Revised 2026-06-27 from "restart on ANY new commit" to a **selective restart**:
 skips CI/docs-only commits, and defers the restart while a tent feed/flush is
@@ -37,15 +37,15 @@ restarts immediately, no defer). Original saved on the VM as `pull-ha.sh.bak`.
 #   * Defer the restart (up to ~1h) while a tent feed/flush cycle is mid-run so a
 #     deploy can't interrupt irrigation. Needs a long-lived token at
 #     ~/.ha_token (chmod 600); without it, restarts immediately (no defer).
-# Runs every 15 min via cron. Log: /home/homeadmin/pull.log
+# Runs every 15 min via cron. Log: /home/brakka/pull.log
 # Original kept as pull-ha.sh.bak.
 
 set -euo pipefail
 
-CONFIG_DIR=/home/homeadmin/homeassistant/.config
-LOG=/home/homeadmin/pull.log
-TOKEN_FILE=/home/homeadmin/.ha_token
-DEFER_FILE=/home/homeadmin/.pull-ha.deferred
+CONFIG_DIR=/home/brakka/homeassistant/.config
+LOG=/home/brakka/pull.log
+TOKEN_FILE=/home/brakka/.ha_token
+DEFER_FILE=/home/brakka/.pull-ha.deferred
 MAX_DEFERS=4   # ~1h (4 x 15 min) of deferral, then restart regardless
 
 cd "$CONFIG_DIR"
