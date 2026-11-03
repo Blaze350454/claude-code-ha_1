@@ -117,8 +117,15 @@ tent_camera_timelapse:
         # shows the cached thumbnail until refreshed. A flat wait is unreliable —
         # weak-signal cams (e.g. overhead, -64 dBm) need ~40s to upload while
         # tent_1 needs ~10s, so an 8s wait snapshotted STALE frames. Instead:
-        # trigger, then poll (update_entity every 6s) until the thumbnail URL
-        # actually changes, capped at ~48s so a stuck cam can't hang the rotation.
+        # trigger, wait, refresh, and keep polling until the thumbnail URL changes.
+        # 2026-11-02: lengthened. The old 6s-poll / 48s cap left ~45% of frames
+        # byte-identical to the previous one, two ways: (a) the cap expired with
+        # no new thumbnail and the old image was saved anyway; (b) the thumbnail
+        # URL changed before Blink's cloud served the new bytes, so the snapshot
+        # still got the old picture. Frame timing doesn't matter for a timelapse,
+        # so: 60s initial wait, then poll every 10s up to 2 min more, then a 15s
+        # settle + one more refresh before saving. Worst case ~3.5 min, well under
+        # the 15 min minimum interval (the scheduler stamps the START of a cycle).
         # Non-Blink (streaming) cams skip straight to the snapshot.
         - if:
             - condition: template
@@ -129,17 +136,28 @@ tent_camera_timelapse:
             - action: blink.trigger_camera
               target:
                 entity_id: "{{ cam }}"
+            - delay:
+                seconds: 60
+            - action: homeassistant.update_entity
+              target:
+                entity_id: "{{ cam }}"
             - repeat:
+                while:
+                  - condition: template
+                    value_template: >
+                      {{ state_attr(cam, 'thumbnail') == pre_thumb and repeat.index <= 12 }}
                 sequence:
                   - delay:
-                      seconds: 6
+                      seconds: 10
                   - action: homeassistant.update_entity
                     target:
                       entity_id: "{{ cam }}"
-                until:
-                  - condition: template
-                    value_template: >
-                      {{ state_attr(cam, 'thumbnail') != pre_thumb or repeat.index >= 8 }}
+            # Settle: the URL can change before the new bytes are served.
+            - delay:
+                seconds: 15
+            - action: homeassistant.update_entity
+              target:
+                entity_id: "{{ cam }}"
         # Timestamped frame for the lapse sequence...
         - action: camera.snapshot
           target:
