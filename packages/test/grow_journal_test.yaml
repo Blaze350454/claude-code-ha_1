@@ -1,0 +1,108 @@
+# TEST ONLY — stand-in helpers for proving the Home Assistant → Grow Journal link before the
+# real grow is switched on (2026-11-07). Nothing here drives a pump, valve, light or selector,
+# and no automation reads these. Delete this file when the test run is done.
+#
+# They mirror the real entities the journal reads, with a `test_` prefix:
+#   grow calendar  input_datetime.test_grow_stage_*_date / test_grow_harvest_date
+#   grow on/off    input_boolean.test_grow_active
+#   stage          input_select.test_feed_stage
+#   feed volume    sensor.test_last_feed_volume  (same formula as tent/irrigation/feed_volume.yaml,
+#                  driven by input_boolean.test_feed_pump + input_number.test_flow_total)
+# A test garden in a throwaway journal copy links to these; the real tent is never touched.
+
+grow_journal_test:
+
+  input_datetime:
+    test_grow_stage_seedling_date: {name: "TEST Grow — Seedling Start", has_date: true, has_time: false}
+    test_grow_stage_early_veg_date: {name: "TEST Grow — Early Veg Start", has_date: true, has_time: false}
+    test_grow_stage_medium_veg_date: {name: "TEST Grow — Medium Veg Start", has_date: true, has_time: false}
+    test_grow_stage_late_veg_date: {name: "TEST Grow — Late Veg Start", has_date: true, has_time: false}
+    test_grow_stage_early_flower_date: {name: "TEST Grow — Early Flower Start", has_date: true, has_time: false}
+    test_grow_stage_mid_flower_date: {name: "TEST Grow — Mid Flower Start", has_date: true, has_time: false}
+    test_grow_stage_late_flower_date: {name: "TEST Grow — Late Flower Start", has_date: true, has_time: false}
+    test_grow_harvest_date: {name: "TEST Grow — Harvest Date", has_date: true, has_time: false}
+
+  input_boolean:
+    test_grow_active:
+      name: "TEST Grow Active"
+    test_feed_pump:
+      name: "TEST Feed Pump (simulated)"
+
+  input_select:
+    test_feed_stage:
+      name: "TEST Feed Stage"
+      options: ["Seedling", "Early Veg", "Medium Veg", "Late Veg", "Early Flower", "Mid Flower", "Late Flower"]
+
+  input_number:
+    test_flow_total:
+      name: "TEST Flow Total (simulated meter)"
+      min: 0
+      max: 10000
+      step: 0.001
+      mode: box
+      unit_of_measurement: "L"
+    test_feed_volume_factor:
+      name: "TEST Feed Volume Factor"
+      min: 0.5
+      max: 2
+      step: 0.001
+      mode: box
+
+  # Same formula as tent/irrigation/feed_volume.yaml; keep the two in step while testing.
+  # Only the pump, meter and factor entities differ; there are no valves, so `line` is "feed".
+  template:
+    - triggers:
+        - trigger: state
+          entity_id: input_boolean.test_feed_pump
+          to: "on"
+          id: start
+        - trigger: state
+          entity_id: input_boolean.test_feed_pump
+          to: "off"
+          for:
+            seconds: 20
+          id: end
+      actions:
+        - variables:
+            prev: "{{ this.attributes if this is defined and this.attributes is defined else {} }}"
+            total: "{{ states('input_number.test_flow_total') | float(none) }}"
+            factor_raw: "{{ states('input_number.test_feed_volume_factor') | float(1) }}"
+            factor: "{{ factor_raw if factor_raw >= 0.5 else 1.0 }}"
+            start_total: "{{ prev.get('start_total') }}"
+            started: "{{ prev.get('started') }}"
+            ok: >
+              {{ trigger.id == 'end' and prev.get('running', false)
+                 and total is number and start_total is number }}
+            raw: >
+              {{ (((total - start_total) if total >= start_total else total) | round(3)) if ok else none }}
+      sensor:
+        - name: "Test Last Feed Volume"
+          unique_id: test_last_feed_volume
+          unit_of_measurement: "L"
+          device_class: volume
+          icon: mdi:test-tube
+          state: >
+            {% if ok %}{{ (raw | float * factor) | round(2) }}
+            {% else %}{{ this.state if this is defined else 'unknown' }}{% endif %}
+          attributes:
+            running: "{{ trigger.id == 'start' }}"
+            start_total: >
+              {{ total if trigger.id == 'start' else none }}
+            started: >
+              {{ now().isoformat() if trigger.id == 'start' else started }}
+            line: "feed"
+            ended: >
+              {{ now().isoformat() if ok else prev.get('ended') }}
+            seconds: >
+              {% if ok and started %}{{ (now() - as_datetime(started)).total_seconds() | round(0) }}
+              {% else %}{{ prev.get('seconds') }}{% endif %}
+            raw_l: "{{ raw if ok else prev.get('raw_l') }}"
+            factor: "{{ factor if ok else prev.get('factor') }}"
+            note: >
+              {% if ok %}{{ 'flow total reset during the run; counted since the reset' if total < start_total else '' }}
+              {%- else %}{{ prev.get('note', '') }}{% endif %}
+            error: >
+              {% if trigger.id == 'end' and not ok -%}
+                {{ 'flow total unavailable' if total is not number or start_total is not number
+                   else 'pump stopped without a recorded start' }}
+              {%- endif %}

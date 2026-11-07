@@ -1,0 +1,95 @@
+# Feed volume — how much water each pump run delivered, for the Grow Journal.
+#
+# STATISTICS ONLY: nothing here switches a pump, valve or selector.
+#
+# Formula: litres = (Flow Total at pump-off − Flow Total at pump-on) × Feed Volume Factor.
+# sensor.flow_total_irrigation_tent is the ESP pulse counter's running total, already
+# bucket-calibrated on the device (62.72 pulses/L, 2026-05-10). The factor is the fine
+# correction: catch a feed in a jug, type the measured litres next to that feed in the Grow
+# Journal (Stats tab), and it suggests a factor = median(measured ÷ raw). Set it here by hand.
+# The journal never writes to Home Assistant.
+#
+# One pump serves both lines (lines.yaml): `line` records which IN valve was open at start.
+# The pump-off trigger waits 20 s so the line's drain-down flow is counted.
+# The device resets the pulse total when the feed tank's empty float releases; if the total
+# went down during a run, only the litres counted since the reset are used (an undercount,
+# flagged in `note`).
+# If the flow total is unavailable at either end, the previous value is kept and `error`
+# says why: the journal records nothing rather than an invented number.
+#
+# The journal keys each feed on `ended`, so a restart (which re-renders nothing here) never
+# records a feed twice.
+
+tent_irrigation_feed_volume:
+
+  input_number:
+    feed_volume_factor:
+      name: "Feed Volume Factor"
+      min: 0.5
+      max: 2
+      step: 0.001
+      mode: box
+      icon: mdi:tune-variant
+    # NO initial: — the calibrated value must survive the push-triggered restarts.
+    # A never-set helper reads its minimum; the template below treats < 0.5 as 1.0.
+
+  template:
+    - triggers:
+        - trigger: state
+          entity_id: switch.feed_pump_irrigation_tent
+          to: "on"
+          id: start
+        - trigger: state
+          entity_id: switch.feed_pump_irrigation_tent
+          to: "off"
+          for:
+            seconds: 20
+          id: end
+      actions:
+        - variables:
+            prev: "{{ this.attributes if this is defined and this.attributes is defined else {} }}"
+            total: "{{ states('sensor.flow_total_irrigation_tent') | float(none) }}"
+            factor_raw: "{{ states('input_number.feed_volume_factor') | float(1) }}"
+            factor: "{{ factor_raw if factor_raw >= 0.5 else 1.0 }}"
+            start_total: "{{ prev.get('start_total') }}"
+            started: "{{ prev.get('started') }}"
+            ok: >
+              {{ trigger.id == 'end' and prev.get('running', false)
+                 and total is number and start_total is number }}
+            raw: >
+              {{ (((total - start_total) if total >= start_total else total) | round(3)) if ok else none }}
+      sensor:
+        - name: "Tent Last Feed Volume"
+          unique_id: tent_last_feed_volume
+          unit_of_measurement: "L"
+          device_class: volume
+          icon: mdi:water-pump
+          state: >
+            {% if ok %}{{ (raw | float * factor) | round(2) }}
+            {% else %}{{ this.state if this is defined else 'unknown' }}{% endif %}
+          attributes:
+            running: "{{ trigger.id == 'start' }}"
+            start_total: >
+              {{ total if trigger.id == 'start' else none }}
+            started: >
+              {{ now().isoformat() if trigger.id == 'start' else started }}
+            line: >
+              {% if trigger.id == 'start' %}
+                {{ 'feed' if is_state('valve.feed_valve_irrigation_tent', 'open')
+                   else ('flush' if is_state('valve.flush_valve_irrigation_tent', 'open') else 'unknown') }}
+              {% else %}{{ prev.get('line', 'unknown') }}{% endif %}
+            ended: >
+              {{ now().isoformat() if ok else prev.get('ended') }}
+            seconds: >
+              {% if ok and started %}{{ (now() - as_datetime(started)).total_seconds() | round(0) }}
+              {% else %}{{ prev.get('seconds') }}{% endif %}
+            raw_l: "{{ raw if ok else prev.get('raw_l') }}"
+            factor: "{{ factor if ok else prev.get('factor') }}"
+            note: >
+              {% if ok %}{{ 'flow total reset during the run; counted since the reset' if total < start_total else '' }}
+              {%- else %}{{ prev.get('note', '') }}{% endif %}
+            error: >
+              {% if trigger.id == 'end' and not ok -%}
+                {{ 'flow total unavailable' if total is not number or start_total is not number
+                   else 'pump stopped without a recorded start' }}
+              {%- endif %}
