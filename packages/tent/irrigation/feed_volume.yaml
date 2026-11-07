@@ -46,19 +46,13 @@ tent_irrigation_feed_volume:
           for:
             seconds: 20
           id: end
+      # Only plain values here: `this` (the sensor's previous state) is available to the
+      # entity's own templates below, not to these action variables.
       actions:
         - variables:
-            prev: "{{ this.attributes if this is defined and this.attributes is defined else {} }}"
             total: "{{ states('sensor.flow_total_irrigation_tent') | float(none) }}"
             factor_raw: "{{ states('input_number.feed_volume_factor') | float(1) }}"
             factor: "{{ factor_raw if factor_raw >= 0.5 else 1.0 }}"
-            start_total: "{{ prev.get('start_total') }}"
-            started: "{{ prev.get('started') }}"
-            ok: >
-              {{ trigger.id == 'end' and prev.get('running', false)
-                 and total is number and start_total is number }}
-            raw: >
-              {{ (((total - start_total) if total >= start_total else total) | round(3)) if ok else none }}
       sensor:
         - name: "Tent Last Feed Volume"
           unique_id: tent_last_feed_volume
@@ -66,31 +60,35 @@ tent_irrigation_feed_volume:
           device_class: volume
           icon: mdi:water-pump
           state: >
-            {% if ok %}{{ (raw | float * factor) | round(2) }}
-            {% else %}{{ this.state if this is defined else 'unknown' }}{% endif %}
+            {%- set p = this.attributes if this is defined else {} -%}{%- set st = p.get('start_total') -%}{%- set ok = trigger.id == 'end' and p.get('running', false) and total is number and st is number -%}{%- set raw = (((total - st) if total >= st else total) | round(3)) if ok else none -%}
+            {%- if ok %}{{ (raw * factor) | round(2) }}{%- else %}{{ this.state if this is defined else 'unknown' }}{%- endif %}
           attributes:
             running: "{{ trigger.id == 'start' }}"
-            start_total: >
-              {{ total if trigger.id == 'start' else none }}
+            start_total: "{{ total if trigger.id == 'start' else none }}"
             started: >
-              {{ now().isoformat() if trigger.id == 'start' else started }}
+              {%- set p = this.attributes if this is defined else {} -%}{%- set st = p.get('start_total') -%}{%- set ok = trigger.id == 'end' and p.get('running', false) and total is number and st is number -%}{%- set raw = (((total - st) if total >= st else total) | round(3)) if ok else none -%}
+              {{ now().isoformat() if trigger.id == 'start' else p.get('started') }}
             line: >
-              {% if trigger.id == 'start' %}
-                {{ 'feed' if is_state('valve.feed_valve_irrigation_tent', 'open')
-                   else ('flush' if is_state('valve.flush_valve_irrigation_tent', 'open') else 'unknown') }}
-              {% else %}{{ prev.get('line', 'unknown') }}{% endif %}
+              {%- set p = this.attributes if this is defined else {} -%}{%- set st = p.get('start_total') -%}{%- set ok = trigger.id == 'end' and p.get('running', false) and total is number and st is number -%}{%- set raw = (((total - st) if total >= st else total) | round(3)) if ok else none -%}
+              {%- if trigger.id == 'start' %}{{ 'feed' if is_state('valve.feed_valve_irrigation_tent', 'open') else ('flush' if is_state('valve.flush_valve_irrigation_tent', 'open') else 'unknown') }}{%- else %}{{ p.get('line', 'unknown') }}{%- endif %}
             ended: >
-              {{ now().isoformat() if ok else prev.get('ended') }}
+              {%- set p = this.attributes if this is defined else {} -%}{%- set st = p.get('start_total') -%}{%- set ok = trigger.id == 'end' and p.get('running', false) and total is number and st is number -%}{%- set raw = (((total - st) if total >= st else total) | round(3)) if ok else none -%}
+              {{ now().isoformat() if ok else p.get('ended') }}
             seconds: >
-              {% if ok and started %}{{ (now() - as_datetime(started)).total_seconds() | round(0) }}
-              {% else %}{{ prev.get('seconds') }}{% endif %}
-            raw_l: "{{ raw if ok else prev.get('raw_l') }}"
-            factor: "{{ factor if ok else prev.get('factor') }}"
+              {%- set p = this.attributes if this is defined else {} -%}{%- set st = p.get('start_total') -%}{%- set ok = trigger.id == 'end' and p.get('running', false) and total is number and st is number -%}{%- set raw = (((total - st) if total >= st else total) | round(3)) if ok else none -%}
+              {%- if ok and p.get('started') %}{{ (now() - as_datetime(p.get('started'))).total_seconds() | round(0) }}
+              {%- else %}{{ p.get('seconds') }}{%- endif %}
+            raw_l: >
+              {%- set p = this.attributes if this is defined else {} -%}{%- set st = p.get('start_total') -%}{%- set ok = trigger.id == 'end' and p.get('running', false) and total is number and st is number -%}{%- set raw = (((total - st) if total >= st else total) | round(3)) if ok else none -%}
+              {{ raw if ok else p.get('raw_l') }}
+            factor: >
+              {%- set p = this.attributes if this is defined else {} -%}{%- set st = p.get('start_total') -%}{%- set ok = trigger.id == 'end' and p.get('running', false) and total is number and st is number -%}{%- set raw = (((total - st) if total >= st else total) | round(3)) if ok else none -%}
+              {{ factor if ok else p.get('factor') }}
             note: >
-              {% if ok %}{{ 'flow total reset during the run; counted since the reset' if total < start_total else '' }}
-              {%- else %}{{ prev.get('note', '') }}{% endif %}
+              {%- set p = this.attributes if this is defined else {} -%}{%- set st = p.get('start_total') -%}{%- set ok = trigger.id == 'end' and p.get('running', false) and total is number and st is number -%}{%- set raw = (((total - st) if total >= st else total) | round(3)) if ok else none -%}
+              {%- if ok %}{{ 'flow total reset during the run; counted since the reset' if total < st else '' }}
+              {%- else %}{{ p.get('note', '') }}{%- endif %}
             error: >
-              {% if trigger.id == 'end' and not ok -%}
-                {{ 'flow total unavailable' if total is not number or start_total is not number
-                   else 'pump stopped without a recorded start' }}
-              {%- endif %}
+              {%- set p = this.attributes if this is defined else {} -%}{%- set st = p.get('start_total') -%}{%- set ok = trigger.id == 'end' and p.get('running', false) and total is number and st is number -%}{%- set raw = (((total - st) if total >= st else total) | round(3)) if ok else none -%}
+              {%- if trigger.id == 'end' and not ok %}{{ 'flow total unavailable' if p.get('running', false)
+                 else 'pump stopped without a recorded start' }}{%- endif %}
