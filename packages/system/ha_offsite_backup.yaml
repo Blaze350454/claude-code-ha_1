@@ -1,0 +1,171 @@
+system_ha_offsite_backup:
+  # ------------------------------------------------------------------------
+  # HA off-site backup (LXC 105 -> Google Drive): failure push + staleness poll
+  #
+  # WHY THIS EXISTS: until 2026-11-07, LXC 105 (backup-server) ran a nightly
+  # script that tarred the config of the OLD Home Assistant at 192.168.2.15.
+  # That host went away in 2025-09. Every step failed every night for 14
+  # months, but the script had no error checks and still logged "Backup
+  # completed". The errors went only to root's local mail. The last real
+  # off-site copy was 2025-09-05. Same failure shape as the ESPHome and
+  # Proxmox blind spots, so this is the same two-part fix as
+  # esphome_backup.yaml:
+  #
+  #   PUSH  /opt/backups/scripts/ha-offsite-backup.sh on LXC 105 POSTs here
+  #         on every run: "ok" stamps the heartbeat, anything else alerts now.
+  #   POLL  sensor.ha_offsite_backup_age alerts when no success has landed in
+  #         36 h. This catches what a push can't report: cron gone, LXC down,
+  #         Drive auth expired before the script could even start.
+  #
+  # WHAT IS COPIED: HA's OWN automatic backups (Settings > System > Backups),
+  # newest one, pulled read-only from ~/homeassistant/.config/backups on the
+  # HA VM. They are ENCRYPTED with HA's backup encryption key. A copy on
+  # Google Drive cannot be restored without that key.
+  #
+  # LXC 105 SIDE:
+  #   /root/.ha_offsite_backup_webhook   mode 600, holds the webhook id
+  #   /var/log/ha-offsite-backup.log     full log of every run
+  #
+  # SECURITY: an HA webhook has no auth, so the id IS the credential. Hence
+  # `!secret ha_offsite_backup_webhook_id`, never committed (this repo is
+  # public). `local_only: true` also refuses anything from off the LAN.
+  # ------------------------------------------------------------------------
+
+  input_datetime:
+    ha_offsite_backup_last_success:
+      name: HA Off-site Backup Last Success
+      has_date: true
+      has_time: true
+      icon: mdi:cloud-check
+
+  input_text:
+    ha_offsite_backup_last_file:
+      name: HA Off-site Backup Last File
+      max: 255
+      icon: mdi:file-cloud
+
+  automation:
+    - id: ha_offsite_backup_webhook_received
+      alias: "Watchdog — HA Off-site Backup Reported"
+      description: >
+        Receives the POST that ha-offsite-backup.sh on LXC 105 sends on every
+        run. "ok" stamps the heartbeat the staleness sensor reads; anything
+        else alerts immediately with the stage and error that caused it.
+      mode: parallel
+      max: 5
+      triggers:
+        - trigger: webhook
+          webhook_id: !secret ha_offsite_backup_webhook_id
+          allowed_methods:
+            - POST
+          local_only: true
+      variables:
+        # Defensive defaults: a malformed payload must still produce a usable
+        # alert, never a template error that silently kills the automation.
+        ob_status: "{{ trigger.json.status | default('unknown', true) }}"
+        ob_stage: "{{ trigger.json.stage | default('unknown', true) }}"
+        ob_detail: "{{ trigger.json.detail | default('(no detail)', true) }}"
+        ob_file: "{{ trigger.json.file | default('', true) }}"
+      actions:
+        - choose:
+            - conditions:
+                - condition: template
+                  value_template: "{{ ob_status == 'ok' }}"
+              sequence:
+                - action: input_datetime.set_datetime
+                  target:
+                    entity_id: input_datetime.ha_offsite_backup_last_success
+                  data:
+                    datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+                - action: input_text.set_value
+                  target:
+                    entity_id: input_text.ha_offsite_backup_last_file
+                  data:
+                    value: "{{ ob_file | truncate(250, true) }}"
+                - action: persistent_notification.dismiss
+                  data:
+                    notification_id: ha_offsite_backup_failed
+          default:
+            - action: notify.send_message
+              target:
+                entity_id: notify.brenton_s_phone
+              data:
+                title: "HA off-site backup FAILED ({{ ob_stage }})"
+                message: >-
+                  {{ ob_detail | truncate(220, true) }}
+            - action: persistent_notification.create
+              data:
+                notification_id: ha_offsite_backup_failed
+                title: "HA off-site backup failed at {{ ob_stage }}"
+                message: |-
+                  **ha-offsite-backup.sh failed on LXC 105 (backup-server)**
+
+                  Stage: `{{ ob_stage }}` · Status: `{{ ob_status }}`
+
+                  ```
+                  {{ ob_detail }}
+                  ```
+
+                  Google Drive is not receiving HA backups until this clears.
+                  Full log, from the Proxmox host:
+                  `pct exec 105 -- tail -40 /var/log/ha-offsite-backup.log`
+
+    - id: ha_offsite_backup_stale
+      alias: "Watchdog — HA Off-site Backup Stale"
+      description: >
+        Fires when no successful off-site backup has been reported in 36 h:
+        cron gone, LXC 105 down, script deleted, network gone. 36 h rather
+        than 24 h so one missed run is tolerated without paging.
+      mode: single
+      triggers:
+        - trigger: numeric_state
+          entity_id: sensor.ha_offsite_backup_age
+          above: 36
+          id: stale
+        - trigger: state
+          entity_id: sensor.ha_offsite_backup_age
+          to: unavailable
+          for: "01:00:00"
+          id: never
+      actions:
+        - variables:
+            ob_reason: >-
+              {% if trigger.id == 'never' %}No successful off-site backup has
+              EVER been recorded, or the heartbeat helper was reset.
+              {% else %}Last success was {{ states('sensor.ha_offsite_backup_age') }} h ago.
+              {% endif %}
+        - action: notify.send_message
+          target:
+            entity_id: notify.brenton_s_phone
+          data:
+            title: "HA off-site backup STALE"
+            message: "{{ ob_reason }} Google Drive is not getting HA backups."
+        - action: persistent_notification.create
+          data:
+            notification_id: ha_offsite_backup_stale
+            title: "HA off-site backup stale"
+            message: |-
+              **No successful HA off-site backup in over 36 h.**
+
+              {{ ob_reason }}
+
+              The failure webhook never fired, so the script is not merely
+              failing: it is not running, or cannot reach HA. From the Proxmox
+              host: `pct status 105; pct exec 105 -- crontab -l`
+
+  template:
+    - sensor:
+        # Hours since the last successful off-site backup.
+        # NOTE: the `timestamp` ATTRIBUTE, never as_timestamp(states(...)) --
+        # the state string is naive and parses as UTC, skewing by the offset.
+        - name: "HA Off-site Backup Age"
+          unique_id: ha_offsite_backup_age
+          unit_of_measurement: h
+          state_class: measurement
+          icon: mdi:cloud-clock
+          state: >
+            {% set ts = state_attr('input_datetime.ha_offsite_backup_last_success','timestamp') %}
+            {% if ts is none or ts == 0 %}unknown
+            {% else %}{{ ((now().timestamp() - ts) / 3600) | round(1) }}{% endif %}
+          availability: >
+            {{ state_attr('input_datetime.ha_offsite_backup_last_success','timestamp') not in [none, 0] }}
