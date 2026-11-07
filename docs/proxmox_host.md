@@ -183,3 +183,23 @@ Cheap and safe — **~30 s** end to end (SSH back at 15 s, HA `RUNNING` at 30 s)
   `/etc/network/interfaces` regardless.
 - After a restart every entity's `last_changed` becomes the restart time, so "offline
   since HH:MM" lies — get true onset from the recorder history API.
+
+---
+
+## Apt repositories (no subscription)
+
+Set 2026-11-07. The host has **no Proxmox subscription**, so it runs from the
+no-subscription repos only. Files in `/etc/apt/sources.list.d/` (deb822 format):
+
+| File | State |
+|---|---|
+| `proxmox.sources` | PVE `trixie` / `pve-no-subscription` (**active**) |
+| `ceph.sources` | `ceph-squid` `trixie` / `no-subscription` (**active**; client libs only, no cluster) |
+| `debian.sources` | Debian `trixie`, `trixie-updates`, `trixie-security` (**active**) |
+| `pve-enterprise.sources` | `Enabled: no` (it was returning **401 Unauthorized** on every `apt-get update`) |
+| `*.bookworm-disabled` | three leftover **PVE 8 / bookworm** lists, renamed so apt ignores them |
+
+The bookworm lists had stayed active after the 8 → 9 upgrade, mixing releases on a trixie
+host. Don't re-enable them. A backup of the directory before the change is at
+`/root/apt-sources-bak-20261107.tgz`. A PVE upgrade can re-create `pve-enterprise.sources`;
+if the 401 returns, add `Enabled: no` to it again.
