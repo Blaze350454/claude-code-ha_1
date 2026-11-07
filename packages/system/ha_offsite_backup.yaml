@@ -13,7 +13,7 @@ system_ha_offsite_backup:
   #
   #   PUSH  /opt/backups/scripts/ha-offsite-backup.sh on LXC 105 POSTs here
   #         on every run: "ok" stamps the heartbeat, anything else alerts now.
-  #   POLL  sensor.ha_offsite_backup_age alerts when no success has landed in
+  #   POLL  sensor.ha_off_site_backup_age alerts when no success has landed in
   #         36 h. This catches what a push can't report: cron gone, LXC down,
   #         Drive auth expired before the script could even start.
   #
@@ -119,11 +119,11 @@ system_ha_offsite_backup:
       mode: single
       triggers:
         - trigger: numeric_state
-          entity_id: sensor.ha_offsite_backup_age
+          entity_id: sensor.ha_off_site_backup_age
           above: 36
           id: stale
         - trigger: state
-          entity_id: sensor.ha_offsite_backup_age
+          entity_id: sensor.ha_off_site_backup_age
           to: unavailable
           for: "01:00:00"
           id: never
@@ -132,7 +132,7 @@ system_ha_offsite_backup:
             ob_reason: >-
               {% if trigger.id == 'never' %}No successful off-site backup has
               EVER been recorded, or the heartbeat helper was reset.
-              {% else %}Last success was {{ states('sensor.ha_offsite_backup_age') }} h ago.
+              {% else %}Last success was {{ states('sensor.ha_off_site_backup_age') }} h ago.
               {% endif %}
         - action: notify.send_message
           target:
