@@ -203,3 +203,13 @@ The bookworm lists had stayed active after the 8 → 9 upgrade, mixing releases 
 host. Don't re-enable them. A backup of the directory before the change is at
 `/root/apt-sources-bak-20261107.tgz`. A PVE upgrade can re-create `pve-enterprise.sources`;
 if the 401 returns, add `Enabled: no` to it again.
+
+## Host reboot 2026-11-07 (PVE 9.1.1 → 9.2.26, kernel 6.17.2 → 7.0.14-28)
+
+- **58 s** from reboot until SSH was back, and **82 s** until HA answered. The e1000e NIC came up clean, and the
+  `tso/gso off` post-up hook was still applied (`ethtool -k eno1`).
+- PVE 9.2 made **kernel 7.0** the default. 6.17.13-21 stays installed as a boot-menu fallback.
+- **CT 104 (vscode-server) and CT 105 (backup-server) have `onboot: 0`** and must be started by hand after a
+  host reboot (`pct start 104; pct start 105`).
+- `pct start` warned "Systemd 252 detected. You may need to enable nesting" → set `nesting=1` on CT 103, 104
+  and 105 (all unprivileged, so this is safe). Every container now has nesting on.
